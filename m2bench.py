@@ -993,7 +993,7 @@ def main():
                "  py m2bench.py grade --run test1\n"
                "  py m2bench.py compare --run-a test1 --run-b test2\n"
                "  py m2bench.py report --run test1 --compare-to test2\n")
-    sub = p.add_subparsers(dest="cmd", required=True)
+    sub = p.add_subparsers(dest="cmd")
 
     m = sub.add_parser("models", help="list available models")
     add_provider_args(m)
@@ -1035,11 +1035,142 @@ def main():
     cmp.add_argument("--run-b", required=True, help="second run name")
 
     sub.add_parser("history", help="list all past runs")
+    sub.add_parser("tui", help="interactive menu (default if no command)")
 
     args = p.parse_args()
-    {"models": cmd_models, "validate": cmd_validate, "run": cmd_run,
-     "grade": cmd_grade, "pair": cmd_pair, "report": cmd_report,
-     "compare": cmd_compare, "history": cmd_history}[args.cmd](args)
+    if args.cmd is None:
+        cmd_tui()
+    else:
+        {"models": cmd_models, "validate": cmd_validate, "run": cmd_run,
+         "grade": cmd_grade, "pair": cmd_pair, "report": cmd_report,
+         "compare": cmd_compare, "history": cmd_history,
+         "tui": lambda _a: cmd_tui()}[args.cmd](args)
+
+
+def _input(prompt, default=""):
+    """Prompt with default value display."""
+    suffix = f" [{default}]" if default else ""
+    val = input(f"{prompt}{suffix}: ").strip()
+    return val or default
+
+
+def _pick_number(title, options, default=1):
+    """Show numbered menu, return selected option."""
+    print(f"\n{colorize(title, 'bold')}")
+    for i, opt in enumerate(options, 1):
+        print(f"  {colorize(str(i), 'bold')}. {opt}")
+    while True:
+        raw = input(f"\n> ").strip()
+        if not raw:
+            return options[default - 1]
+        try:
+            idx = int(raw)
+            if 1 <= idx <= len(options):
+                return options[idx - 1]
+        except ValueError:
+            pass
+        print(f"  {colorize('invalid choice', 'err')}")
+
+
+def cmd_tui():
+    """Interactive menu-based TUI for m2bench."""
+    print(colorize("\n  m2bench v2 — Personal LLM Benchmark", "bold"))
+    print(colorize("  " + "=" * 40, "dim"))
+
+    action = _pick_number("Main Menu", [
+        "Run benchmark",
+        "Grade responses",
+        "Compare two runs",
+        "View history",
+        "Validate task sets",
+        "List models",
+        "Exit",
+    ], default=7)
+
+    if action == "Exit":
+        print("bye!")
+        return
+
+    if action == "Validate task sets":
+        print()
+        cmd_validate(None)
+        return
+
+    if action == "View history":
+        print()
+        cmd_history(None)
+        return
+
+    if action == "List models":
+        pname = _pick_number("Provider", [
+            "opencode-go", "openai", "anthropic",
+            "deepseek", "xiaomi", "openrouter", "custom"
+        ])
+        base_url = ""
+        api_key = ""
+        if pname == "custom":
+            base_url = _input("Base URL")
+            api_key = _input("API key")
+        ns = argparse.Namespace(provider=pname, base_url=base_url, api_key=api_key)
+        print()
+        cmd_models(ns)
+        return
+
+    # --- Run / Grade / Compare need provider first ---
+    if action in ("Run benchmark", "Grade responses", "Compare two runs"):
+        pname = _pick_number("Provider", [
+            "opencode-go", "openai", "anthropic",
+            "deepseek", "xiaomi", "openrouter", "custom"
+        ])
+        base_url = ""
+        api_key = ""
+        if pname == "custom":
+            base_url = _input("Base URL")
+            api_key = _input("API key")
+
+    if action == "Run benchmark":
+        models = _input("Model(s) (comma-separated)")
+        if not models:
+            print(colorize("model is required", "err"))
+            return
+        set_name = _input("Task set", "easy")
+        run_name = _input("Run name", f"run-{time.strftime('%H%M%S')}")
+        reasoning = _input("Reasoning effort [none/low/medium/high/max, Enter=skip]", "")
+        workers = _input("Workers", "2")
+        print()
+        ns = argparse.Namespace(
+            provider=pname, base_url=base_url, api_key=api_key,
+            models=models, set=set_name, name=run_name, tasks="",
+            runs=1, workers=int(workers), reasoning=reasoning,
+        )
+        cmd_run(ns)
+        return
+
+    if action == "Grade responses":
+        run_name = _input("Run name")
+        if not run_name:
+            print(colorize("run name is required", "err"))
+            return
+        judge = _input("Judge model", "qwen3.7-plus")
+        workers = _input("Workers", "2")
+        print()
+        ns = argparse.Namespace(
+            provider=pname, base_url=base_url, api_key=api_key,
+            run=run_name, judge=judge, models="", workers=int(workers),
+        )
+        cmd_grade(ns)
+        return
+
+    if action == "Compare two runs":
+        run_a = _input("Run A (baseline)")
+        run_b = _input("Run B (challenger)")
+        if not run_a or not run_b:
+            print(colorize("both run names are required", "err"))
+            return
+        print()
+        ns = argparse.Namespace(run_a=run_a, run_b=run_b)
+        cmd_compare(ns)
+        return
 
 
 if __name__ == "__main__":
