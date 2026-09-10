@@ -548,18 +548,26 @@ def cmd_run(args):
 
             done = 0
             fails = 0
-            with ThreadPoolExecutor(max_workers=args.workers) as ex:
-                futs = [ex.submit(do, m, t) for m, t in jobs]
-                for fut in as_completed(futs):
-                    status, model, tid = fut.result()
-                    done += 1
-                    icon = colorize("ok", "ok") if status == "ok" \
-                        else colorize("ERR", "err") if status == "err" \
-                        else colorize("skip", "dim")
-                    print(f"  {icon} [{model}] {tid}  {progress_line(done, total)}")
-                    if status == "err":
-                        fails += 1
-            print(f"-- {os.path.basename(rdir)}: {total - fails}/{total} ok\n")
+            cancelled = 0
+            try:
+                with ThreadPoolExecutor(max_workers=args.workers) as ex:
+                    futs = {ex.submit(do, m, t): (m, t) for m, t in jobs}
+                    for fut in as_completed(futs):
+                        status, model, tid = fut.result()
+                        done += 1
+                        icon = colorize("ok", "ok") if status == "ok" \
+                            else colorize("ERR", "err") if status == "err" \
+                            else colorize("skip", "dim")
+                        print(f"  {icon} [{model}] {tid}  {progress_line(done, total)}")
+                        if status == "err":
+                            fails += 1
+            except KeyboardInterrupt:
+                print(f"\n{colorize('Interrupted!', 'err')} cancelling remaining jobs...")
+                for fut in futs:
+                    fut.cancel()
+                cancelled = total - done
+            print(f"-- {os.path.basename(rdir)}: {done - fails}/{total} ok"
+                  + (f" ({cancelled} cancelled)" if cancelled else "") + "\n")
 
 
 def run_dir_of(name):
@@ -626,24 +634,32 @@ def cmd_grade(args):
 
     done = 0
     fails = 0
-    with ThreadPoolExecutor(max_workers=args.workers) as ex:
-        futs = [ex.submit(do, r) for r in recs]
-        for fut in as_completed(futs):
-            status, model, tid, info = fut.result()
-            done += 1
-            if status == "cached":
-                tag = colorize("cached", "dim")
-            elif status == "skip":
-                tag = colorize(f"skip ({info})", "dim")
-            elif status == "err":
-                tag = colorize(f"ERR {info}", "err")
-                fails += 1
-            else:
-                score = info
-                style = "pass" if score >= 0.99 else "partial" if score >= 0.5 else "fail"
-                tag = colorize(f"score={score:.2f}", style)
-            print(f"  {tag} [{model}] {tid}  {progress_line(done, total)}")
-    print(f"-- grade done, {fails} failed")
+    cancelled = 0
+    try:
+        with ThreadPoolExecutor(max_workers=args.workers) as ex:
+            futs = {ex.submit(do, r): r for r in recs}
+            for fut in as_completed(futs):
+                status, model, tid, info = fut.result()
+                done += 1
+                if status == "cached":
+                    tag = colorize("cached", "dim")
+                elif status == "skip":
+                    tag = colorize(f"skip ({info})", "dim")
+                elif status == "err":
+                    tag = colorize(f"ERR {info}", "err")
+                    fails += 1
+                else:
+                    score = info
+                    style = "pass" if score >= 0.99 else "partial" if score >= 0.5 else "fail"
+                    tag = colorize(f"score={score:.2f}", style)
+                print(f"  {tag} [{model}] {tid}  {progress_line(done, total)}")
+    except KeyboardInterrupt:
+        print(f"\n{colorize('Interrupted!', 'err')} cancelling remaining jobs...")
+        for fut in futs:
+            fut.cancel()
+        cancelled = total - done
+    print(f"-- grade done, {fails} failed"
+          + (f", {cancelled} cancelled" if cancelled else ""))
 
 
 def cmd_pair(args):
@@ -695,9 +711,21 @@ def cmd_pair(args):
                       "reason": reason})
         return f"{tid} o{order}: {w} ({reason[:50]})"
 
-    with ThreadPoolExecutor(max_workers=args.workers) as ex:
-        for fut in as_completed([ex.submit(do, *j) for j in jobs]):
-            print(" ", fut.result())
+    total = len(jobs)
+    done = 0
+    try:
+        with ThreadPoolExecutor(max_workers=args.workers) as ex:
+            futs = {ex.submit(do, *j): j for j in jobs}
+            for fut in as_completed(futs):
+                done += 1
+                print(f"  {fut.result()}  {progress_line(done, total)}")
+    except KeyboardInterrupt:
+        print(f"\n{colorize('Interrupted!', 'err')} cancelling remaining jobs...")
+        for fut in futs:
+            fut.cancel()
+        cancelled = total - done
+        print(f"-- pair interrupted, {done}/{total} done, {cancelled} cancelled")
+        return
     print("-- pair done")
 
 
