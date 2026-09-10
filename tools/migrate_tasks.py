@@ -4,7 +4,7 @@ import os
 import sys
 
 SRC = r"C:\Users\athai\Hermes-Output\code\mini-bench"
-OUT = r"C:\Users\athai\Hermes-Output\code\athabench\tasks"
+OUT = r"C:\Users\athai\Hermes-Output\code\m2bench\tasks"
 os.makedirs(OUT, exist_ok=True)
 sys.path.insert(0, SRC)
 from tasks import TASKS  # noqa: E402

@@ -42,6 +42,26 @@ PROVIDERS_PATH = os.path.join(CODE_DIR, "providers.json")
 VERDICT_W = {"pass": 1.0, "partial": 0.5, "fail": 0.0}
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+# ANSI colors for terminal output
+_COLOR = {
+    "pass": "\033[92m",     # green
+    "partial": "\033[93m",  # yellow
+    "fail": "\033[91m",     # red
+    "ok": "\033[92m",       # green
+    "err": "\033[91m",      # red
+    "dim": "\033[90m",      # gray
+    "bold": "\033[1m",      # bold
+    "reset": "\033[0m",     # reset
+}
+_USE_COLOR = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+
+
+def colorize(text, style):
+    """Wrap text in ANSI color codes if terminal supports it."""
+    if not _USE_COLOR:
+        return text
+    return f"{_COLOR.get(style, '')}{text}{_COLOR['reset']}"
+
 JUDGE_SYSTEM = (
     "You are a strict, objective grading judge for an AI benchmark. "
     "Grade each rubric criterion INDEPENDENTLY against the model's answer only. "
@@ -470,55 +490,76 @@ def unique_run_dir(base):
     return os.path.join(RUNS_DIR, f"{base}_r{i}")
 
 
+def progress_line(done, total, label=""):
+    """Render a simple progress indicator: [===>      ] 5/8 model · task."""
+    pct = done / total if total else 1
+    bar_w = 20
+    filled = int(bar_w * pct)
+    bar = "=" * filled + ">" + " " * (bar_w - filled - 1)
+    return f"\r{colorize(f'[{bar}]', 'bold')} {done}/{total}{label}"
+
+
 def cmd_run(args):
     provider = resolve_provider(args)
     models = [m.strip() for m in args.models.split(",") if m.strip()]
-    tasks = load_set(args.set)
-    tmap = task_map(tasks)
-    tids = [t.strip() for t in args.tasks.split(",") if t.strip()] \
-        if args.tasks else [t["id"] for t in tasks]
-    bad = [t for t in tids if t not in tmap]
-    if bad:
-        sys.exit(f"unknown task ids: {', '.join(bad)}")
-
+    # support comma-separated sets: --set easy,medium,hard
+    sets = [s.strip() for s in args.set.split(",") if s.strip()]
     reasoning = args.reasoning or None
-    for rep in range(1, args.runs + 1):
-        base = args.name if args.runs == 1 else f"{args.name}_r{rep}"
-        rdir = unique_run_dir(base)
-        save_json(os.path.join(rdir, "meta.json"), {
-            "name": os.path.basename(rdir), "set": args.set,
-            "models": models, "tasks": tids, "created": time.strftime("%Y-%m-%d %H:%M"),
-            "reasoning": reasoning, "provider": provider["provider"],
-            "base_url": provider["base_url"],
-        })
-        jobs = [(m, t) for m in models for t in tids]
-        print(f"== run {os.path.basename(rdir)}: {len(jobs)} jobs ==")
 
-        def do(model, tid):
-            p = os.path.join(rdir, "responses", f"{safe(model)}__{safe(tid)}.json")
-            if os.path.exists(p):
-                return f"[{model}] {tid}: cached"
-            res = run_stream(model, [{"role": "user", "content": tmap[tid]["prompt"]}],
-                             max_tokens=24576, provider=provider, reasoning_effort=reasoning)
-            rec = {"model": model, "task": tid, **res}
-            if not rec.get("error") and rec.get("finish") == "length" \
-                    and not (rec.get("content") or "").strip():
-                rec["error"] = "DNF: truncated (reasoning ate max_tokens)"
-            save_json(p, rec)
-            return (f"[{model}] {tid}: "
-                    + (f"ERR {rec['error']}" if rec.get("error")
-                       else f"ok ({len(rec.get('content', ''))}ch, "
-                            f"{rec.get('total_ms', 0) / 1000:.0f}s)"))
+    for set_name in sets:
+        tasks = load_set(set_name)
+        tmap = task_map(tasks)
+        tids = [t.strip() for t in args.tasks.split(",") if t.strip()] \
+            if args.tasks else [t["id"] for t in tasks]
+        bad = [t for t in tids if t not in tmap]
+        if bad:
+            sys.exit(f"unknown task ids: {', '.join(bad)}")
 
-        fails = 0
-        with ThreadPoolExecutor(max_workers=args.workers) as ex:
-            futs = [ex.submit(do, m, t) for m, t in jobs]
-            for fut in as_completed(futs):
-                line = fut.result()
-                print(" ", line)
-                if ": ERR" in line:
-                    fails += 1
-        print(f"-- {os.path.basename(rdir)}: {len(jobs) - fails}/{len(jobs)} ok")
+        for rep in range(1, args.runs + 1):
+            # suffix run name with set if multiple sets
+            run_name = args.name
+            if len(sets) > 1:
+                run_name = f"{args.name}-{set_name}"
+            base = run_name if args.runs == 1 else f"{run_name}_r{rep}"
+            rdir = unique_run_dir(base)
+            save_json(os.path.join(rdir, "meta.json"), {
+                "name": os.path.basename(rdir), "set": set_name,
+                "models": models, "tasks": tids, "created": time.strftime("%Y-%m-%d %H:%M"),
+                "reasoning": reasoning, "provider": provider["provider"],
+                "base_url": provider["base_url"],
+            })
+            jobs = [(m, t) for m in models for t in tids]
+            total = len(jobs)
+            print(f"== run {os.path.basename(rdir)}: {total} jobs ==")
+
+            def do(model, tid):
+                p = os.path.join(rdir, "responses", f"{safe(model)}__{safe(tid)}.json")
+                if os.path.exists(p):
+                    return "cached", model, tid
+                res = run_stream(model, [{"role": "user", "content": tmap[tid]["prompt"]}],
+                                 max_tokens=24576, provider=provider, reasoning_effort=reasoning)
+                rec = {"model": model, "task": tid, **res}
+                if not rec.get("error") and rec.get("finish") == "length" \
+                        and not (rec.get("content") or "").strip():
+                    rec["error"] = "DNF: truncated (reasoning ate max_tokens)"
+                save_json(p, rec)
+                status = "err" if rec.get("error") else "ok"
+                return status, model, tid
+
+            done = 0
+            fails = 0
+            with ThreadPoolExecutor(max_workers=args.workers) as ex:
+                futs = [ex.submit(do, m, t) for m, t in jobs]
+                for fut in as_completed(futs):
+                    status, model, tid = fut.result()
+                    done += 1
+                    icon = colorize("ok", "ok") if status == "ok" \
+                        else colorize("ERR", "err") if status == "err" \
+                        else colorize("skip", "dim")
+                    print(f"  {icon} [{model}] {tid}  {progress_line(done, total)}")
+                    if status == "err":
+                        fails += 1
+            print(f"-- {os.path.basename(rdir)}: {total - fails}/{total} ok\n")
 
 
 def run_dir_of(name):
@@ -551,15 +592,16 @@ def cmd_grade(args):
         if args.models else None
     recs = [r for r in iter_responses(rdir, only)]
     n_ok = sum(1 for r in recs if not r.get("error"))
-    print(f"grade {args.run}: {len(recs)} responses ({n_ok} ok) judge={judge}")
+    total = len(recs)
+    print(f"grade {args.run}: {total} responses ({n_ok} ok) judge={judge}")
 
     def do(rec):
         p = os.path.join(rdir, "grades",
                          f"{safe(judge)}__{safe(rec['model'])}__{safe(rec['task'])}.json")
         if os.path.exists(p):
-            return f"[{rec['model']}] {rec['task']}: cached"
+            return "cached", rec["model"], rec["task"], None
         if rec.get("error"):
-            return f"[{rec['model']}] {rec['task']}: skip ({rec['error'][:40]})"
+            return "skip", rec["model"], rec["task"], rec["error"][:40]
         task = tmap[rec["task"]]
         crit = "\n".join(f"- id {c['id']}: {c['text']}" for c in task["criteria"])
         user = (f"# TASK PROMPT\n{task['prompt']}\n\n# RUBRIC CRITERIA\n{crit}\n\n"
@@ -576,20 +618,31 @@ def cmd_grade(args):
                 max_tokens=16384, provider=provider)
             verd = extract_verdicts(answer_text(res)) if not res.get("error") else None
         if not verd:
-            return f"[{rec['model']}] {rec['task']}: ERR judge JSON unparseable"
+            return "err", rec["model"], rec["task"], "judge JSON unparseable"
         score = sum(VERDICT_W[v["verdict"]] for v in verd.values()) / len(task["criteria"])
         save_json(p, {"judge": judge, "model": rec["model"], "task": rec["task"],
                       "verdicts": verd, "task_score": round(score, 4)})
-        return f"[{rec['model']}] {rec['task']}: score={score:.2f}"
+        return "scored", rec["model"], rec["task"], score
 
+    done = 0
     fails = 0
     with ThreadPoolExecutor(max_workers=args.workers) as ex:
         futs = [ex.submit(do, r) for r in recs]
         for fut in as_completed(futs):
-            line = fut.result()
-            print(" ", line)
-            if ": ERR" in line:
+            status, model, tid, info = fut.result()
+            done += 1
+            if status == "cached":
+                tag = colorize("cached", "dim")
+            elif status == "skip":
+                tag = colorize(f"skip ({info})", "dim")
+            elif status == "err":
+                tag = colorize(f"ERR {info}", "err")
                 fails += 1
+            else:
+                score = info
+                style = "pass" if score >= 0.99 else "partial" if score >= 0.5 else "fail"
+                tag = colorize(f"score={score:.2f}", style)
+            print(f"  {tag} [{model}] {tid}  {progress_line(done, total)}")
     print(f"-- grade done, {fails} failed")
 
 
@@ -922,7 +975,7 @@ def main():
     r = sub.add_parser("run", help="run inference on tasks")
     add_provider_args(r)
     r.add_argument("--models", required=True, help="comma-separated model ids")
-    r.add_argument("--set", default="easy", help="task set: easy, medium, hard (default: easy)")
+    r.add_argument("--set", default="easy", help="task set(s): easy, medium, hard (comma-separated for multiple)")
     r.add_argument("--name", required=True, help="run name (output folder)")
     r.add_argument("--tasks", default="", help="comma-separated task ids (default: all)")
     r.add_argument("--runs", type=int, default=1, help="repeat N times")
