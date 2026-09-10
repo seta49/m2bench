@@ -38,6 +38,7 @@ DATA_DIR = os.path.join(os.environ.get("Hermes_Output",
 RUNS_DIR = os.path.join(DATA_DIR, "runs")
 PRICES_PATH = os.path.join(CODE_DIR, "prices.json")
 PROVIDERS_PATH = os.path.join(CODE_DIR, "providers.json")
+CONFIG_PATH = os.path.join(CODE_DIR, "config.json")
 
 VERDICT_W = {"pass": 1.0, "partial": 0.5, "fail": 0.0}
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -92,6 +93,18 @@ def load_providers():
     return {}
 
 
+def load_config():
+    """Load saved provider config from config.json."""
+    if os.path.exists(CONFIG_PATH):
+        return load_json(CONFIG_PATH)
+    return {}
+
+
+def save_config(cfg):
+    """Save provider config to config.json."""
+    save_json(CONFIG_PATH, cfg)
+
+
 def load_dotenv():
     """Load env vars from .env file into os.environ (no override)."""
     if not os.path.exists(ENV_PATH):
@@ -116,9 +129,18 @@ def resolve_provider(args):
     """
     load_dotenv()
     providers = load_providers()
+    saved = load_config()
     pname = getattr(args, "provider", "") or ""
     base_url = getattr(args, "base_url", "") or ""
     api_key = getattr(args, "api_key", "") or ""
+
+    # fill from saved config if not provided via CLI
+    if not pname and saved.get("provider"):
+        pname = saved["provider"]
+    if not base_url and saved.get("base_url"):
+        base_url = saved["base_url"]
+    if not api_key and saved.get("api_key"):
+        api_key = saved["api_key"]
 
     if not pname and not base_url:
         sys.exit("provider required. use --provider <name> or --base-url <url>. "
@@ -1109,6 +1131,47 @@ def _pause():
     input(f"\n{colorize('Press Enter to continue...', 'dim')}")
 
 
+def cmd_setup_provider(_args=None):
+    """Interactive provider setup — save to config.json."""
+    saved = load_config()
+    print(colorize("\n  Provider Setup", "bold"))
+    print(colorize("  " + "=" * 30, "dim"))
+    if saved:
+        print(f"  current: {colorize(saved.get('provider', '?'), 'ok')}"
+              f" ({saved.get('base_url', '?')[:50]})")
+        print(f"  key: {saved.get('api_key', '')[:8]}...{saved.get('api_key', '')[-4:]}"
+              if len(saved.get('api_key', '')) > 12 else f"  key: {saved.get('api_key', 'none')}")
+        print()
+
+    pname = _pick_number("Select provider", [
+        "opencode-go", "openai", "anthropic",
+        "deepseek", "xiaomi", "openrouter", "custom"
+    ], back=True)
+    if pname is None:
+        return
+
+    providers = load_providers()
+    cfg = {"provider": pname}
+
+    if pname == "custom":
+        cfg["base_url"] = _input("Base URL", saved.get("base_url", ""))
+        cfg["api_key"] = _input("API key", saved.get("api_key", ""))
+    else:
+        default_url = providers.get(pname, {}).get("base_url", "")
+        cfg["base_url"] = _input("Base URL", default_url)
+        # try env var first
+        env_var = providers.get(pname, {}).get("auth_env", "")
+        env_val = os.environ.get(env_var, "") if env_var else ""
+        cfg["api_key"] = _input("API key", env_val if env_val else saved.get("api_key", ""))
+
+    if not cfg.get("base_url") or not cfg.get("api_key"):
+        print(colorize("base URL and API key are required", "err"))
+        return
+
+    save_config(cfg)
+    print(f"\n  {colorize('saved!', 'ok')} provider={cfg['provider']} base={cfg['base_url'][:50]}")
+
+
 def cmd_tui():
     """Interactive menu-based TUI for m2bench. Ctrl+C to exit."""
     print(colorize("\n  m2bench v2 — Personal LLM Benchmark", "bold"))
@@ -1116,6 +1179,10 @@ def cmd_tui():
     print(colorize("  Ctrl+C to exit\n", "dim"))
     try:
         while True:
+            saved = load_config()
+            prov_tag = f" [{saved.get('provider', 'none')}]" if saved else ""
+            print(colorize(f"\n  m2bench v2{prov_tag}", "bold"))
+
             action = _pick_number("Main Menu", [
                 "Run benchmark",
                 "Grade responses",
@@ -1123,6 +1190,7 @@ def cmd_tui():
                 "View history",
                 "Validate task sets",
                 "List models",
+                "Setup provider",
             ])
 
             if action == "Validate task sets":
@@ -1152,6 +1220,11 @@ def cmd_tui():
                 ns = argparse.Namespace(provider=pname, base_url=base_url, api_key=api_key)
                 print()
                 cmd_models(ns)
+                _pause()
+                continue
+
+            if action == "Setup provider":
+                cmd_setup_provider()
                 _pause()
                 continue
 
