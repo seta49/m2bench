@@ -1110,118 +1110,117 @@ def _pause():
 
 
 def cmd_tui():
-    """Interactive menu-based TUI for m2bench."""
-    while True:
-        print(colorize("\n  m2bench v2 — Personal LLM Benchmark", "bold"))
-        print(colorize("  " + "=" * 40, "dim"))
+    """Interactive menu-based TUI for m2bench. Ctrl+C to exit."""
+    print(colorize("\n  m2bench v2 — Personal LLM Benchmark", "bold"))
+    print(colorize("  " + "=" * 40, "dim"))
+    print(colorize("  Ctrl+C to exit\n", "dim"))
+    try:
+        while True:
+            action = _pick_number("Main Menu", [
+                "Run benchmark",
+                "Grade responses",
+                "Compare two runs",
+                "View history",
+                "Validate task sets",
+                "List models",
+            ])
 
-        action = _pick_number("Main Menu", [
-            "Run benchmark",
-            "Grade responses",
-            "Compare two runs",
-            "View history",
-            "Validate task sets",
-            "List models",
-            "Exit",
-        ], default=7)
-
-        if action == "Exit":
-            print("bye!")
-            return
-
-        if action == "Validate task sets":
-            print()
-            cmd_validate(None)
-            _pause()
-            continue
-
-        if action == "View history":
-            print()
-            cmd_history(None)
-            _pause()
-            continue
-
-        if action == "List models":
-            pname = _pick_number("Provider", [
-                "opencode-go", "openai", "anthropic",
-                "deepseek", "xiaomi", "openrouter", "custom"
-            ], back=True)
-            if pname is None:
-                continue
-            base_url = ""
-            api_key = ""
-            if pname == "custom":
-                base_url = _input("Base URL")
-                api_key = _input("API key")
-            ns = argparse.Namespace(provider=pname, base_url=base_url, api_key=api_key)
-            print()
-            cmd_models(ns)
-            _pause()
-            continue
-
-        # --- Run / Grade / Compare need provider first ---
-        if action in ("Run benchmark", "Grade responses", "Compare two runs"):
-            pname = _pick_number("Provider", [
-                "opencode-go", "openai", "anthropic",
-                "deepseek", "xiaomi", "openrouter", "custom"
-            ], back=True)
-            if pname is None:
-                continue
-            base_url = ""
-            api_key = ""
-            if pname == "custom":
-                base_url = _input("Base URL")
-                api_key = _input("API key")
-
-        if action == "Run benchmark":
-            models = _input("Model(s) (comma-separated)")
-            if not models:
-                print(colorize("model is required", "err"))
+            if action == "Validate task sets":
+                print()
+                cmd_validate(None)
                 _pause()
                 continue
-            set_name = _input("Task set", "easy")
-            run_name = _input("Run name", f"run-{time.strftime('%H%M%S')}")
-            reasoning = _input("Reasoning effort [none/low/medium/high/max, Enter=skip]", "")
-            workers = _input("Workers", "2")
-            print()
-            ns = argparse.Namespace(
-                provider=pname, base_url=base_url, api_key=api_key,
-                models=models, set=set_name, name=run_name, tasks="",
-                runs=1, workers=int(workers), reasoning=reasoning,
-            )
-            cmd_run(ns)
-            _pause()
-            continue
 
-        if action == "Grade responses":
-            run_name = _input("Run name")
-            if not run_name:
-                print(colorize("run name is required", "err"))
+            if action == "View history":
+                print()
+                cmd_history(None)
                 _pause()
                 continue
-            judge = _input("Judge model", "qwen3.7-plus")
-            workers = _input("Workers", "2")
-            print()
-            ns = argparse.Namespace(
-                provider=pname, base_url=base_url, api_key=api_key,
-                run=run_name, judge=judge, models="", workers=int(workers),
-            )
-            cmd_grade(ns)
-            _pause()
-            continue
 
-        if action == "Compare two runs":
-            run_a = _input("Run A (baseline)")
-            run_b = _input("Run B (challenger)")
-            if not run_a or not run_b:
-                print(colorize("both run names are required", "err"))
+            if action == "List models":
+                pname = _pick_number("Provider", [
+                    "opencode-go", "openai", "anthropic",
+                    "deepseek", "xiaomi", "openrouter", "custom"
+                ], back=True)
+                if pname is None:
+                    continue
+                base_url = ""
+                api_key = ""
+                if pname == "custom":
+                    base_url = _input("Base URL")
+                    api_key = _input("API key")
+                ns = argparse.Namespace(provider=pname, base_url=base_url, api_key=api_key)
+                print()
+                cmd_models(ns)
                 _pause()
                 continue
-            print()
-            ns = argparse.Namespace(run_a=run_a, run_b=run_b)
-            cmd_compare(ns)
-            _pause()
-            continue
+
+            # --- Run / Grade / Compare need provider first ---
+            if action in ("Run benchmark", "Grade responses", "Compare two runs"):
+                pname = _pick_number("Provider", [
+                    "opencode-go", "openai", "anthropic",
+                    "deepseek", "xiaomi", "openrouter", "custom"
+                ], back=True)
+                if pname is None:
+                    continue
+                base_url = ""
+                api_key = ""
+                if pname == "custom":
+                    base_url = _input("Base URL")
+                    api_key = _input("API key")
+
+            if action == "Run benchmark":
+                models = _input("Model(s) (comma-separated)")
+                if not models:
+                    print(colorize("model is required", "err"))
+                    _pause()
+                    continue
+                set_name = _input("Task set", "easy")
+                run_name = _input("Run name", f"run-{time.strftime('%H%M%S')}")
+                reasoning = _input("Reasoning effort [none/low/medium/high/max, Enter=skip]", "")
+                workers = _input("Workers", "2")
+                print()
+                ns = argparse.Namespace(
+                    provider=pname, base_url=base_url, api_key=api_key,
+                    models=models, set=set_name, name=run_name, tasks="",
+                    runs=1, workers=int(workers), reasoning=reasoning,
+                )
+                cmd_run(ns)
+                _pause()
+                continue
+
+            if action == "Grade responses":
+                run_name = _input("Run name")
+                if not run_name:
+                    print(colorize("run name is required", "err"))
+                    _pause()
+                    continue
+                judge = _input("Judge model", "qwen3.7-plus")
+                workers = _input("Workers", "2")
+                print()
+                ns = argparse.Namespace(
+                    provider=pname, base_url=base_url, api_key=api_key,
+                    run=run_name, judge=judge, models="", workers=int(workers),
+                )
+                cmd_grade(ns)
+                _pause()
+                continue
+
+            if action == "Compare two runs":
+                run_a = _input("Run A (baseline)")
+                run_b = _input("Run B (challenger)")
+                if not run_a or not run_b:
+                    print(colorize("both run names are required", "err"))
+                    _pause()
+                    continue
+                print()
+                ns = argparse.Namespace(run_a=run_a, run_b=run_b)
+                cmd_compare(ns)
+                _pause()
+                continue
+
+    except (KeyboardInterrupt, EOFError):
+        print(f"\n{colorize('bye!', 'dim')}")
 
 
 if __name__ == "__main__":
