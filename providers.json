@@ -1,0 +1,45 @@
+{
+  "_comment": "Provider registry for m2bench. base_url kosong = user harus set manual via --base-url.",
+  "opencode-go": {
+    "base_url": "https://opencode.ai/zen/go/v1",
+    "auth_env": "OPENCODE_GO_API_KEY",
+    "reasoning_effort": true,
+    "notes": "Flat subscription. Cloudflare protected — curl only."
+  },
+  "openai": {
+    "base_url": "https://api.openai.com/v1",
+    "auth_env": "OPENAI_API_KEY",
+    "reasoning_effort": true,
+    "notes": "GPT-4o, o1, o3. o1/o3 reject max_tokens."
+  },
+  "anthropic": {
+    "base_url": "https://api.anthropic.com/v1",
+    "auth_env": "ANTHROPIC_API_KEY",
+    "reasoning_effort": false,
+    "notes": "Claude. Uses thinking budget_tokens, not reasoning_effort."
+  },
+  "deepseek": {
+    "base_url": "https://api.deepseek.com/v1",
+    "auth_env": "DEEPSEEK_API_KEY",
+    "reasoning_effort": true,
+    "notes": "V4 Flash/Pro."
+  },
+  "xiaomi": {
+    "base_url": "https://api.xiaomimimo.com/v1",
+    "auth_env": "XIAOMI_API_KEY",
+    "reasoning_effort": false,
+    "notes": "MiMo V2.5 omni/vision. api-key header, not Bearer."
+  },
+  "openrouter": {
+    "base_url": "https://openrouter.ai/api/v1",
+    "auth_env": "OPENROUTER_API_KEY",
+    "reasoning_effort": true,
+    "notes": "Aggregator. Model format: provider/model-name."
+  },
+  "custom": {
+    "base_url": "",
+    "auth_env": "",
+    "reasoning_effort": false,
+    "notes": "Any OpenAI-compatible. User must set --base-url + --api-key."
+  }
+}

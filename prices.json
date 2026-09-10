@@ -1,0 +1,5 @@
+{
+  "_comment": "Opsional: estimasi cost per model dalam USD per 1 juta token. Isi sesuai harga OpenCode Go. Model yang tidak ada di sini -> kolom cost tampil '-'.",
+  "_format": "model_id: {prompt: USD/1M input tokens, completion: USD/1M output tokens}",
+  "example-model": {"prompt": 0.10, "completion": 0.30}
+}
