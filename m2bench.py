@@ -944,15 +944,19 @@ def cmd_history(_args):
     if not os.path.isdir(RUNS_DIR):
         print("no runs yet")
         return
-    print("| Run | Set | Date | Model: Score (DNF) |")
-    print("|---|---|---|---|")
+
+    # collect all rows first to compute column widths
+    rows = []
     for name in sorted(os.listdir(RUNS_DIR)):
         rdir = os.path.join(RUNS_DIR, name)
         meta_p = os.path.join(rdir, "meta.json")
         if not os.path.exists(meta_p):
             continue
         meta = load_json(meta_p)
-        tmap = task_map(load_set(meta["set"]))
+        try:
+            tmap = task_map(load_set(meta["set"]))
+        except SystemExit:
+            continue
         _, resp, grades = collect_run(rdir, tmap)
         cells = []
         for m in meta["models"]:
@@ -969,8 +973,32 @@ def cmd_history(_args):
         rtag = f" [reasoning={reasoning}]" if reasoning else ""
         prov = meta.get("provider", "")
         ptag = f" [{prov}]" if prov else ""
-        print(f"| {meta['name']}{rtag}{ptag} | {meta['set']} | {meta['created']} | "
-              + " | ".join(cells) + " |")
+        run_label = f"{meta['name']}{rtag}{ptag}"
+        rows.append((run_label, meta["set"], meta["created"], " | ".join(cells)))
+
+    if not rows:
+        print("no graded runs yet")
+        return
+
+    # compute column widths
+    headers = ["Run", "Set", "Date", "Model: Score (DNF)"]
+    cols = list(zip(*rows))  # transpose: 4 tuples
+    widths = [len(h) for h in headers]
+    for col_idx, col_data in enumerate(cols):
+        for val in col_data:
+            widths[col_idx] = max(widths[col_idx], len(val))
+
+    def fmt_row(vals):
+        parts = []
+        for v, w in zip(vals, widths):
+            parts.append(f" {v:<{w}} ")
+        return "|".join(parts)
+
+    sep = "|".join("-" * (w + 2) for w in widths)
+    print(fmt_row(headers))
+    print(sep)
+    for row in rows:
+        print(fmt_row(row))
 
 
 def main():
