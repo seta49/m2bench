@@ -1,5 +1,5 @@
 #!/bin/bash
-cd "C:/Users/athai/Hermes-Output/code/athabench"
+cd "$(dirname "$0")"
 
 echo "=== mimo-v2.5 vs mimo-v2.5-pro | hard | reasoning off ==="
 echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"

@@ -21,7 +21,7 @@ import datetime as dt
 from collections import Counter
 from pathlib import Path
 
-BASE = Path("C:/Users/athai/Hermes-Output/code/athabench")
+BASE = Path(__file__).resolve().parent.parent
 D = BASE / "drafts"
 failures = []
 

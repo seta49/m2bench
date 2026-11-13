@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run m2bench for mimo-v2.5, all levels, thinking off vs on - SEQUENTIAL
-cd "C:/Users/athai/Hermes-Output/code/athabench"
+cd "$(dirname "$0")"
 
 echo "=== Starting mimo-v2.5 benchmark runs ==="
 echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"

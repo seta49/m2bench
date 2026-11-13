@@ -8,7 +8,7 @@ import re
 
 DATA = os.path.join(os.environ.get("USERPROFILE", ""), "Hermes-Output", "data", "m2bench")
 RUNS = os.path.join(DATA, "runs")
-TASKS = os.path.join(os.environ.get("USERPROFILE", ""), "Hermes-Output", "code", "athabench", "tasks")
+TASKS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tasks")
 JUDGE_PREF = "Qwen_Qwen3.7-Plus"
 
 # set -> list of (run_name, model_id, display_label)

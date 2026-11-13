@@ -114,7 +114,7 @@ Every inference call injects a uniform system guardrail (`--no-guardrail` to dis
 ## Repository Layout
 
 ```text
-athabench/
+m2bench/
 ├── m2bench.py              # Core benchmark CLI & interactive TUI (stdlib only)
 ├── providers.json          # Provider endpoints & auth env var registry
 ├── tasks/                  # Task sets (expert.json, daily_plus.json, legacy sets)
