@@ -82,6 +82,12 @@ PAIR_SYSTEM = (
     "Respond ONLY with JSON: "
     "{\"winner\":\"A|B|tie\",\"reason\":\"max 25 words\"}. No fences, no other text."
 )
+BENCH_GUARDRAIL = (
+    "Benchmark constraints: You do NOT have web search, browsing, code execution, "
+    "or external tools. Answer strictly from your own knowledge and the data given "
+    "in the prompt. Provide a single complete final response without asking "
+    "follow-up questions."
+)
 
 
 # ---------- provider ----------
@@ -145,6 +151,7 @@ def resolve_provider(args):
     if not pname and not base_url:
         sys.exit("provider required. use --provider <name> or --base-url <url>. "
                  "see providers.json for available providers.")
+    requires_key = True
     if pname:
         if pname not in providers:
             avail = [k for k in providers if not k.startswith("_")]
@@ -152,13 +159,14 @@ def resolve_provider(args):
         cfg = providers[pname]
         if not base_url:
             base_url = cfg.get("base_url", "")
-        if not api_key:
-            env_var = cfg.get("auth_env", "")
-            if env_var:
-                api_key = os.environ.get(env_var, "")
+        env_var = cfg.get("auth_env", "")
+        requires_key = bool(env_var)
+        if not api_key and env_var:
+            api_key = os.environ.get(env_var, "")
     if not base_url:
         sys.exit("--base-url is required (or use --provider with a known provider)")
-    if not api_key:
+    is_local = base_url.startswith(("http://127.0.0.1", "http://localhost", "https://127.0.0.1", "https://localhost"))
+    if not api_key and requires_key and not is_local:
         sys.exit("no API key found. set --api-key or the provider's env var")
     return {
         "base_url": base_url.rstrip("/"),
@@ -212,7 +220,11 @@ def validate_set(obj, label):
         if not tid:
             errs.append(f"{label}: task without id")
             continue
-        if not str(t.get("prompt", "")).strip():
+        turns = t.get("turns")
+        if turns is not None:
+            if not isinstance(turns, list) or len(turns) < 2 or not all(str(x).strip() for x in turns):
+                errs.append(f"{tid}: turns must be a list of >= 2 non-empty strings")
+        elif not str(t.get("prompt", "")).strip():
             errs.append(f"{tid}: empty prompt")
         crit = t.get("criteria") or []
         if len(crit) != 4:
@@ -247,10 +259,14 @@ def task_map(tasks):
 
 # ---------- API ----------
 
-def run_stream(model, messages, max_tokens, provider, reasoning_effort=None):
+def run_stream(model, messages, max_tokens, provider, reasoning_effort=None, temperature=None):
     """curl SSE; temp-file payload (WinError 206 on inline); retry 5xx/429."""
     body = {"model": model, "messages": messages,
             "max_tokens": max_tokens, "stream": True}
+    if temperature is not None:
+        body["temperature"] = temperature
+    if provider.get("provider") == "ollama":
+        body["stream_options"] = {"include_usage": True}
     if reasoning_effort:
         body["reasoning_effort"] = reasoning_effort
     payload = json.dumps(body, ensure_ascii=False)
@@ -266,10 +282,11 @@ def run_stream(model, messages, max_tokens, provider, reasoning_effort=None):
             cmd = ["curl", "-s", "-N", "--max-time", "480", "-X", "POST",
                    f"{base}/chat/completions",
                    "-H", "Content-Type: application/json",
-                   "-H", f"x-opencode-session: {session_id}",
-                   "-H", f"Authorization: Bearer {key}",
-                   "--data-binary", f"@{tmp}",
-                   "-w", "\n__HTTP__%{http_code}"]
+                   "-H", f"x-opencode-session: {session_id}"]
+            if key:
+                cmd += ["-H", f"Authorization: Bearer {key}"]
+            cmd += ["--data-binary", f"@{tmp}",
+                    "-w", "\n__HTTP__%{http_code}"]
             t0 = time.perf_counter()
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                     encoding="utf-8", errors="replace", bufsize=1)
@@ -299,8 +316,9 @@ def run_stream(model, messages, max_tokens, provider, reasoning_effort=None):
                 if not ch:
                     continue
                 d = ch[0].get("delta") or {}
-                if d.get("reasoning_content"):
-                    reasoning.append(d["reasoning_content"])
+                r_chunk = d.get("reasoning_content") or d.get("reasoning")
+                if r_chunk:
+                    reasoning.append(r_chunk)
                 if d.get("content"):
                     content.append(d["content"])
                 if ch[0].get("finish_reason"):
@@ -463,10 +481,10 @@ def aggregate_run(rdir, tmap):
 
 def cmd_models(args):
     provider = resolve_provider(args)
-    out = subprocess.run(
-        ["curl", "-s", "--max-time", "60", f"{provider['base_url']}/models",
-         "-H", f"Authorization: Bearer {provider['api_key']}"],
-        capture_output=True, encoding="utf-8", errors="replace").stdout
+    cmd = ["curl", "-s", "--max-time", "60", f"{provider['base_url']}/models"]
+    if provider["api_key"]:
+        cmd += ["-H", f"Authorization: Bearer {provider['api_key']}"]
+    out = subprocess.run(cmd, capture_output=True, encoding="utf-8", errors="replace").stdout
     try:
         ids = sorted(m["id"] for m in json.loads(out).get("data", []))
     except Exception:
@@ -488,6 +506,11 @@ def cmd_validate(_args):
         except Exception as e:
             print(f"[BAD ] {name}: invalid JSON ({e})")
             ok = False
+            continue
+        if isinstance(obj, list) and obj and all(
+                isinstance(t, dict) and "criteria" not in t and ("type" in t or "answer" in t)
+                for t in obj):
+            print(f"[SKIP] {name}: {len(obj)} tasks (non-rubric schema; validated by its own builder)")
             continue
         errs = validate_set(obj, name)
         if errs:
@@ -527,6 +550,10 @@ def cmd_run(args):
     # support comma-separated sets: --set easy,medium,hard
     sets = [s.strip() for s in args.set.split(",") if s.strip()]
     reasoning = args.reasoning or None
+    resume = bool(getattr(args, "resume", False))
+    use_guardrail = not bool(getattr(args, "no_guardrail", False))
+    raw_temp = getattr(args, "temp", 0.0)
+    temp = None if raw_temp is not None and raw_temp < 0 else raw_temp
 
     for set_name in sets:
         tasks = load_set(set_name)
@@ -543,13 +570,16 @@ def cmd_run(args):
             if len(sets) > 1:
                 run_name = f"{args.name}-{set_name}"
             base = run_name if args.runs == 1 else f"{run_name}_r{rep}"
-            rdir = unique_run_dir(base)
-            save_json(os.path.join(rdir, "meta.json"), {
-                "name": os.path.basename(rdir), "set": set_name,
-                "models": models, "tasks": tids, "created": time.strftime("%Y-%m-%d %H:%M"),
-                "reasoning": reasoning, "provider": provider["provider"],
-                "base_url": provider["base_url"],
-            })
+            rdir = os.path.join(RUNS_DIR, base) if resume else unique_run_dir(base)
+            meta_path = os.path.join(rdir, "meta.json")
+            if not (resume and os.path.exists(meta_path)):
+                save_json(meta_path, {
+                    "name": os.path.basename(rdir), "set": set_name,
+                    "models": models, "tasks": tids, "created": time.strftime("%Y-%m-%d %H:%M"),
+                    "reasoning": reasoning, "provider": provider["provider"],
+                    "base_url": provider["base_url"], "guardrail": use_guardrail,
+                    "temperature": temp,
+                })
             jobs = [(m, t) for m in models for t in tids]
             total = len(jobs)
             print(f"== run {os.path.basename(rdir)}: {total} jobs ==")
@@ -557,10 +587,53 @@ def cmd_run(args):
             def do(model, tid):
                 p = os.path.join(rdir, "responses", f"{safe(model)}__{safe(tid)}.json")
                 if os.path.exists(p):
-                    return "cached", model, tid
-                res = run_stream(model, [{"role": "user", "content": tmap[tid]["prompt"]}],
-                                 max_tokens=24576, provider=provider, reasoning_effort=reasoning)
-                rec = {"model": model, "task": tid, **res}
+                    if not resume or not load_json(p).get("error"):
+                        return "cached", model, tid
+                task = tmap[tid]
+                turns = task.get("turns") or [task["prompt"]]
+                msgs = []
+                if use_guardrail:
+                    msgs.append({"role": "system", "content": BENCH_GUARDRAIL})
+                turn_outputs = []
+                total_ms = 0.0
+                ptok, ctok = 0, 0
+                has_usage = False
+                last_res = None
+                for prompt_turn in turns:
+                    msgs.append({"role": "user", "content": prompt_turn})
+                    res = run_stream(model, msgs, max_tokens=24576,
+                                     provider=provider, reasoning_effort=reasoning,
+                                     temperature=temp)
+                    last_res = res
+                    if res.get("error"):
+                        break
+                    total_ms += res.get("total_ms", 0)
+                    u = res.get("usage") or {}
+                    if u:
+                        has_usage = True
+                        ptok += u.get("prompt_tokens") or 0
+                        ctok += u.get("completion_tokens") or 0
+                    turn_outputs.append({
+                        "content": res.get("content", ""),
+                        "reasoning": res.get("reasoning", ""),
+                        "finish": res.get("finish"),
+                        "total_ms": res.get("total_ms", 0),
+                    })
+                    msgs.append({"role": "assistant", "content": answer_text(res)})
+                if last_res and last_res.get("error"):
+                    rec = {"model": model, "task": tid, **last_res}
+                else:
+                    rec = {
+                        "model": model, "task": tid,
+                        "content": last_res.get("content", ""),
+                        "reasoning": last_res.get("reasoning", ""),
+                        "usage": {"prompt_tokens": ptok, "completion_tokens": ctok} if has_usage else None,
+                        "cost": last_res.get("cost"),
+                        "finish": last_res.get("finish"),
+                        "total_ms": total_ms,
+                    }
+                    if len(turn_outputs) > 1:
+                        rec["turn_outputs"] = turn_outputs
                 if not rec.get("error") and rec.get("finish") == "length" \
                         and not (rec.get("content") or "").strip():
                     rec["error"] = "DNF: truncated (reasoning ate max_tokens)"
@@ -612,6 +685,59 @@ def iter_responses(rdir, only_models=None):
         yield rec
 
 
+def _task_prompt_text(task):
+    if task.get("turns"):
+        return "\n\n".join(f"[Turn {i + 1}]\n{t}" for i, t in enumerate(task["turns"]))
+    return task["prompt"]
+
+
+def _format_answer_for_grade(rec):
+    turns = rec.get("turn_outputs")
+    if not turns:
+        return answer_text(rec)
+    parts = []
+    for i, t in enumerate(turns, 1):
+        txt = (t.get("content") or "").strip() or (t.get("reasoning") or "")
+        parts.append(f"[Turn {i} Answer]\n{txt}")
+    return "\n\n".join(parts)
+
+
+def _eval_check(chk, text):
+    """Evaluate a deterministic rule dict against text -> {'verdict', 'reason'}."""
+    kind = chk.get("kind")
+    t = text or ""
+    if kind == "valid_json":
+        if chk.get("no_fence") and "```" in t:
+            return {"verdict": "fail", "reason": "contains markdown fence"}
+        try:
+            obj = json.loads(t.strip())
+        except Exception as e:
+            return {"verdict": "fail", "reason": f"invalid JSON: {str(e)[:60]}"}
+        if chk.get("expect") == "dict" and not isinstance(obj, dict):
+            return {"verdict": "fail", "reason": "JSON is not an object"}
+        if chk.get("expect") == "list" and not isinstance(obj, list):
+            return {"verdict": "fail", "reason": "JSON is not a list"}
+        return {"verdict": "pass", "reason": "valid JSON"}
+    if kind == "max_words":
+        n = len(t.split())
+        lim = chk["value"]
+        ok = n <= lim
+        return {"verdict": "pass" if ok else "fail", "reason": f"{n} words (limit {lim})"}
+    if kind == "no_substring":
+        bad = [s for s in chk.get("values", []) if s in t]
+        return {"verdict": "fail" if bad else "pass",
+                "reason": f"forbidden found: {bad[0]}" if bad else "none found"}
+    if kind == "contains_all":
+        missing = [s for s in chk.get("values", []) if s not in t]
+        return {"verdict": "fail" if missing else "pass",
+                "reason": f"missing: {missing[0]}" if missing else "all present"}
+    if kind == "regex_match":
+        m = re.search(chk["pattern"], t, re.S)
+        return {"verdict": "pass" if m else "fail",
+                "reason": "pattern matched" if m else "pattern not matched"}
+    return None
+
+
 def cmd_grade(args):
     provider = resolve_provider(args)
     rdir = run_dir_of(args.run)
@@ -633,22 +759,47 @@ def cmd_grade(args):
         if rec.get("error"):
             return "skip", rec["model"], rec["task"], rec["error"][:40]
         task = tmap[rec["task"]]
-        crit = "\n".join(f"- id {c['id']}: {c['text']}" for c in task["criteria"])
-        user = (f"# TASK PROMPT\n{task['prompt']}\n\n# RUBRIC CRITERIA\n{crit}\n\n"
-                f"# MODEL ANSWER\n{answer_text(rec)}")
-        res = run_stream(judge, [{"role": "system", "content": JUDGE_SYSTEM},
-                                 {"role": "user", "content": user}],
-                         max_tokens=16384, provider=provider)
-        verd = extract_verdicts(answer_text(res)) if not res.get("error") else None
-        if not verd:
-            res = run_stream(judge, [
-                {"role": "system", "content": JUDGE_SYSTEM},
-                {"role": "user",
-                 "content": user + "\n\nIMPORTANT: reply ONLY the JSON array."}],
-                max_tokens=16384, provider=provider)
-            verd = extract_verdicts(answer_text(res)) if not res.get("error") else None
-        if not verd:
-            return "err", rec["model"], rec["task"], "judge JSON unparseable"
+        verd = {}
+        judge_crits = []
+        turns = rec.get("turn_outputs")
+        for c in task["criteria"]:
+            chk = c.get("check")
+            if chk:
+                tidx = chk.get("turn")
+                if turns and isinstance(tidx, int) and 0 <= tidx < len(turns):
+                    target = (turns[tidx].get("content") or "").strip() or (turns[tidx].get("reasoning") or "")
+                else:
+                    target = answer_text(rec)
+                res_chk = _eval_check(chk, target)
+                if res_chk:
+                    verd[c["id"]] = res_chk
+                    continue
+            judge_crits.append(c)
+
+        if judge_crits:
+            crit = "\n".join(f"- id {c['id']}: {c['text']}" for c in judge_crits)
+            user = (f"# TASK PROMPT\n{_task_prompt_text(task)}\n\n# RUBRIC CRITERIA\n{crit}\n\n"
+                    f"# MODEL ANSWER\n{_format_answer_for_grade(rec)}")
+            valid_ids = {c["id"] for c in judge_crits}
+            res = run_stream(judge, [{"role": "system", "content": JUDGE_SYSTEM},
+                                     {"role": "user", "content": user}],
+                             max_tokens=16384, provider=provider)
+            jverd = extract_verdicts(answer_text(res)) if not res.get("error") else None
+            if jverd:
+                jverd = {k: v for k, v in jverd.items() if k in valid_ids} or None
+            if not jverd:
+                res = run_stream(judge, [
+                    {"role": "system", "content": JUDGE_SYSTEM},
+                    {"role": "user",
+                     "content": user + "\n\nIMPORTANT: reply ONLY the JSON array."}],
+                    max_tokens=16384, provider=provider)
+                jverd = extract_verdicts(answer_text(res)) if not res.get("error") else None
+                if jverd:
+                    jverd = {k: v for k, v in jverd.items() if k in valid_ids} or None
+            if not jverd:
+                err_msg = res.get("error") or "judge JSON unparseable"
+                return "err", rec["model"], rec["task"], err_msg
+            verd.update(jverd)
         score = sum(VERDICT_W[v["verdict"]] for v in verd.values()) / len(task["criteria"])
         save_json(p, {"judge": judge, "model": rec["model"], "task": rec["task"],
                       "verdicts": verd, "task_score": round(score, 4)})
@@ -712,10 +863,10 @@ def cmd_pair(args):
         task = tmap[tid]
         crit = "\n".join(f"- {c['text']}" for c in task["criteria"])
         first, second = (a, b) if order == 1 else (b, a)
-        user = (f"# TASK\n{task['prompt']}\n\n"
+        user = (f"# TASK\n{_task_prompt_text(task)}\n\n"
                 f"# QUALITY SIGNALS (checklist of a correct answer)\n{crit}\n\n"
-                f"# ANSWER A\n{answer_text(ra if order == 1 else rb)}\n\n"
-                f"# ANSWER B\n{answer_text(rb if order == 1 else ra)}\n\n"
+                f"# ANSWER A\n{_format_answer_for_grade(ra if order == 1 else rb)}\n\n"
+                f"# ANSWER B\n{_format_answer_for_grade(rb if order == 1 else ra)}\n\n"
                 f"Which answer is better? ONLY the JSON verdict.")
         res = run_stream(judge, [{"role": "system", "content": PAIR_SYSTEM},
                                  {"role": "user", "content": user}],
@@ -804,11 +955,20 @@ def cmd_report(args):
         lines += ["| Model | Score | DNF | Time/Task | Tok (p/c)/Task | Est.Cost/Task |",
                   "|---|---|---|---|---|---|"]
 
+    def fmt_tok(v):
+        return f"{v / 1000:.1f}k" if v >= 1000 else f"{v:.0f}"
+
     for m in models:
         n = len(tids)
         sc = agg[m]["score"]
-        tm = f"{sum(agg[m]['times']) / len(agg[m]['times']):.0f}s" if agg[m]["times"] else "-"
-        tok = f"{agg[m]['ptok'] / n:.0f}k/{agg[m]['ctok'] / n:.0f}k" if n and agg[m]["ptok"] else "-"
+        tot_s = sum(agg[m]["times"])
+        if agg[m]["times"]:
+            avg_s = tot_s / len(agg[m]["times"])
+            tps = (agg[m]["ctok"] / tot_s) if (agg[m]["ctok"] and tot_s > 0) else 0
+            tm = f"{avg_s:.0f}s ({tps:.1f} t/s)" if tps > 0 else f"{avg_s:.0f}s"
+        else:
+            tm = "-"
+        tok = f"{fmt_tok(agg[m]['ptok'] / n)}/{fmt_tok(agg[m]['ctok'] / n)}" if n and agg[m]["ptok"] else "-"
         ct = fmt_cost(m, agg[m]["ptok"], agg[m]["ctok"]) if agg[m]["costs"] else "-"
         dnf = agg[m]["dnf"]
         if comp:
@@ -1053,13 +1213,19 @@ def main():
     r = sub.add_parser("run", help="run inference on tasks")
     add_provider_args(r)
     r.add_argument("--models", required=True, help="comma-separated model ids")
-    r.add_argument("--set", default="easy", help="task set(s): easy, medium, hard (comma-separated for multiple)")
+    r.add_argument("--set", default="expert", help="task set(s): expert (default), easy, medium, hard")
     r.add_argument("--name", required=True, help="run name (output folder)")
     r.add_argument("--tasks", default="", help="comma-separated task ids (default: all)")
     r.add_argument("--runs", type=int, default=1, help="repeat N times")
     r.add_argument("--workers", type=int, default=2, help="parallel workers")
     r.add_argument("--reasoning", default="",
                     help="reasoning_effort: none/low/medium/high/max")
+    r.add_argument("--temp", type=float, default=0.0,
+                    help="sampling temperature (default: 0.0, -1 for provider default)")
+    r.add_argument("--resume", action="store_true",
+                    help="resume existing run folder, skipping completed tasks")
+    r.add_argument("--no-guardrail", action="store_true",
+                    help="omit benchmark guardrail system message")
 
     g = sub.add_parser("grade", help="grade responses with a judge model")
     add_provider_args(g)
@@ -1131,6 +1297,12 @@ def _pause():
     input(f"\n{colorize('Press Enter to continue...', 'dim')}")
 
 
+def _provider_choices():
+    """Return ordered provider names from providers.json with 'custom' last."""
+    names = [k for k in load_providers() if not k.startswith("_") and k != "custom"]
+    return names + ["custom"]
+
+
 def cmd_setup_provider(_args=None):
     """Interactive provider setup — save to config.json."""
     saved = load_config()
@@ -1143,10 +1315,7 @@ def cmd_setup_provider(_args=None):
               if len(saved.get('api_key', '')) > 12 else f"  key: {saved.get('api_key', 'none')}")
         print()
 
-    pname = _pick_number("Select provider", [
-        "opencode-go", "openai", "anthropic",
-        "deepseek", "xiaomi", "openrouter", "custom"
-    ], back=True)
+    pname = _pick_number("Select provider", _provider_choices(), back=True)
     if pname is None:
         return
 
@@ -1155,16 +1324,21 @@ def cmd_setup_provider(_args=None):
 
     if pname == "custom":
         cfg["base_url"] = _input("Base URL", saved.get("base_url", ""))
-        cfg["api_key"] = _input("API key", saved.get("api_key", ""))
+        cfg["api_key"] = _input("API key (Enter if local/none)", saved.get("api_key", ""))
     else:
         default_url = providers.get(pname, {}).get("base_url", "")
         cfg["base_url"] = _input("Base URL", default_url)
         # try env var first
         env_var = providers.get(pname, {}).get("auth_env", "")
-        env_val = os.environ.get(env_var, "") if env_var else ""
-        cfg["api_key"] = _input("API key", env_val if env_val else saved.get("api_key", ""))
+        if env_var:
+            env_val = os.environ.get(env_var, "")
+            cfg["api_key"] = _input("API key", env_val if env_val else saved.get("api_key", ""))
+        else:
+            cfg["api_key"] = _input("API key (Enter=none)", "")
 
-    if not cfg.get("base_url") or not cfg.get("api_key"):
+    is_local = cfg.get("base_url", "").startswith(("http://127.0.0.1", "http://localhost"))
+    requires_key = bool(providers.get(pname, {}).get("auth_env", pname == "custom"))
+    if not cfg.get("base_url") or (not cfg.get("api_key") and requires_key and not is_local):
         print(colorize("base URL and API key are required", "err"))
         return
 
@@ -1206,17 +1380,14 @@ def cmd_tui():
                 continue
 
             if action == "List models":
-                pname = _pick_number("Provider", [
-                    "opencode-go", "openai", "anthropic",
-                    "deepseek", "xiaomi", "openrouter", "custom"
-                ], back=True)
+                pname = _pick_number("Provider", _provider_choices(), back=True)
                 if pname is None:
                     continue
                 base_url = ""
                 api_key = ""
                 if pname == "custom":
                     base_url = _input("Base URL")
-                    api_key = _input("API key")
+                    api_key = _input("API key (Enter if local/none)")
                 ns = argparse.Namespace(provider=pname, base_url=base_url, api_key=api_key)
                 print()
                 cmd_models(ns)
@@ -1230,17 +1401,14 @@ def cmd_tui():
 
             # --- Run / Grade / Compare need provider first ---
             if action in ("Run benchmark", "Grade responses", "Compare two runs"):
-                pname = _pick_number("Provider", [
-                    "opencode-go", "openai", "anthropic",
-                    "deepseek", "xiaomi", "openrouter", "custom"
-                ], back=True)
+                pname = _pick_number("Provider", _provider_choices(), back=True)
                 if pname is None:
                     continue
                 base_url = ""
                 api_key = ""
                 if pname == "custom":
                     base_url = _input("Base URL")
-                    api_key = _input("API key")
+                    api_key = _input("API key (Enter if local/none)")
 
             if action == "Run benchmark":
                 models = _input("Model(s) (comma-separated)")
@@ -1248,7 +1416,7 @@ def cmd_tui():
                     print(colorize("model is required", "err"))
                     _pause()
                     continue
-                set_name = _input("Task set", "easy")
+                set_name = _input("Task set", "expert")
                 run_name = _input("Run name", f"run-{time.strftime('%H%M%S')}")
                 reasoning = _input("Reasoning effort [none/low/medium/high/max, Enter=skip]", "")
                 workers = _input("Workers", "2")

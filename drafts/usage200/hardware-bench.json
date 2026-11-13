@@ -1,0 +1,244 @@
+[
+ {
+  "id": "hw-001",
+  "category": "hardware-bench",
+  "type": "mcq",
+  "difficulty": "easy",
+  "usage_source": "Benchmark APU Ryzen 5 5600H di VivoBook M1403QA (tanpa dGPU): kenapa clock CPU turun saat iGPU dibebani.",
+  "prompt": "Laptopmu ASUS VivoBook M1403QA pakai Ryzen 5 5600H (APU, tanpa GPU diskrit). Saat kamu jalankan benchmark grafis iGPU, frekuensi CPU malah turun dibanding waktu idle, padahal suhunya belum kritis. Penjelasan paling tepat untuk fenomena ini apa?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Karena CPU dan iGPU berbagi satu budget daya/PPT yang sama, jadi ketika iGPU menarik daya lebih besar, jatah daya untuk core CPU berkurang dan clock-nya ikut turun.",
+   "B) Karena thermal paste laptop sudah kering dan harus diganti dulu.",
+   "C) Karena RAM single channel otomatis mengunci clock CPU di angka tetap.",
+   "D) Karena Tctl selalu terbaca lebih tinggi dari Tdie sehingga sistem salah membaca suhu."
+  ],
+  "answer": {
+   "value": "A"
+  },
+  "solution": "Di APU Ryzen 5600H, core CPU, SoC, dan iGPU berbagi satu plafon daya (PPT/STAPM) sekaligus satu plafon termal. Begitu beban grafis menaikkan konsumsi iGPU, porsi daya untuk core CPU berkurang sehingga clock CPU turun walaupun suhu belum menyentuh batas. Jawaban A. (B/C/D tidak terkait mekanisme shared power budget.)"
+ },
+ {
+  "id": "hw-002",
+  "category": "hardware-bench",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "Membaca sensor Tctl vs Tdie lewat HWiNFO di laptop Ryzen.",
+  "prompt": "Kamu pantau suhu VivoBook lewat HWiNFO dan muncul dua nilai: Tctl dan Tdie. Pernyataan mana yang PALING tepat soal keduanya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Tdie adalah suhu kontrol yang mengatur fan, sedangkan Tctl adalah suhu core yang sebenarnya.",
+   "B) Tctl adalah nilai suhu yang dipakai untuk manajemen termal (kontrol fan/throttle), dan pada sebagian chip nilainya bisa berbeda dari Tdie karena adanya offset suhu tertentu.",
+   "C) Tctl mengukur suhu bagian luar chassis, sedangkan Tdie mengukur suhu ruangan.",
+   "D) Tctl dan Tdie selalu identik persis di semua chip AMD maupun Intel."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "Tctl = 'control temperature' yang jadi acuan manajemen termal (kurva fan, titik throttle). Tdie = suhu junction/die yang diukur sensor on-die. Pada sebagian chip Tctl diberi offset sehingga angkanya bisa tidak sama dengan Tdie. Jadi B benar. A menukar definisi, C salah objek, D salah karena klaim 'selalu identik'."
+ },
+ {
+  "id": "hw-003",
+  "category": "hardware-bench",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "Metodologi benchmark berulang: melaporkan skor tipikal dari 5 run (median vs best-of-N).",
+  "prompt": "Kamu jalankan benchmark CPU 5 kali dan skornya: 4090, 4120, 4310, 4150, 4180. Salah satu run terlihat kelewat tinggi karena boost sesaat. Cara melaporkan hasil yang paling tepat untuk merepresentasikan performa tipikal adalah...\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Laporkan skor tertinggi (4310), karena itu batas kemampuan chip.",
+   "B) Laporkan median dari beberapa run setelah warm-up, karena tahan terhadap outlier dan menggambarkan performa tipikal.",
+   "C) Laporkan run pertama saja karena dianggap paling murni.",
+   "D) Laporkan rata-rata semua run, termasuk run yang sempat crash."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "5 run punya satu outlier tinggi (4310). Best-of-N (A) membias ke atas dan tidak menggambarkan performa harian; run pertama (C) sering rendah karena cold cache/warm-up belum stabil; memasukkan run yang crash (D) mencemari data. Median/statistik tengah (B) paling tahan outlier. Median data ini = nilai ke-3 dari urutan 4090,4120,4150,4180,4310 = 4150. Jawaban B."
+ },
+ {
+  "id": "hw-004",
+  "category": "hardware-bench",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "Diagnosis turunnya clock saat game meski suhu CPU masih ~74°C (power limit vs thermal throttle).",
+  "prompt": "Waktu main game, clock CPU VivoBook turun ke sekitar 2,2 GHz padahal suhu CPU masih sekitar 74°C dan kipas tidak berputar penuh. Kemungkinan penyebab paling masuk akal?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Pasti thermal throttle, karena setiap clock turun berarti suhu terlalu tinggi.",
+   "B) Bisa jadi bukan thermal, melainkan power limit (PPT/STAPM) atau batas konsumsi daya total; clock sengaja ditahan untuk memenuhi budget daya, bukan karena suhu.",
+   "C) Berarti kipas rusak total sehingga tidak berputar sama sekali.",
+   "D) Berarti Windows otomatis melakukan undervolt ke CPU."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "Thermal throttle dipicu suhu tinggi (mendekati limit, mis. ~95-100°C untuk Ryzen mobile) dan biasanya kipas ikut naik. Suhu 74°C jauh dari limit, jadi penalti clock lebih mungkin berasal dari power limit: PPT/STAPM atau plafon daya total (CPU+iGPU) sedang tercapai, sehingga clock ditahan demi budget daya. Jawaban B."
+ },
+ {
+  "id": "hw-005",
+  "category": "hardware-bench",
+  "type": "mcq",
+  "difficulty": "easy",
+  "usage_source": "Efek dual-channel RAM terhadap performa iGPU di APU tanpa VRAM sendiri.",
+  "prompt": "Kamu ganti RAM VivoBook dari satu keping 8 GB DDR4-3200 jadi dua keping 8 GB (dual-channel). Kalau fokusnya performa grafis iGPU, efek utama peningkatan channel ini apa?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Hanya kapasitas yang naik jadi 16 GB; kecepatan grafis tidak berubah.",
+   "B) Bandwidth memori efektif naik karena dual-channel, sehingga iGPU yang tidak punya VRAM sendiri dapat suplai data lebih cepat dan performa grafis (game/render) biasanya naik cukup terasa.",
+   "C) Performa single-thread CPU langsung naik dua kali lipat.",
+   "D) Latensi CL RAM otomatis menjadi nol."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "iGPU memakai RAM sistem sebagai memori grafis, jadi sangat bergantung pada bandwidth. Dua keping DDR4-3200 (dual-channel) memberi ~2x bandwidth teoretis, menaikkan fps iGPU yang tadinya tercekik bandwidth. A salah karena mengabaikan dampak bandwidth grafis; C dan D berlebihan/tidak benar. Jawaban B."
+ },
+ {
+  "id": "hw-006",
+  "category": "hardware-bench",
+  "type": "mcq",
+  "difficulty": "hard",
+  "usage_source": "Analisis bottleneck: FPS mentok dengan iGPU ~60% dan satu core CPU 100%.",
+  "prompt": "Di sebuah game, kamu turunkan resolusi dan setting grafis sampai paling rendah, tapi FPS tetap mentok. Saat dipantau, pemakaian iGPU hanya sekitar 60% sedangkan salah satu core CPU menunjukkan 100%. Diagnosis bottleneck yang paling tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) GPU bottleneck, karena FPS rendah berarti GPU yang paling berat bekerja.",
+   "B) CPU-bound: meski FPS rendah, GPU tidak penuh sementara ada core CPU jenuh, jadi pembatasnya di CPU (kemungkinan jalur single-thread).",
+   "C) RAM kurang, karena RAM selalu jadi penyebab FPS mentok.",
+   "D) GPU thermal throttle, karena GPU menolak bekerja penuh."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "Jadi tidaknya bottleneck grafis dilihat dari utilisasi GPU. GPU hanya ~60% (belum penuh) tetapi satu core CPU 100% menandakan batasnya di CPU, khususnya jalur utama/single-thread yang menahan penyuapan frame ke GPU. Ini klasik CPU-bound. Jawaban B."
+ },
+ {
+  "id": "hw-007",
+  "category": "hardware-bench",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "Menafsirkan powercfg /batteryreport: design vs full charge capacity (battery health).",
+  "prompt": "Laporan `powercfg /batteryreport` VivoBook menunjukkan Design Capacity 42.000 mWh dan Full Charge Capacity 33.600 mWh. Tafsiran yang paling tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Baterai rusak dan wajib diganti sekarang juga.",
+   "B) Health baterai = Full Charge / Design = 33.600/42.000 = 80%; jadi kapasitas penuh sudah menyusut sekitar 20% dari spesifikasi awal, dan itu belum berarti baterai langsung mati.",
+   "C) Full Charge Capacity adalah jumlah energi total yang masuk seumur hidup baterai.",
+   "D) Health baterai hanya ditentukan cycle count; angka kapasitas tidak relevan."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "Design Capacity = kapasitas desain pabrik; Full Charge Capacity = kapasitas yang benar-benar tersimpan saat 100%. Health = FCC/Design = 33600/42000 = 0,8 = 80%, artinya degradasi ~20%. Ini menyusut wajar dan belum berarti baterai mati. A berlebihan; C keliru definisi (itu total charging lifetime); D salah karena kapasitas justru indikator utama degradasi. Jawaban B."
+ },
+ {
+  "id": "hw-008",
+  "category": "hardware-bench",
+  "type": "mcq",
+  "difficulty": "hard",
+  "usage_source": "Kenapa skor benchmark jauh lebih rendah saat pakai baterai, dan cara mengontrolnya.",
+  "prompt": "Kamu bandingkan skor benchmark waktu laptop dicolok charger dengan waktu pakai baterai saja, dan hasilnya jauh lebih rendah saat pakai baterai. Penjelasan paling tepat berikut cara mengontrolnya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Karena saat pakai baterai laptop justru sambil mengisi, jadi pengukurannya tidak valid.",
+   "B) Saat pakai baterai, Windows memakai profil daya hemat yang menekan PPT/boost (dan bisa mengaktifkan battery saver), sehingga skor turun; kontrolnya dengan menjalankan benchmark saat dicolok dan memakai mode daya performa/best performance.",
+   "C) Karena layar otomatis jadi lebih terang saat pakai baterai.",
+   "D) Karena SSD melambat drastis setiap kali memakai baterai."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "Platform mobile memakai kebijakan daya berbeda saat unplugged: power mode/battery saver menurunkan plafon daya (PPT/STAPM) dan kebebasan boost demi ketahanan baterai, jadi skor benchmark turun. Metodologi yang benar: benchmark saat dicolok + mode performa, dan catat kondisi daya. Jawaban B."
+ },
+ {
+  "id": "hw-009",
+  "category": "hardware-bench",
+  "type": "numeric",
+  "difficulty": "easy",
+  "usage_source": "Statistik skor benchmark berulang: menghitung median 5 run.",
+  "prompt": "Hasil 5 run CineBench multicore: 4090, 4120, 4310, 4150, 4180 (dalam poin). Satu run kelewat tinggi karena boost sesaat. Hitung median dari 5 skor itu untuk melaporkan performa tipikal.\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+  "answer": {
+   "value": 4150,
+   "unit": "poin",
+   "tolerance": 0
+  },
+  "solution": "Urutkan: 4090, 4120, 4150, 4180, 4310. Jumlah data ganjil (5), jadi median = nilai ke-3 dari data terurut = 4150 poin. (Nilai 4310 adalah outlier, tidak dipakai karena bukan best-of-N.)"
+ },
+ {
+  "id": "hw-010",
+  "category": "hardware-bench",
+  "type": "numeric",
+  "difficulty": "easy",
+  "usage_source": "Menghitung health baterai dari laporan powercfg (design vs full charge).",
+  "prompt": "Laporan baterai VivoBook mencatat Design Capacity 42.000 mWh dan Full Charge Capacity 33.600 mWh. Hitung health baterai dalam persen dengan rumus Full Charge dibagi Design dikali 100.\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+  "answer": {
+   "value": 80,
+   "unit": "%",
+   "tolerance": 0.1
+  },
+  "solution": "Health = (Full Charge / Design) x 100% = (33600 / 42000) x 100% = 0,8 x 100% = 80%. Artinya kapasitas penuh sudah menyusut sekitar 20%."
+ },
+ {
+  "id": "hw-011",
+  "category": "hardware-bench",
+  "type": "numeric",
+  "difficulty": "medium",
+  "usage_source": "Menghitung persen kenaikan skor multicore dual-channel vs single-channel memakai median.",
+  "prompt": "Benchmark multicore dijalankan 5 kali. Single-channel (1x8 GB): 8900, 9050, 9000, 8950, 9020. Dual-channel (2x8 GB): 10300, 10420, 10350, 10280, 10400. Pakai median tiap kondisi, lalu hitung berapa persen kenaikan skor dual-channel dibanding single-channel.\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+  "answer": {
+   "value": 15,
+   "unit": "%",
+   "tolerance": 0.2
+  },
+  "solution": "Single terurut: 8900, 8950, 9000, 9020, 9050 -> median = nilai ke-3 = 9000. Dual terurut: 10280, 10300, 10350, 10400, 10420 -> median = nilai ke-3 = 10350. Kenaikan = (10350 - 9000) / 9000 x 100% = 1350/9000 x 100% = 15%."
+ },
+ {
+  "id": "hw-012",
+  "category": "hardware-bench",
+  "type": "numeric",
+  "difficulty": "medium",
+  "usage_source": "Persentase penurunan clock CPU saat throttling dibanding kondisi boost.",
+  "prompt": "Saat boost, clock CPU VivoBook menyentuh 4200 MHz. Beberapa menit main game, clock turun dan stabil di 3150 MHz. Hitung berapa persen penurunan clock dibanding kondisi boost.\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+  "answer": {
+   "value": 25,
+   "unit": "%",
+   "tolerance": 0.1
+  },
+  "solution": "Penurunan = (4200 - 3150) / 4200 x 100% = 1050 / 4200 x 100% = 0,25 x 100% = 25%."
+ },
+ {
+  "id": "hw-013",
+  "category": "hardware-bench",
+  "type": "numeric",
+  "difficulty": "hard",
+  "usage_source": "Menghitung selisih latency absolut RAM dari timing CL dan data rate (DDR4-3200).",
+  "prompt": "Kamu bandingkan dua keping DDR4-3200 (data rate 3200 MT/s): satu ber-timing CL22, satu CL16. Hitung selisih latency akses absolut antara keduanya dalam nanodetik (CL22 dikurangi CL16). Gunakan rumus latency(ns) = CL x 2000 / data_rate(MT/s).\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+  "answer": {
+   "value": 3.75,
+   "unit": "ns",
+   "tolerance": 0.05
+  },
+  "solution": "Frekuensi efektif = 3200/2 = 1600 MHz. Latency(ns) = CL x 1000 / frekuensi(MHz). CL22: 22 x 1000 / 1600 = 13,75 ns. CL16: 16 x 1000 / 1600 = 10,00 ns. Selisih = 13,75 - 10,00 = 3,75 ns. (Ekuivalen: CL x 2000 / 3200 = CL x 0,625 -> 22x0,625=13,75; 16x0,625=10.)"
+ },
+ {
+  "id": "hw-014",
+  "category": "hardware-bench",
+  "type": "numeric",
+  "difficulty": "medium",
+  "usage_source": "Persentase endurance SSD (TBW) yang sudah terpakai dari total host writes SMART.",
+  "prompt": "SSD NVMe di laptopmu punya rating endurance TBW 300 TB. Baru 18 bulan dipakai, SMART mencatat total host writes 48 TB. Hitung berapa persen dari TBW yang sudah terpakai.\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+  "answer": {
+   "value": 16,
+   "unit": "%",
+   "tolerance": 0.1
+  },
+  "solution": "Persen TBW terpakai = (host writes / TBW) x 100% = (48 / 300) x 100% = 0,16 x 100% = 16%."
+ },
+ {
+  "id": "hw-015",
+  "category": "hardware-bench",
+  "type": "numeric",
+  "difficulty": "hard",
+  "usage_source": "Menghitung daya rata-rata CPU dari log package power berjenjang waktu (power x waktu).",
+  "prompt": "Log package power CPU saat stress test: 0-30 s = 54 W, 30-90 s = 45 W, 90-150 s = 35 W. Hitung daya rata-rata (dalam watt) selama total 150 detik.\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+  "answer": {
+   "value": 42.8,
+   "unit": "W",
+   "tolerance": 0.1
+  },
+  "solution": "Energi tiap fase = daya x durasi: 54x30 = 1620 W.s ; 45x60 = 2700 W.s ; 35x60 = 2100 W.s. Total energi = 1620+2700+2100 = 6420 W.s. Durasi total = 30+60+60 = 150 s. Daya rata-rata = 6420 / 150 = 42,8 W."
+ }
+]

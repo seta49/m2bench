@@ -1,0 +1,342 @@
+[
+  {
+    "id": "iot-001",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Wiring DHT22 ke ESP32 (GPIO15) untuk node suhu/kelembapan",
+    "prompt": "Atha menyambungkan DHT22 ke ESP32: VCC ke 3.3V, GND ke GND, dan jalur data ke GPIO15. Data ternyata sering gagal dibaca secara acak. DHT22 memakai protokol one-wire open-drain, jadi jalur datanya butuh komponen tambahan. Apa yang harus dipasang pada jalur data agar stabil?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Resistor pull-up sekitar 4.7k-10k antara jalur data dan VCC",
+      "B) Resistor pull-down 10k antara jalur data dan GND",
+      "C) Kapasitor elektrolit 100uF antara jalur data dan GND",
+      "D) Dioda flyback antara jalur data dan VCC"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Jalur data DHT22 bersifat open-drain sehingga tidak bisa menarik level HIGH sendiri. Perlu resistor pull-up (umumnya 4.7k-10k ohm) dari jalur data ke VCC. Tanpa pull-up, sinyal HIGH terbentuk lambat/tidak terbentuk dan pembacaan gagal acak."
+  },
+  {
+    "id": "iot-002",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Koneksi modul I2C (mis. sensor) ke ESP32",
+    "prompt": "Atha mau memasang sensor I2C ke ESP32 dengan library Wire pada Arduino core. Pin default yang dipakai bus I2C (SDA dan SCL) di ESP32 adalah...\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) SDA = GPIO21, SCL = GPIO22",
+      "B) SDA = GPIO22, SCL = GPIO21",
+      "C) SDA = GPIO18, SCL = GPIO19",
+      "D) SDA = GPIO4, SCL = GPIO5"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Pada ESP32 Arduino core, instance Wire default memakai SDA=GPIO21 dan SCL=GPIO22. Nilai ini bisa diubah dengan Wire.begin(sda, scl), tetapi default tetap 21/22."
+  },
+  {
+    "id": "iot-003",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Timing pembacaan DHT22 di loop node sensor",
+    "prompt": "Atha mengirim data ke server tiap 30 detik, tetapi di dalam loop ia juga membaca DHT22 tiap 500 ms karena ingin 'respons lebih cepat'. Lama-lama pembacaan sering menghasilkan NaN/nilai tak valid. Apa penyebab paling tepatnya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) DHT22 mensampling internal kira-kira tiap 2 detik (max ~0.5 Hz); membacanya lebih cepat dari itu sering mengembalikan data lama/tak valid",
+      "B) DHT22 butuh jeda minimal 10 menit antar pembacaan",
+      "C) DHT22 akan rusak permanen jika dibaca lebih dari sekali per detik",
+      "D) Membaca cepat membuat koneksi WiFi terputus"
+    ],
+    "answer": { "value": "A" },
+    "solution": "DHT22 memiliki sampling period minimum ~2 detik. Membaca lebih cepat dari siklus sampling internal menghasilkan data lama atau gagal (timeout/NaN). Interval baca harus >=2 detik; karena kirim tiap 30 s, cukup baca sekali per siklus."
+  },
+  {
+    "id": "iot-004",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Pembacaan analog (potensiometer), konflik ADC2 dengan WiFi pada ESP32",
+    "prompt": "Atha memasang potensiometer ke GPIO25 dan membacanya dengan analogRead(). Begitu WiFi diaktifkan, bacaannya selalu penuh (4095) atau kacau. Apa penyebab dan solusi yang tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) GPIO25 termasuk ADC2, dan ADC2 tidak bisa dipakai bersamaan dengan WiFi; pindahkan input ke pin ADC1 (mis. GPIO32-GPIO39)",
+      "B) GPIO25 bukan pin analog; input analog wajib memakai GPIO15",
+      "C) ADC berhenti karena WiFi memakai seluruh RAM ESP32",
+      "D) Masalahnya baud rate serial yang terlalu tinggi"
+    ],
+    "answer": { "value": "A" },
+    "solution": "ESP32 punya dua unit ADC. ADC2 dipakai WiFi secara internal sehingga analogRead pada channel ADC2 (termasuk GPIO25) gagal/kacau saat WiFi aktif. Solusinya memakai channel ADC1 (GPIO32-GPIO39)."
+  },
+  {
+    "id": "iot-005",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Pola loop pada firmware pengirim data 30 detik",
+    "prompt": "Firmware Atha memakai delay(30000) di dalam loop() untuk mengatur pengiriman tiap 30 detik. Akibatnya, tombol, respons WiFi, dan penanganan lain terasa macet. Perbaikan yang paling tepat adalah...\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Ganti pola delay() menjadi non-blocking: simpan stempel waktu dan cek interval dengan millis() sehingga loop terus berjalan",
+      "B) Kecilkan delay menjadi delay(1) dan panggil berkali-kali",
+      "C) Naikkan baud rate Serial agar loop lebih cepat",
+      "D) Pindahkan delay() ke dalam ISR (interrupt) hardware"
+    ],
+    "answer": { "value": "A" },
+    "solution": "delay() memblokir CPU sehingga task lain (tombol, WiFi, watchdog) tidak dilayani. Pola timer non-blocking dengan millis() memungkinkan loop tetap responsif sambil mengirim tiap 30 detik."
+  },
+  {
+    "id": "iot-006",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Antarmuka sensor 5V dengan GPIO 3.3V ESP32",
+    "prompt": "Atha punya modul sensor yang ditenagai 5V dan output datanya berlogika 5V, lalu jalur output itu dihubungkan langsung ke pin GPIO input ESP32. Apa risiko utamanya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) GPIO ESP32 berlogika 3.3V dan tidak toleran 5V, sehingga tegangan 5V bisa merusak pin; perlu level shifter atau pembagi tegangan",
+      "B) Tidak ada risiko karena semua pin ESP32 toleran tegangan 5V",
+      "C) Sensor tidak akan menyala karena tegangan 5V kurang untuk ESP32",
+      "D) Hanya membuat baud rate komunikasi turun otomatis"
+    ],
+    "answer": { "value": "A" },
+    "solution": "ESP32 tidak 5V-tolerant; tegangan pada pin GPIO tidak boleh melebihi ~3.6V. Output 5V harus diturunkan dengan level shifter atau pembagi tegangan sebelum masuk pin 3.3V."
+  },
+  {
+    "id": "iot-007",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Pemilihan sensor suhu/kelembapan DHT11 vs DHT22",
+    "prompt": "Atha membandingkan DHT11 dan DHT22 untuk node monitoring. Mana pernyataan yang benar tentang spesifikasi keduanya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) DHT22: kelembapan 0-100% RH +/-2% dan suhu -40..80 C +/-0.5 C; DHT11: kelembapan 20-90% RH +/-5% dan suhu 0..50 C +/-2 C",
+      "B) DHT11 lebih akurat daripada DHT22 tetapi harganya lebih mahal",
+      "C) Keduanya identik, bedanya hanya warna PCB",
+      "D) DHT22 hanya bisa mengukur suhu, tidak bisa kelembapan"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Datasheet: DHT22 (AM2302) rentang -40..80 C dan 0-100% RH dengan akurasi lebih baik; DHT11 terbatas 0..50 C dan 20-90% RH dengan akurasi lebih kasar. DHT22 lebih cocok untuk pemantauan serius."
+  },
+  {
+    "id": "iot-008",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Pemilihan pin GPIO ESP32 untuk jalur data sensor (strapping pin)",
+    "prompt": "Atha memindahkan jalur data DHT22 ke GPIO12 dan memasang pull-up 4.7k ke 3.3V. Setelah itu board kadang gagal boot dan harus dicabut-pasang beberapa kali. Penyebab paling mungkin?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) GPIO12 adalah strapping pin (MTDI); menariknya HIGH saat boot dapat memilih mode tegangan flash 1.8V sehingga boot gagal",
+      "B) GPIO12 sama sekali tidak bisa dipakai sebagai pin input/output",
+      "C) Resistor 4.7k terlalu kecil untuk semua pin GPIO ESP32",
+      "D) GPIO12 hanya bisa dipakai untuk channel ADC2"
+    ],
+    "answer": { "value": "A" },
+    "solution": "GPIO12 (MTDI) termasuk strapping pin. Level-nya saat power-on memengaruhi konfigurasi tegangan flash internal; pull-up yang menariknya HIGH saat boot bisa membuat board gagal boot. Hindari strapping pin (0,2,4,5,12,15) untuk sinyal yang di-pull-up ke level tertentu saat boot."
+  },
+  {
+    "id": "iot-009",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Firmware HTTP POST ke server Python di VPS",
+    "prompt": "Firmware Atha mengirim data dengan HTTP POST ke server. Kadang server membalas status 500. Kode firmware hanya memeriksa apakah koneksi TCP berhasil, sehingga data dianggap terkirim. Praktik penanganan yang benar adalah...\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Periksa kode status HTTP: anggap sukses hanya pada 2xx, dan lakukan retry/backoff untuk 5xx atau timeout",
+      "B) Anggap semua respons selain 200 sebagai sukses",
+      "C) Lakukan retry tanpa batas tanpa jeda sampai berhasil",
+      "D) Abaikan kode status karena TCP sudah menjamin data diterima aplikasi server"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Keberhasilan koneksi TCP tidak menjamin server memproses request. Firmware harus memeriksa HTTP status code, menganggap sukses hanya 2xx, dan menangani 5xx/timeout dengan retry berjeda (backoff) agar tidak membanjiri server."
+  },
+  {
+    "id": "iot-010",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Pembacaan tegangan analog 0-3.3V pada ADC ESP32",
+    "prompt": "Atha memakai analogRead() pada ESP32 untuk mengukur tegangan 0-3.3V. Di sekitar 3.2V hasil bacaannya selalu sekitar 3.05V, dan kurvanya melengkung tidak lurus. Apa faktor utama dan perbaikan yang tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) ADC ESP32 memang non-linear (terutama di ujung rentang); perlu kalibrasi karakteristik ADC (mis. esp_adc_cal) dengan attenuation yang sesuai",
+      "B) ESP32 tidak punya ADC; nilai itu sebenarnya hasil PWM",
+      "C) Harus memindahkan pembacaan ke resolusi 16-bit lewat analogReadResolution(16)",
+      "D) Masalahnya kurang resistor pull-down 10k di pin analog"
+    ],
+    "answer": { "value": "A" },
+    "solution": "ADC SAR pada ESP32 dikenal non-linear, terutama di dekat batas atas/bawah rentang dan sensitif terhadap attenuation serta variasi chip. Pembacaan akurat memerlukan kalibrasi (mis. esp_adc_cal/ADC calibration) dan pemilihan attenuation yang benar (mis. 11 dB untuk rentang hingga ~3.3V)."
+  },
+  {
+    "id": "iot-011",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Strategi daya node sensor ESP32 bertenaga baterai",
+    "prompt": "Atha membuat node sensor bertenaga baterai yang hanya perlu mengirim data tiap 10 menit. Mana pendekatan yang paling hemat daya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Bangun dari deep sleep tiap 10 menit, baca sensor, kirim data, lalu masuk deep sleep lagi",
+      "B) Loop terus-menerus dengan delay(600000) di antara pengiriman",
+      "C) Biarkan loop jalan terus dan cukup matikan WiFi",
+      "D) Pakai light sleep sepanjang waktu tanpa pernah bangun penuh"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Deep sleep mematikan CPU dan radio (konsumsi orde mikroampere) sehingga rata-rata konsumsi sangat rendah untuk interval besar. Loop terus dengan delay tetap menyalakan CPU/WiFi sehingga baterai cepat habis."
+  },
+  {
+    "id": "iot-012",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Penanganan tombol fisik pada proyek ESP32",
+    "prompt": "Tombol fisik di rangkaian Atha kadang terdeteksi berkali-kali hanya dari satu kali tekan. Solusi standar untuk mengatasi hal ini adalah...\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Debouncing: abaikan perubahan status dalam jendela waktu kecil (sekitar 20-50 ms) memakai millis(), atau filter di software",
+      "B) Menambah kapasitor 1000uF tepat di kaki tombol",
+      "C) Mengganti tombol dengan potensiometer",
+      "D) Menaikkan frekuensi CPU ESP32"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Kontak mekanis memantul (bounce) selama beberapa milidetik sehingga satu tekan terbaca sebagai banyak edge. Debouncing software (menunda validasi perubahan status sekitar 20-50 ms) atau RC filter menghilangkan pantulan ini."
+  },
+  {
+    "id": "iot-013",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Penyimpanan counter ke NVS/Preferences pada ESP32",
+    "prompt": "Firmware Atha menyimpan sebuah counter ke Preferences (NVS) setiap kali membaca sensor, yaitu tiap 30 detik. Setelah beberapa bulan, area penyimpanan mulai bermasalah. Apa penjelasan dan penanganan yang tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Flash memiliki batas siklus tulis (orde 10^5 per sel); kurangi frekuensi tulis dengan menampung di RAM lalu menulis berkala, walau NVS sudah punya wear leveling",
+      "B) NVS tidak pernah aus sehingga menulis tiap detik pun aman",
+      "C) Memakai SPIFFS membuat penyimpanan menjadi tak terbatas",
+      "D) Satu-satunya solusi adalah memakai EEPROM eksternal"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Flash ESP32 punya batas siklus erase/write (~100.000 per blok). Menulis tiap 30 detik mempercepat aus walau NVS melakukan wear leveling. Praktik baik: buffer di RAM dan flush ke NVS secara berkala atau saat shutdown, bukan setiap pembacaan."
+  },
+  {
+    "id": "iot-014",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Perilaku loop() dan watchdog pada firmware ESP32",
+    "prompt": "Board ESP32 Atha reboot sendiri berkali-kali. Ternyata di dalam loop() ada pemanggilan delay(120000) dan beberapa operasi yang memblokir lama. Apa penyebab paling mungkin dari reboot tersebut?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Task watchdog timeout karena loop memblokir terlalu lama tanpa memberi kesempatan task lain/idle berjalan; perlu refactor menjadi non-blocking atau menambah yield",
+      "B) Watchdog hanya aktif saat deep sleep, jadi reboot tidak mungkin berasal dari watchdog",
+      "C) Penyebabnya pasti kabel USB yang kurang bagus",
+      "D) Reboot berkala itu normal dan bisa diabaikan"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Task watchdog ESP32 akan me-reset chip jika sebuah task (termasuk loop) tidak memberi kesempatan scheduler berjalan dalam batas waktu. delay() yang sangat panjang dan operasi blocking memicu ini. Solusinya memecah pekerjaan menjadi non-blocking atau menambah yield/vTaskDelay."
+  },
+  {
+    "id": "iot-015",
+    "category": "iot-embedded",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Konfigurasi library DHT untuk DHT22 vs DHT11",
+    "prompt": "Atha memakai library DHT (Adafruit) dan mendeklarasikan objek dengan tipe DHT11, padahal sensor yang terpasang adalah DHT22. Apa yang akan terjadi?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Pembacaan akan kacau/NaN karena protokol dan skala datanya berbeda; harus diubah ke tipe DHT22 (AM2302)",
+      "B) Tidak ada efek karena library otomatis mendeteksi tipe sensor",
+      "C) DHT22 akan otomatis berubah menjadi DHT11",
+      "D) Hanya nilai suhu yang salah, sedangkan kelembapan selalu benar"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Konstanta tipe (DHT11 vs DHT22) menentukan cara library mem-parse frame data dan menskalakan nilai. Tipe yang salah membuat parsing tidak sesuai protokol sehingga hasil kacau atau NaN. Sesuaikan konstanta dengan sensor fisik (DHT22 = AM2302)."
+  },
+  {
+    "id": "iot-016",
+    "category": "iot-embedded",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Debugging Serial Monitor setelah upload ke ESP32",
+    "prompt": "Atha baru selesai meng-upload sketch ke ESP32, tetapi jendela Serial Monitor menampilkan karakter sampah (garbage). Baud rate di sketch diset lewat Serial.begin(). Berapa baud rate yang paling umum dipakai untuk Serial Monitor pada ESP32 Arduino core?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "115200", "accept": ["115200", "115200.0"] },
+    "solution": "Baud rate default yang umum pada board ESP32 Arduino core adalah 115200 bps. Karakter sampah muncul saat baud rate Serial Monitor tidak sama dengan nilai Serial.begin()."
+  },
+  {
+    "id": "iot-017",
+    "category": "iot-embedded",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Pembacaan analog ADC ESP32 default",
+    "prompt": "Pada konfigurasi default (resolusi 12-bit), berapa nilai maksimum yang dikembalikan oleh analogRead() pada ESP32?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "4095", "accept": ["4095", "0-4095", "4095 (12-bit)"] },
+    "solution": "Resolusi default ADC ESP32 adalah 12-bit sehingga rentang nilai 0 sampai 2^12-1 = 4095."
+  },
+  {
+    "id": "iot-018",
+    "category": "iot-embedded",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Identifikasi part number sensor DHT22",
+    "prompt": "DHT22 sering dijual dengan nama/part number lain yang sebenarnya sensor yang sama/kompatibel. Apa nama/part number tersebut?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "am2302", "accept": ["am2302", "am2302 (dht22)", "aosong am2302"] },
+    "solution": "DHT22 adalah nama pasar dari sensor AM2302 buatan Aosong. Keduanya merujuk modul suhu/kelembapan yang sama, sehingga library yang mendukung DHT22 biasanya juga menamainya AM2302."
+  },
+  {
+    "id": "iot-019",
+    "category": "iot-embedded",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Kontrol PWM LED/kipas via LEDC pada ESP32",
+    "prompt": "Di Arduino core ESP32, setelah memanggil ledcSetup() dan ledcAttachPin(), fungsi apa yang dipakai untuk mengubah duty cycle PWM pada channel LEDC?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "ledcwrite", "accept": ["ledcwrite", "ledcwrite()", "ledc_write"] },
+    "solution": "ledcWrite(channel, duty) mengatur besar duty cycle pada channel LEDC yang sudah disetup dengan ledcSetup() dan di-attach ke pin dengan ledcAttachPin()."
+  },
+  {
+    "id": "iot-020",
+    "category": "iot-embedded",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Reconnect WiFi otomatis pada firmware ESP32",
+    "prompt": "Fungsi/method pada objek WiFi di Arduino core ESP32 apa yang membuat library secara otomatis mencoba menyambung ulang ke AP ketika koneksi terputus?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "wifisetautoreconnect", "accept": ["wifisetautoreconnect", "setautoreconnect", "wifi.setautoreconnect", "wifi.setautoreconnect(true)"] },
+    "solution": "WiFi.setAutoReconnect(true) membuat library WiFi menangani upaya reconnect otomatis saat koneksi ke AP hilang, sehingga firmware tidak perlu memonitor status secara manual."
+  },
+  {
+    "id": "iot-021",
+    "category": "iot-embedded",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Pemberian IP statis pada ESP32 di LAN",
+    "prompt": "Atha ingin ESP32 selalu mendapat IP yang sama di LAN (IP statis), bukan DHCP. Panggilan/method WiFi apa di Arduino core yang dipakai untuk mengonfigurasi IP statis sebelum WiFi.begin()?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "wificonfig", "accept": ["wificonfig", "wifi.config", "wifi.config()"] },
+    "solution": "WiFi.config(local_ip, gateway, subnet) menetapkan IP statis pada ESP32 (dipanggil sebelum WiFi.begin()). Dengan begitu board selalu memakai alamat LAN yang tetap."
+  },
+  {
+    "id": "iot-022",
+    "category": "iot-embedded",
+    "type": "short",
+    "difficulty": "hard",
+    "usage_source": "Handling hasil NaN dari pembacaan DHT22 di firmware",
+    "prompt": "Bacaan suhu/kelembapan dari DHT22 kadang mengembalikan nilai NaN sehingga perhitungan di firmware menjadi rusak. Fungsi bawaan bahasa C apa yang dipakai untuk menguji apakah sebuah nilai float adalah NaN sebelum dipakai?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "isnan", "accept": ["isnan", "isnan()", "isnan(x)", "isnan(dht.readtemperature())"] },
+    "solution": "isnan() (header math.h) mengembalikan true bila argumennya NaN. Pola umum: float t = dht.readTemperature(); if (isnan(t)) { skip atau coba ulang; } agar data tak valid tidak dikirim/dihitung."
+  },
+  {
+    "id": "iot-023",
+    "category": "iot-embedded",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Timing non-blocking pada loop firmware ESP32",
+    "prompt": "Fungsi apa di Arduino core yang mengembalikan jumlah milidetik sejak board mulai menyala, biasa dipakai untuk membuat timing non-blocking tanpa delay()?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "millis", "accept": ["millis", "millis()"] },
+    "solution": "millis() mengembalikan waktu berjalan (uptime) dalam milidetik. Pola non-blocking: simpan stempel waktu terakhir, lalu bandingkan dengan millis() untuk mengecek apakah interval sudah terlampaui, tanpa memblokir loop."
+  },
+  {
+    "id": "iot-024",
+    "category": "iot-embedded",
+    "type": "short",
+    "difficulty": "hard",
+    "usage_source": "Konflik unit ADC dengan WiFi pada ESP32",
+    "prompt": "ESP32 punya dua unit ADC. Unit ADC mana yang tidak dapat dipakai bersamaan saat WiFi sedang aktif?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "adc2", "accept": ["adc2", "adc 2", "unit adc2", "adc2 unit"] },
+    "solution": "ADC2 pada ESP32 berbagi sumber daya dengan subsistem WiFi. Saat WiFi aktif, kanal ADC2 (GPIO0,2,4,12-15,25-27) tidak bisa dibaca dengan benar, sehingga input analog sebaiknya dipasang pada kanal ADC1 (GPIO32-GPIO39)."
+  },
+  {
+    "id": "iot-025",
+    "category": "iot-embedded",
+    "type": "short",
+    "difficulty": "hard",
+    "usage_source": "Interval minimum pembacaan DHT22",
+    "prompt": "Menurut datasheet, berapa jeda waktu minimum (dalam detik) yang direkomendasikan antara dua pembacaan berturut-turut pada sensor DHT22?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "2", "accept": ["2", "2s", "2 detik", "2 seconds", "2 detik (2s)"] },
+    "solution": "Datasheet DHT22/AM2302 menyatakan sampling period tidak boleh kurang dari 2 detik (laju maksimum ~0.5 Hz). Membaca lebih cepat menghasilkan data lama atau gagal baca."
+  }
+]

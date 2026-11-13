@@ -1,0 +1,342 @@
+[
+  {
+    "id": "net-001",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Konfigurasi firewall VPS pribadi",
+    "prompt": "Saat mengatur firewall VPS, Atha mau menandai alamat yang hanya dipakai di LAN internal dan tidak boleh muncul di internet publik. Manakah alamat di bawah ini yang termasuk alamat IP privat (sesuai RFC 1918)?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) 8.8.8.8",
+      "B) 192.168.1.10",
+      "C) 172.32.0.1",
+      "D) 203.0.113.5"
+    ],
+    "answer": { "value": "B" },
+    "solution": "RFC 1918 hanya mencakup 10.0.0.0/8, 172.16.0.0/12 (172.16–172.31), dan 192.168.0.0/16. 192.168.1.10 privat → B. Jebakan: 172.32.0.1 ada di luar blok 172.16/12 sehingga sebenarnya publik. 8.8.8.8 itu DNS publik Google, 203.0.113.5 itu blok dokumentasi TEST-NET-3."
+  },
+  {
+    "id": "net-002",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Debug status code service web pribadi",
+    "prompt": "Atha mengakses endpoint /admin tanpa mengirim token sama sekali. Server membalas dengan kode 401. Apa arti kode ini?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Sudah login tapi rolenya tidak cukup (kasus ini justru 403)",
+      "B) Belum terautentikasi / kredensial tidak ada atau tidak valid",
+      "C) Terlalu banyak request dalam waktu singkat (kasus ini justru 429)",
+      "D) Server di balik proxy sedang tidak bisa dihubungi (kasus ini justru 502)"
+    ],
+    "answer": { "value": "B" },
+    "solution": "401 Unauthorized = autentikasi gagal atau kredensial tidak dikirim. 403 Forbidden = sudah terautentikasi tetapi tidak berhak. 429 = rate limit, 502 = bad gateway (upstream gagal). Jadi jawabannya B."
+  },
+  {
+    "id": "net-003",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Secret management env var vs hardcode",
+    "prompt": "Di file .env service-nya, Atha menulis password database lalu meng-encode-nya ke base64 supaya 'aman'. Manakah pernyataan yang benar?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Base64 setara enkripsi, jadi password aman walau file bocor",
+      "B) Base64 hanya encoding, bisa di-decode siapa pun tanpa kunci, jadi bukan pengaman",
+      "C) Base64 adalah fungsi hash satu arah yang tidak bisa dibalik",
+      "D) Base64 memakai kunci rahasia server untuk membuka isinya"
+    ],
+    "answer": { "value": "B" },
+    "solution": "Base64 adalah encoding reversibel untuk representasi data: tidak butuh kunci, siapa pun bisa decode. Bukan enkripsi, bukan hash. Untuk penyimpanan password pakai hash (bcrypt/argon2) dan simpan sebagai secret terproteksi, bukan sekadar encode."
+  },
+  {
+    "id": "net-004",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Login web service pribadi tanpa TLS",
+    "prompt": "Password di database Atha sudah di-hash dengan bcrypt. Namun halaman login-nya masih dilayani lewat HTTP polos (bukan HTTPS). Kenapa ini tetap berbahaya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Hashing di server tidak melindungi apa pun saat transit; password polos dan cookie sesi bisa disadap di jaringan",
+      "B) bcrypt hanya bekerja kalau lewat HTTPS",
+      "C) HTTP membuat hash di database otomatis berubah jadi MD5",
+      "D) Tanpa HTTPS, browser tidak bisa mengirim POST"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Hash melindungi data saat diam (at rest). Saat transit lewat HTTP polos, penyerang di jalur (jaringan WiFi sama, ISP) bisa membaca password dan cookie sesi. Karena itu form login wajib lewat TLS/HTTPS. B, C, D tidak benar secara teknis."
+  },
+  {
+    "id": "net-005",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Setup Let's Encrypt di reverse proxy",
+    "prompt": "Atha memakai sertifikat TLS dari Let's Encrypt untuk domain service-nya. Fungsi UTAMA sertifikat ini di HTTPS adalah…\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Membuktikan bahwa server yang dihubungi benar pemegang domain itu, sekaligus jadi dasar pertukaran kunci enkripsi",
+      "B) Menyembunyikan IP asli server dari publik",
+      "C) Mempercepat loading halaman karena data dikompresi",
+      "D) Menggantikan firewall dan whitelist IP"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Sertifikat TLS (diterbitkan CA) mengautentikasi identitas server dan memungkinkan pertukaran kunci untuk enkripsi. Menyembunyikan IP asli bukan tugas sertifikat (itu peran Cloudflare Tunnel/proxy). Sertifikat tidak mengompresi data dan bukan pengganti firewall."
+  },
+  {
+    "id": "net-006",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Frontend dan API di subdomain berbeda",
+    "prompt": "Halaman di https://app.atha.dev gagal melakukan fetch ke https://api.atha.dev dan browser menampilkan error CORS. Apa akar masalahnya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) app.atha.dev dan api.atha.dev beda origin, jadi API harus mengizinkan dengan header Access-Control-Allow-Origin",
+      "B) api.atha.dev sedang down sehingga browser menandainya sebagai error CORS",
+      "C) Salah satu domain tidak memakai HTTPS",
+      "D) Kedua layanan berjalan di IP publik yang berbeda"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Origin = kombinasi skema + host + port. Host yang berbeda berarti cross-origin, sehingga browser memblokir kecuali server mengirim header CORS yang cocok. Error CORS bukan tentang server down, soal HTTPS, atau perbedaan IP."
+  },
+  {
+    "id": "net-007",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Whitelist IP di belakang reverse proxy Caddy",
+    "prompt": "Di belakang Caddy, service Atha mem-whitelist IP dan membaca alamat IP client dari koneksi langsung. Hasilnya alamat yang terbaca selalu 127.0.0.1 sehingga whitelist-nya tidak berguna. Kenapa, dan apa solusinya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Karena koneksi selalu datang dari Caddy di localhost; IP asli ada di header X-Forwarded-For/Forwarded yang hanya boleh dipercaya bila datang dari proxy tepercaya",
+      "B) Karena DNS server salah mengarahkan domain",
+      "C) Karena sertifikat TLS kedaluwarsa",
+      "D) Karena Cloudflare Tunnel mematikan header HTTP"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Di balik reverse proxy, koneksi TCP berasal dari proxy (127.0.0.1). IP client asli dibawa di header X-Forwarded-For, tetapi header ini bisa dipalsukan klien bila tidak ditimpa oleh proxy tepercaya. Solusinya: hanya percaya XFF dari proxy yang dikenal / pakai direktif real_ip Caddy."
+  },
+  {
+    "id": "net-008",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Cloudflare Tunnel vs expose port langsung",
+    "prompt": "Atha memindahkan service-nya dari 'membuka port 443 langsung ke internet' menjadi lewat Cloudflare Tunnel. Keuntungan keamanan UTAMA-nya adalah…\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Server tidak perlu membuka port inbound dan IP publik aslinya tersembunyi, karena koneksi dibuka keluar dari server ke Cloudflare",
+      "B) Password user otomatis ter-hash jadi lebih kuat",
+      "C) Tunnel otomatis menangkal brute force pada form login",
+      "D) Tunnel menghilangkan kebutuhan autentikasi aplikasi"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Cloudflare Tunnel membuat koneksi keluar (outbound) dari server ke edge Cloudflare, sehingga origin tidak perlu expose port inbound dan IP aslinya tidak terlihat publik. Ia TIDAK menggantikan hashing, autentikasi, atau rate limiting aplikasi."
+  },
+  {
+    "id": "net-009",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Debug 502 dari reverse proxy",
+    "prompt": "Saat backend service Atha dimatikan, reverse proxy mengembalikan 502 Bad Gateway. Interpretasi yang benar dari 502 adalah…\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Client mengirim terlalu banyak request",
+      "B) Proxy gagal menghubungi upstream/backend yang tidak berjalan atau tidak merespons",
+      "C) Client belum login sehingga belum terautentikasi",
+      "D) DNS milik client salah konfigurasi"
+    ],
+    "answer": { "value": "B" },
+    "solution": "502 Bad Gateway berarti proxy menerima respons tidak valid atau gagal menghubungi upstream. 429 = terlalu banyak request, 401 = belum terautentikasi. 502 bukan masalah DNS di sisi client."
+  },
+  {
+    "id": "net-010",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Manajemen akun user di service sendiri",
+    "prompt": "Untuk menyimpan password user di database, cara yang paling tepat adalah…\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Enkripsi reversibel dengan kunci yang ditaruh di source code",
+      "B) Hash lambat bergaram (salt) unik per user, misalnya bcrypt atau argon2",
+      "C) Encode base64 lalu simpan apa adanya",
+      "D) Hash MD5 tanpa salt agar cepat"
+    ],
+    "answer": { "value": "B" },
+    "solution": "Password disimpan sebagai hash lambat + salt unik per user (bcrypt/argon2). Enkripsi reversibel berisiko: bila kunci bocor, semua password bocor. base64 bukan pengaman. MD5 cepat dan tanpa salt mudah di-rainbow-table atau di-brute-force."
+  },
+  {
+    "id": "net-011",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Hashing password bcrypt di service sendiri",
+    "prompt": "Atha memakai bcrypt dengan salt acak per user. Manfaat utama salt di sini adalah…\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Membuat dua user dengan password sama menghasilkan hash berbeda, sehingga tabel pra-komputasi (rainbow table) tak berguna",
+      "B) Membuat hash bisa dibalik kembali ke password asli",
+      "C) Menggantikan kebutuhan enkripsi koneksi HTTPS",
+      "D) Mempercepat proses login sehingga tahan brute force"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Salt unik per user mencegah hash identik untuk password identik dan menetralkan rainbow table, karena penyerang harus menghitung ulang per user. Salt bukan enkripsi reversibel, tidak menggantikan HTTPS, dan tidak mempercepat login."
+  },
+  {
+    "id": "net-012",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Header auth di API service sendiri",
+    "prompt": "Atha melihat dua bentuk header Authorization yang umum: 'Basic <base64 user:pass>' dan 'Bearer <token>'. Mana pernyataan yang benar?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Basic mengirim kredensial user:password (hanya base64, bukan enkripsi) tiap request; Bearer mengirim token yang bisa kedaluwarsa dan dicabut",
+      "B) Bearer mengirim password polos, Basic mengirim token terenkripsi",
+      "C) Keduanya identik, hanya beda nama",
+      "D) Basic sudah terenkripsi end-to-end jadi aman di HTTP polos"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Basic mengirim base64(user:pass) — bukan enkripsi, jadi sangat bergantung pada TLS. Bearer mengirim token (misalnya JWT atau session token) yang bisa berumur pendek dan dicabut. Keduanya tetap memerlukan HTTPS."
+  },
+  {
+    "id": "net-013",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Keamanan berlapis panel admin pribadi dengan IP dinamis",
+    "prompt": "Atha mengandalkan whitelist IP saja untuk mengamankan panel admin, selain login. Kenapa whitelist IP saja TIDAK cukup sebagai pengaman penuh?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) IP publik bisa berubah (dinamis) dan header XFF bisa dipalsukan bila tak divalidasi dari proxy tepercaya, jadi whitelist hanyalah satu lapis — bukan pengganti autentikasi",
+      "B) Whitelist IP otomatis mematikan HTTPS",
+      "C) Whitelist IP membuat password tidak lagi di-hash",
+      "D) IP privat tidak bisa di-whitelist sama sekali"
+    ],
+    "answer": { "value": "A" },
+    "solution": "IP publik yang dinamis membuat whitelist rapuh (perlu DDNS), dan X-Forwarded-For bisa dipalsukan bila tidak ditimpa proxy tepercaya. Model aman = berlapis (login + MFA + rate limit + TLS), bukan bergantung pada satu kontrol saja."
+  },
+  {
+    "id": "net-014",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Cookie sesi login service pribadi",
+    "prompt": "Atha menyetel cookie sesi dengan atribut SameSite=Lax/Strict. Serangan apa yang terutama dicegah oleh atribut ini?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) CSRF (request lintas situs yang diam-diam ikut membawa cookie sesi)",
+      "B) SQL injection pada query database",
+      "C) Brute force pada form password",
+      "D) Serangan DDoS bervolume besar"
+    ],
+    "answer": { "value": "A" },
+    "solution": "SameSite membatasi cookie agar tidak terkirim pada request lintas situs, sehingga mitigasi utama adalah CSRF. Atribut ini tidak berkaitan dengan SQL injection, brute force, atau DDoS."
+  },
+  {
+    "id": "net-015",
+    "category": "networking-security",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Proteksi brute force login panel admin",
+    "prompt": "Atha melihat adanya percobaan login yang gagal 5000 kali dalam satu menit ke satu endpoint. Mitigasi PALING langsung untuk brute force ini adalah…\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Rate limiting plus lockout/backoff per akun dan per IP",
+      "B) Mengganti skema warna UI halaman login",
+      "C) Cukup mengaktifkan HTTPS tanpa throttle",
+      "D) Menaikkan timeout server"
+    ],
+    "answer": { "value": "A" },
+    "solution": "Rate limiting/backoff/lockout membatasi laju percobaan otentikasi. HTTPS melindungi data saat transit, bukan volume percobaan. Perubahan UI dan timeout tidak menyentuh masalah brute force."
+  },
+  {
+    "id": "net-016",
+    "category": "networking-security",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Konfigurasi reverse proxy service pribadi",
+    "prompt": "Port default untuk protokol HTTPS adalah berapa?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "443", "accept": ["443/tcp", "port 443"] },
+    "solution": "HTTPS secara default berjalan di port TCP 443; HTTP di port 80."
+  },
+  {
+    "id": "net-017",
+    "category": "networking-security",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Penandaan alamat internal LAN di firewall",
+    "prompt": "Sebutkan SATU rentang alamat IP privat (RFC 1918) dalam notasi CIDR.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "192.168.0.0/16", "accept": ["10.0.0.0/8", "172.16.0.0/12"] },
+    "solution": "RFC 1918 mendefinisikan tiga blok privat: 10.0.0.0/8, 172.16.0.0/12, dan 192.168.0.0/16. Salah satu di antaranya sudah benar."
+  },
+  {
+    "id": "net-018",
+    "category": "networking-security",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Pemilihan algoritma hashing password akun user",
+    "prompt": "Selain MD5 dan SHA-1, sebutkan satu algoritma hashing password yang direkomendasikan untuk penyimpanan aman.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "bcrypt", "accept": ["argon2", "argon2id", "scrypt", "pbkdf2"] },
+    "solution": "Algoritma yang direkomendasikan untuk password adalah yang sengaja lambat dan mendukung salt, seperti bcrypt, argon2/argon2id, scrypt, atau pbkdf2. MD5/SHA-1 terlalu cepat dan tidak cocok."
+  },
+  {
+    "id": "net-019",
+    "category": "networking-security",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Pengiriman token akses ke API sendiri",
+    "prompt": "Saat mengirim token akses memakai skema Bearer, header HTTP apa yang dipakai? Sebutkan nama headernya saja.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "authorization" },
+    "solution": "Token Bearer dikirim di header Authorization, contohnya: Authorization: Bearer eyJhbGci... Jadi jawabannya 'authorization'."
+  },
+  {
+    "id": "net-020",
+    "category": "networking-security",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Whitelist IP di belakang reverse proxy Caddy",
+    "prompt": "Di balik reverse proxy, header apa yang biasa membawa alamat IP asli client sebelum request diteruskan ke backend? Sebutkan nama headernya saja.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "x-forwarded-for", "accept": ["forwarded", "x-real-ip", "x-forwarded-for header"] },
+    "solution": "Reverse proxy menambahkan header X-Forwarded-For (atau versi standar Forwarded; X-Real-IP pada Nginx) berisi IP asli client. Nilainya hanya boleh dipercaya jika datang dari proxy tepercaya."
+  },
+  {
+    "id": "net-021",
+    "category": "networking-security",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Debug rate limiting pada API sendiri",
+    "prompt": "Kode status HTTP untuk 'Too Many Requests' (rate limit terlampaui) adalah berapa?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "429" },
+    "solution": "HTTP 429 Too Many Requests menandakan client mengirim terlalu banyak request dalam rentang waktu tertentu (rate limit terlampaui)."
+  },
+  {
+    "id": "net-022",
+    "category": "networking-security",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Cloudflare Tunnel vs expose port langsung",
+    "prompt": "Produk Cloudflare yang menghubungkan server ke internet TANPA membuka port inbound dan tanpa mengekspos IP publik aslinya disebut Cloudflare ___.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "tunnel", "accept": ["cloudflare tunnel", "cf tunnel", "cloudflared"] },
+    "solution": "Cloudflare Tunnel (dijalankan lewat daemon cloudflared) membuka koneksi keluar dari server ke edge Cloudflare, sehingga IP origin tidak terekspos dan tidak ada port inbound yang perlu dibuka."
+  },
+  {
+    "id": "net-023",
+    "category": "networking-security",
+    "type": "short",
+    "difficulty": "hard",
+    "usage_source": "Debug status code endpoint yang butuh login",
+    "prompt": "User belum login sama sekali dan mengakses endpoint yang butuh autentikasi. Server seharusnya membalas kode status berapa?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "401", "accept": ["401 unauthorized"] },
+    "solution": "Belum terautentikasi = 401 Unauthorized. 403 Forbidden dipakai saat user SUDAH terautentikasi tetapi tidak punya izin. Karena user belum login, jawabannya 401."
+  },
+  {
+    "id": "net-024",
+    "category": "networking-security",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Pengamanan cookie sesi login service pribadi",
+    "prompt": "Atribut cookie apa yang mencegah JavaScript di halaman membaca cookie sesi? Sebutkan nama atributnya saja.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "httponly" },
+    "solution": "Atribut HttpOnly membuat cookie tidak dapat diakses lewat document.cookie, sehingga mengurangi dampak XSS yang mencoba mencuri cookie sesi."
+  },
+  {
+    "id": "net-025",
+    "category": "networking-security",
+    "type": "short",
+    "difficulty": "hard",
+    "usage_source": "Menjaga domain tetap mengarah ke service saat IP publik berubah",
+    "prompt": "Atha sering berpindah jaringan (rumah bergantian dengan kos) sehingga IP publiknya berubah-ubah, tetapi domain harus tetap mengarah ke service-nya. Sistem/layanan yang otomatis memperbarui record DNS saat IP publik berubah disebut apa? Sebutkan singkatannya saja.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "ddns", "accept": ["dynamic dns", "dyndns", "dynamic domain name system"] },
+    "solution": "DDNS (Dynamic DNS) otomatis memperbarui record DNS domain ke IP publik baru setiap kali ISP mengganti alamatnya, sehingga domain tetap menunjuk ke service meski IP rumah/kos berganti."
+  }
+]

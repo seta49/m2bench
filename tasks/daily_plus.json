@@ -1,0 +1,234 @@
+[
+ {
+  "id": "dp-long-log-needle",
+  "category": "long-context",
+  "prompt": "Berikut log telemetri server & ESP32 (200 baris):\n\n```\n2026-11-12 00:00:05 INFO  esp32-kitchen heartbeat ok heap_free=42100 rssi=-64dBm\n2026-11-12 00:01:05 INFO  esp32-roof telemetry temp=27.3 hum=62 rssi=-74dBm\n2026-11-12 00:02:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=20\n2026-11-12 00:03:05 INFO  esp32-kitchen heartbeat ok heap_free=42460 rssi=-64dBm\n2026-11-12 00:04:05 INFO  esp32-roof telemetry temp=27.6 hum=61 rssi=-74dBm\n2026-11-12 00:05:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=23\n2026-11-12 00:06:05 INFO  esp32-kitchen heartbeat ok heap_free=42820 rssi=-64dBm\n2026-11-12 00:07:05 INFO  esp32-roof telemetry temp=27.4 hum=64 rssi=-74dBm\n2026-11-12 00:08:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=26\n2026-11-12 00:09:05 INFO  esp32-kitchen heartbeat ok heap_free=42340 rssi=-64dBm\n2026-11-12 00:10:05 INFO  esp32-roof telemetry temp=27.2 hum=63 rssi=-74dBm\n2026-11-12 00:11:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=18\n2026-11-12 00:12:05 INFO  esp32-kitchen heartbeat ok heap_free=42700 rssi=-64dBm\n2026-11-12 00:13:05 INFO  esp32-roof telemetry temp=27.5 hum=62 rssi=-74dBm\n2026-11-12 00:14:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=21\n2026-11-12 00:15:05 INFO  esp32-kitchen heartbeat ok heap_free=42220 rssi=-64dBm\n2026-11-12 00:16:05 INFO  esp32-roof telemetry temp=27.3 hum=61 rssi=-74dBm\n2026-11-12 00:17:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=24\n2026-11-12 00:18:05 INFO  esp32-kitchen heartbeat ok heap_free=42580 rssi=-64dBm\n2026-11-12 00:19:05 INFO  esp32-roof telemetry temp=27.6 hum=64 rssi=-74dBm\n2026-11-12 00:20:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=27\n2026-11-12 00:21:05 INFO  esp32-kitchen heartbeat ok heap_free=42100 rssi=-64dBm\n2026-11-12 00:22:05 INFO  esp32-roof telemetry temp=27.4 hum=63 rssi=-74dBm\n2026-11-12 00:23:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=19\n2026-11-12 00:24:05 INFO  esp32-kitchen heartbeat ok heap_free=42460 rssi=-64dBm\n2026-11-12 00:25:05 INFO  esp32-roof telemetry temp=27.2 hum=62 rssi=-74dBm\n2026-11-12 00:26:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=22\n2026-11-12 00:27:05 INFO  esp32-kitchen heartbeat ok heap_free=42820 rssi=-64dBm\n2026-11-12 00:28:05 INFO  esp32-roof telemetry temp=27.5 hum=61 rssi=-74dBm\n2026-11-12 00:29:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=25\n2026-11-12 00:30:05 INFO  esp32-kitchen heartbeat ok heap_free=42340 rssi=-64dBm\n2026-11-12 00:31:05 INFO  esp32-roof telemetry temp=27.3 hum=64 rssi=-74dBm\n2026-11-12 00:32:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=28\n2026-11-12 00:33:05 INFO  esp32-kitchen heartbeat ok heap_free=42700 rssi=-64dBm\n2026-11-12 00:34:05 INFO  esp32-roof telemetry temp=27.6 hum=63 rssi=-74dBm\n2026-11-12 00:35:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=20\n2026-11-12 00:36:05 INFO  esp32-kitchen heartbeat ok heap_free=42220 rssi=-64dBm\n2026-11-12 00:37:05 INFO  esp32-roof telemetry temp=27.4 hum=62 rssi=-74dBm\n2026-11-12 00:38:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=23\n2026-11-12 00:39:05 INFO  esp32-kitchen heartbeat ok heap_free=42580 rssi=-64dBm\n2026-11-12 00:40:05 INFO  esp32-roof telemetry temp=27.2 hum=61 rssi=-74dBm\n2026-11-12 00:41:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=26\n2026-11-12 00:42:05 INFO  esp32-kitchen heartbeat ok heap_free=42100 rssi=-64dBm\n2026-11-12 00:43:05 INFO  esp32-roof telemetry temp=27.5 hum=64 rssi=-74dBm\n2026-11-12 00:44:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=18\n2026-11-12 00:45:05 INFO  esp32-kitchen heartbeat ok heap_free=42460 rssi=-64dBm\n2026-11-12 00:46:05 WARN  esp32-kitchen heap_free=18400 rssi=-71dBm\n2026-11-12 00:47:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=21\n2026-11-12 00:48:05 INFO  esp32-kitchen heartbeat ok heap_free=42820 rssi=-64dBm\n2026-11-12 00:49:05 INFO  esp32-roof telemetry temp=27.6 hum=62 rssi=-74dBm\n2026-11-12 00:50:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=24\n2026-11-12 00:51:05 INFO  esp32-kitchen heartbeat ok heap_free=42340 rssi=-64dBm\n2026-11-12 00:52:05 INFO  esp32-roof telemetry temp=27.4 hum=61 rssi=-74dBm\n2026-11-12 00:53:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=27\n2026-11-12 00:54:05 INFO  esp32-kitchen heartbeat ok heap_free=42700 rssi=-64dBm\n2026-11-12 00:55:05 INFO  esp32-roof telemetry temp=27.2 hum=64 rssi=-74dBm\n2026-11-12 00:56:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=19\n2026-11-12 00:57:05 INFO  esp32-kitchen heartbeat ok heap_free=42220 rssi=-64dBm\n2026-11-12 00:58:05 INFO  esp32-roof telemetry temp=27.5 hum=63 rssi=-74dBm\n2026-11-12 00:59:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=22\n2026-11-12 01:00:05 INFO  esp32-kitchen heartbeat ok heap_free=42580 rssi=-64dBm\n2026-11-12 01:01:05 INFO  esp32-roof telemetry temp=27.3 hum=62 rssi=-74dBm\n2026-11-12 01:02:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=25\n2026-11-12 01:03:05 INFO  esp32-kitchen heartbeat ok heap_free=42100 rssi=-64dBm\n2026-11-12 01:04:05 INFO  esp32-roof telemetry temp=27.6 hum=61 rssi=-74dBm\n2026-11-12 01:05:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=28\n2026-11-12 01:06:05 INFO  esp32-kitchen heartbeat ok heap_free=42460 rssi=-64dBm\n2026-11-12 01:07:05 INFO  esp32-roof telemetry temp=27.4 hum=64 rssi=-74dBm\n2026-11-12 01:08:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=20\n2026-11-12 01:09:05 INFO  esp32-kitchen heartbeat ok heap_free=42820 rssi=-64dBm\n2026-11-12 01:10:05 INFO  esp32-roof telemetry temp=27.2 hum=63 rssi=-74dBm\n2026-11-12 01:11:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=23\n2026-11-12 01:12:05 INFO  esp32-kitchen heartbeat ok heap_free=42340 rssi=-64dBm\n2026-11-12 01:13:05 INFO  esp32-roof telemetry temp=27.5 hum=62 rssi=-74dBm\n2026-11-12 01:14:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=26\n2026-11-12 01:15:05 INFO  esp32-kitchen heartbeat ok heap_free=42700 rssi=-64dBm\n2026-11-12 01:16:05 INFO  esp32-roof telemetry temp=27.3 hum=61 rssi=-74dBm\n2026-11-12 01:17:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=18\n2026-11-12 01:18:05 INFO  esp32-kitchen heartbeat ok heap_free=42220 rssi=-64dBm\n2026-11-12 01:19:05 INFO  esp32-roof telemetry temp=27.6 hum=64 rssi=-74dBm\n2026-11-12 01:20:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=21\n2026-11-12 01:21:05 INFO  esp32-kitchen heartbeat ok heap_free=42580 rssi=-64dBm\n2026-11-12 01:22:05 INFO  esp32-roof telemetry temp=27.4 hum=63 rssi=-74dBm\n2026-11-12 01:23:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=24\n2026-11-12 01:24:05 INFO  esp32-kitchen heartbeat ok heap_free=42100 rssi=-64dBm\n2026-11-12 01:25:05 INFO  esp32-roof telemetry temp=27.2 hum=62 rssi=-74dBm\n2026-11-12 01:26:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=27\n2026-11-12 01:27:05 INFO  esp32-kitchen heartbeat ok heap_free=42460 rssi=-64dBm\n2026-11-12 01:28:05 INFO  esp32-roof telemetry temp=27.5 hum=61 rssi=-74dBm\n2026-11-12 01:29:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=19\n2026-11-12 01:30:05 INFO  esp32-kitchen heartbeat ok heap_free=42820 rssi=-64dBm\n2026-11-12 01:31:05 INFO  esp32-roof telemetry temp=27.3 hum=64 rssi=-74dBm\n2026-11-12 01:32:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=22\n2026-11-12 01:33:05 INFO  esp32-kitchen heartbeat ok heap_free=42340 rssi=-64dBm\n2026-11-12 01:34:05 INFO  esp32-roof telemetry temp=27.6 hum=63 rssi=-74dBm\n2026-11-12 01:35:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=25\n2026-11-12 01:36:05 INFO  esp32-kitchen heartbeat ok heap_free=42700 rssi=-64dBm\n2026-11-12 01:37:05 INFO  esp32-roof telemetry temp=27.4 hum=62 rssi=-74dBm\n2026-11-12 01:38:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=28\n2026-11-12 01:39:05 INFO  esp32-kitchen heartbeat ok heap_free=42220 rssi=-64dBm\n2026-11-12 01:40:05 INFO  esp32-roof telemetry temp=27.2 hum=61 rssi=-74dBm\n2026-11-12 01:41:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=20\n2026-11-12 01:42:05 INFO  esp32-kitchen heartbeat ok heap_free=42580 rssi=-64dBm\n2026-11-12 01:43:05 INFO  esp32-roof telemetry temp=27.5 hum=64 rssi=-74dBm\n2026-11-12 01:44:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=23\n2026-11-12 01:45:05 INFO  esp32-kitchen heartbeat ok heap_free=42100 rssi=-64dBm\n2026-11-12 01:46:05 INFO  esp32-roof telemetry temp=27.3 hum=63 rssi=-74dBm\n2026-11-12 01:47:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=26\n2026-11-12 01:48:05 INFO  esp32-kitchen heartbeat ok heap_free=42460 rssi=-64dBm\n2026-11-12 01:49:05 INFO  esp32-roof telemetry temp=27.6 hum=62 rssi=-74dBm\n2026-11-12 01:50:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=18\n2026-11-12 01:51:05 ERROR esp32-roof dht_read_timeout retry=1\n2026-11-12 01:52:05 ERROR esp32-roof dht_read_timeout retry=2\n2026-11-12 01:53:05 ERROR esp32-roof mqtt_disconnect rc=-4\n2026-11-12 01:54:05 INFO  esp32-kitchen heartbeat ok heap_free=42340 rssi=-64dBm\n2026-11-12 01:55:05 INFO  esp32-roof telemetry temp=27.2 hum=64 rssi=-74dBm\n2026-11-12 01:56:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=24\n2026-11-12 01:57:05 INFO  esp32-kitchen heartbeat ok heap_free=42700 rssi=-64dBm\n2026-11-12 01:58:05 INFO  esp32-roof telemetry temp=27.5 hum=63 rssi=-74dBm\n2026-11-12 01:59:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=27\n2026-11-12 02:00:05 INFO  esp32-kitchen heartbeat ok heap_free=42220 rssi=-64dBm\n2026-11-12 02:01:05 INFO  esp32-roof telemetry temp=27.3 hum=62 rssi=-74dBm\n2026-11-12 02:02:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=19\n2026-11-12 02:03:05 INFO  esp32-kitchen heartbeat ok heap_free=42580 rssi=-64dBm\n2026-11-12 02:04:05 INFO  esp32-roof telemetry temp=27.6 hum=61 rssi=-74dBm\n2026-11-12 02:05:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=22\n2026-11-12 02:06:05 INFO  esp32-kitchen heartbeat ok heap_free=42100 rssi=-64dBm\n2026-11-12 02:07:05 INFO  esp32-roof telemetry temp=27.4 hum=64 rssi=-74dBm\n2026-11-12 02:08:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=25\n2026-11-12 02:09:05 INFO  esp32-kitchen heartbeat ok heap_free=42460 rssi=-64dBm\n2026-11-12 02:10:05 INFO  esp32-roof telemetry temp=27.2 hum=63 rssi=-74dBm\n2026-11-12 02:11:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=28\n2026-11-12 02:12:05 INFO  esp32-kitchen heartbeat ok heap_free=42820 rssi=-64dBm\n2026-11-12 02:13:05 INFO  esp32-roof telemetry temp=27.5 hum=62 rssi=-74dBm\n2026-11-12 02:14:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=20\n2026-11-12 02:15:05 INFO  esp32-kitchen heartbeat ok heap_free=42340 rssi=-64dBm\n2026-11-12 02:16:05 INFO  esp32-roof telemetry temp=27.3 hum=61 rssi=-74dBm\n2026-11-12 02:17:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=23\n2026-11-12 02:18:05 INFO  esp32-kitchen heartbeat ok heap_free=42700 rssi=-64dBm\n2026-11-12 02:19:05 INFO  esp32-roof telemetry temp=27.6 hum=64 rssi=-74dBm\n2026-11-12 02:20:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=26\n2026-11-12 02:21:05 INFO  esp32-kitchen heartbeat ok heap_free=42220 rssi=-64dBm\n2026-11-12 02:22:05 INFO  esp32-roof telemetry temp=27.4 hum=63 rssi=-74dBm\n2026-11-12 02:23:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=18\n2026-11-12 02:24:05 INFO  esp32-kitchen heartbeat ok heap_free=42580 rssi=-64dBm\n2026-11-12 02:25:05 INFO  esp32-roof telemetry temp=27.2 hum=62 rssi=-74dBm\n2026-11-12 02:26:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=21\n2026-11-12 02:27:05 INFO  esp32-kitchen heartbeat ok heap_free=42100 rssi=-64dBm\n2026-11-12 02:28:05 INFO  esp32-roof telemetry temp=27.5 hum=61 rssi=-74dBm\n2026-11-12 02:29:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=24\n2026-11-12 02:30:05 INFO  esp32-kitchen heartbeat ok heap_free=42460 rssi=-64dBm\n2026-11-12 02:31:05 INFO  esp32-roof telemetry temp=27.3 hum=64 rssi=-74dBm\n2026-11-12 02:32:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=27\n2026-11-12 02:33:05 INFO  esp32-kitchen heartbeat ok heap_free=42820 rssi=-64dBm\n2026-11-12 02:34:05 INFO  esp32-roof telemetry temp=27.6 hum=63 rssi=-74dBm\n2026-11-12 02:35:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=19\n2026-11-12 02:36:05 INFO  esp32-kitchen heartbeat ok heap_free=42340 rssi=-64dBm\n2026-11-12 02:37:05 INFO  esp32-roof telemetry temp=27.4 hum=62 rssi=-74dBm\n2026-11-12 02:38:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=22\n2026-11-12 02:39:05 INFO  esp32-kitchen heartbeat ok heap_free=42700 rssi=-64dBm\n2026-11-12 02:40:05 INFO  esp32-roof telemetry temp=27.2 hum=61 rssi=-74dBm\n2026-11-12 02:41:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=25\n2026-11-12 02:42:05 INFO  esp32-kitchen heartbeat ok heap_free=42220 rssi=-64dBm\n2026-11-12 02:43:05 INFO  esp32-roof telemetry temp=27.5 hum=64 rssi=-74dBm\n2026-11-12 02:44:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=28\n2026-11-12 02:45:05 INFO  esp32-kitchen heartbeat ok heap_free=42580 rssi=-64dBm\n2026-11-12 02:46:05 INFO  esp32-roof telemetry temp=27.3 hum=63 rssi=-74dBm\n2026-11-12 02:47:05 ERROR api-worker db_lock_timeout duration_ms=4820\n2026-11-12 02:48:05 INFO  esp32-kitchen heartbeat ok heap_free=42100 rssi=-64dBm\n2026-11-12 02:49:05 INFO  esp32-roof telemetry temp=27.6 hum=62 rssi=-74dBm\n2026-11-12 02:50:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=23\n2026-11-12 02:51:05 INFO  esp32-kitchen heartbeat ok heap_free=42460 rssi=-64dBm\n2026-11-12 02:52:05 INFO  esp32-roof telemetry temp=27.4 hum=61 rssi=-74dBm\n2026-11-12 02:53:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=26\n2026-11-12 02:54:05 INFO  esp32-kitchen heartbeat ok heap_free=42820 rssi=-64dBm\n2026-11-12 02:55:05 INFO  esp32-roof telemetry temp=27.2 hum=64 rssi=-74dBm\n2026-11-12 02:56:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=18\n2026-11-12 02:57:05 INFO  esp32-kitchen heartbeat ok heap_free=42340 rssi=-64dBm\n2026-11-12 02:58:05 INFO  esp32-roof telemetry temp=27.5 hum=63 rssi=-74dBm\n2026-11-12 02:59:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=21\n2026-11-12 03:00:05 INFO  esp32-kitchen heartbeat ok heap_free=42700 rssi=-64dBm\n2026-11-12 03:01:05 INFO  esp32-roof telemetry temp=27.3 hum=62 rssi=-74dBm\n2026-11-12 03:02:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=24\n2026-11-12 03:03:05 INFO  esp32-kitchen heartbeat ok heap_free=42220 rssi=-64dBm\n2026-11-12 03:04:05 INFO  esp32-roof telemetry temp=27.6 hum=61 rssi=-74dBm\n2026-11-12 03:05:05 INFO  api-worker batch_flush rows=17 status=200 latency_ms=27\n2026-11-12 03:06:05 INFO  esp32-kitchen heartbeat ok heap_free=42580 rssi=-64dBm\n2026-11-12 03:07:05 INFO  esp32-roof telemetry temp=27.4 hum=64 rssi=-74dBm\n2026-11-12 03:08:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=19\n2026-11-12 03:09:05 INFO  esp32-kitchen heartbeat ok heap_free=42100 rssi=-64dBm\n2026-11-12 03:10:05 INFO  esp32-roof telemetry temp=27.2 hum=63 rssi=-74dBm\n2026-11-12 03:11:05 INFO  api-worker batch_flush rows=14 status=200 latency_ms=22\n2026-11-12 03:12:05 INFO  esp32-kitchen heartbeat ok heap_free=42460 rssi=-64dBm\n2026-11-12 03:13:05 INFO  esp32-roof telemetry temp=27.5 hum=62 rssi=-74dBm\n2026-11-12 03:14:05 WARN  esp32-roof rssi=-89dBm\n2026-11-12 03:15:05 INFO  esp32-kitchen heartbeat ok heap_free=42820 rssi=-64dBm\n2026-11-12 03:16:05 INFO  esp32-roof telemetry temp=27.3 hum=61 rssi=-74dBm\n2026-11-12 03:17:05 INFO  api-worker batch_flush rows=20 status=200 latency_ms=28\n2026-11-12 03:18:05 INFO  esp32-kitchen heartbeat ok heap_free=42340 rssi=-64dBm\n2026-11-12 03:19:05 INFO  esp32-roof telemetry temp=27.6 hum=64 rssi=-74dBm\n```\n\nJawab persis berdasarkan log di atas:\n1. Total berapa baris berlevel `ERROR` di seluruh log?\n2. Perangkat/service apa saja yang mencatat `ERROR`, dan berapa nilai `rc` pada event `mqtt_disconnect`?\n3. Berapa nilai `heap_free` TERENDAH yang tercatat untuk `esp32-kitchen` (dan jam berapa)?\n4. Berapa durasi `db_lock_timeout` pada `api-worker` dalam DETIK (2 desimal)?",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Total baris ERROR = 4 (01:51, 01:52, 01:53, dan 02:47)"
+   },
+   {
+    "id": "c2",
+    "text": "Perangkat/service dengan ERROR = esp32-roof dan api-worker, dengan mqtt_disconnect rc=-4"
+   },
+   {
+    "id": "c3",
+    "text": "heap_free terendah esp32-kitchen = 18400 pada jam 00:46 (2026-11-12 00:46:05)"
+   },
+   {
+    "id": "c4",
+    "text": "Durasi db_lock_timeout = 4.82 detik (dari 4820 ms)"
+   }
+  ]
+ },
+ {
+  "id": "dp-long-code-audit",
+  "category": "long-context",
+  "prompt": "Audit file layanan FastAPI berikut dan temukan maksimal 3 bug paling kritis (sebutkan nama fungsi, penyebab, dan perbaikan minimalnya). Jangan mengarang bug pada fungsi yang sudah benar.\n\n```python\nimport asyncio\nimport json\nimport logging\nimport sqlite3\nimport time\nfrom pathlib import Path\nfrom fastapi import FastAPI, HTTPException\n\napp = FastAPI(title=\"Telemetry Collector\")\nDB_PATH = Path(\"telemetry.db\")\nlogger = logging.getLogger(\"telemetry\")\n\ndef normalize_temp(raw_c: float, offset_c: float = 0.0) -> float:\n    if raw_c == -999:\n        raise ValueError(\"invalid sensor reading\")\n    return round(raw_c + offset_c, 2)\n\ndef init_db() -> None:\n    with sqlite3.connect(DB_PATH) as conn:\n        conn.execute(\n            \"CREATE TABLE IF NOT EXISTS readings (\"\n            \"id INTEGER PRIMARY KEY AUTOINCREMENT, device_id TEXT, temp REAL, hum REAL, ts REAL)\"\n        )\n\n@app.get(\"/health\")\ndef health():\n    return {\"status\": \"ok\", \"db\": DB_PATH.exists()}\n\ndef _metric_bucket_1(val: float) -> str:\n    \"\"\"Classify reading into bucket 1 range.\"\"\"\n    if val < 21:\n        return \"low\"\n    if val > 36:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_2(val: float) -> str:\n    \"\"\"Classify reading into bucket 2 range.\"\"\"\n    if val < 22:\n        return \"low\"\n    if val > 37:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_3(val: float) -> str:\n    \"\"\"Classify reading into bucket 3 range.\"\"\"\n    if val < 23:\n        return \"low\"\n    if val > 38:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_4(val: float) -> str:\n    \"\"\"Classify reading into bucket 4 range.\"\"\"\n    if val < 24:\n        return \"low\"\n    if val > 39:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_5(val: float) -> str:\n    \"\"\"Classify reading into bucket 5 range.\"\"\"\n    if val < 25:\n        return \"low\"\n    if val > 40:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_6(val: float) -> str:\n    \"\"\"Classify reading into bucket 6 range.\"\"\"\n    if val < 26:\n        return \"low\"\n    if val > 41:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_7(val: float) -> str:\n    \"\"\"Classify reading into bucket 7 range.\"\"\"\n    if val < 27:\n        return \"low\"\n    if val > 42:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_8(val: float) -> str:\n    \"\"\"Classify reading into bucket 8 range.\"\"\"\n    if val < 28:\n        return \"low\"\n    if val > 43:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_9(val: float) -> str:\n    \"\"\"Classify reading into bucket 9 range.\"\"\"\n    if val < 29:\n        return \"low\"\n    if val > 44:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_10(val: float) -> str:\n    \"\"\"Classify reading into bucket 10 range.\"\"\"\n    if val < 30:\n        return \"low\"\n    if val > 45:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_11(val: float) -> str:\n    \"\"\"Classify reading into bucket 11 range.\"\"\"\n    if val < 31:\n        return \"low\"\n    if val > 46:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_12(val: float) -> str:\n    \"\"\"Classify reading into bucket 12 range.\"\"\"\n    if val < 32:\n        return \"low\"\n    if val > 47:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_13(val: float) -> str:\n    \"\"\"Classify reading into bucket 13 range.\"\"\"\n    if val < 33:\n        return \"low\"\n    if val > 48:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_14(val: float) -> str:\n    \"\"\"Classify reading into bucket 14 range.\"\"\"\n    if val < 34:\n        return \"low\"\n    if val > 49:\n        return \"high\"\n    return \"normal\"\n\ndef _metric_bucket_15(val: float) -> str:\n    \"\"\"Classify reading into bucket 15 range.\"\"\"\n    if val < 35:\n        return \"low\"\n    if val > 50:\n        return \"high\"\n    return \"normal\"\n\n@app.post(\"/ingest\")\nasync def ingest_batch(items: list[dict]):\n    saved = 0\n    for item in items:\n        temp = normalize_temp(float(item[\"temp\"]))\n        with sqlite3.connect(DB_PATH) as conn:\n            conn.execute(\n                \"INSERT INTO readings (device_id, temp, hum, ts) VALUES (?, ?, ?, ?)\",\n                (item[\"device_id\"], temp, float(item[\"hum\"]), time.time()),\n            )\n        saved += 1\n        # rate-limit backoff between writes\n        time.sleep(0.25)\n    return {\"saved\": saved}\n\n@app.get(\"/readings/{device_id}\")\ndef get_recent_readings(device_id: str, limit: int = 20):\n    conn = sqlite3.connect(DB_PATH)\n    cur = conn.cursor()\n    sql = f\"SELECT device_id, temp, hum, ts FROM readings WHERE device_id = '{device_id}' ORDER BY ts DESC LIMIT {int(limit)}\"\n    rows = cur.execute(sql).fetchall()\n    return [{\"device_id\": r[0], \"temp\": r[1], \"hum\": r[2], \"ts\": r[3]} for r in rows]\n```",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Menemukan bug blocking event loop: time.sleep(0.25) di dalam async def ingest_batch (seharusnya await asyncio.sleep(0.25))"
+   },
+   {
+    "id": "c2",
+    "text": "Menemukan SQL injection di get_recent_readings: interpolasi f-string device_id ke query SQL (seharusnya parameterized query ?)"
+   },
+   {
+    "id": "c3",
+    "text": "Menemukan resource leak di get_recent_readings: sqlite3.connect tanpa with atau conn.close()"
+   },
+   {
+    "id": "c4",
+    "text": "Tidak mengarang bug palsu pada normalize_temp atau health"
+   }
+  ]
+ },
+ {
+  "id": "dp-multi-code-evolve",
+  "category": "multi-turn",
+  "turns": [
+   "Tulis fungsi Python `clean_readings(rows)` dengan docstring singkat. Aturan: terima list dict `{\"temp\": float, \"hum\": float}`, buang baris dengan `temp == -999`, clamp `hum` ke rentang `[0, 100]`, dan kembalikan list dict baru tanpa memutasi `rows` input.",
+   "Revisi `clean_readings(rows)` supaya mengembalikan tuple `(cleaned, skipped_count)` dengan `skipped_count` adalah jumlah baris `-999` yang dibuang. Pertahankan nama fungsi, docstring, dan sifat tanpa mutasi input. Tulis kode lengkap fungsi hasil revisinya.",
+   "Tanpa mengubah kode revisi barusan, tuliskan output persis jika fungsi itu dipanggil dengan `[{\"temp\": 28.0, \"hum\": 105}, {\"temp\": -999, \"hum\": 50}]`."
+  ],
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Di Turn 1, fungsi membuang temp == -999, meng-clamp hum [0, 100], memiliki docstring, dan tidak memutasi dict/list input"
+   },
+   {
+    "id": "c2",
+    "text": "Di Turn 2, mengembalikan tuple (cleaned, skipped_count) dengan docstring dan nama clean_readings tetap dipertahankan",
+    "check": {
+     "kind": "contains_all",
+     "values": [
+      "def clean_readings",
+      "skipped_count"
+     ],
+     "turn": 1
+    }
+   },
+   {
+    "id": "c3",
+    "text": "Di Turn 3, hasil trace tepat: ([{'temp': 28.0, 'hum': 100}], 1)"
+   },
+   {
+    "id": "c4",
+    "text": "Konsisten antar-turn: Turn 3 tidak mengubah kode dan sesuai dengan implementasi Turn 2"
+   }
+  ]
+ },
+ {
+  "id": "dp-multi-constraint-edit",
+  "category": "multi-turn",
+  "turns": [
+   "Tulis catatan rilis v1.2 tentang perbaikan script backup: TEPAT 3 bullet bahasa Indonesia, tanpa kalimat pembuka/penutup di luar bullet, total MAKSIMAL 40 kata.",
+   "Revisi HANYA bullet ke-2 supaya menyebut frasa persis \"T4 GPU\". Bullet ke-1 dan ke-3 wajib dipertahankan sama persis kata demi kata, tetap TEPAT 3 bullet tanpa teks di luar bullet, dan total MAKSIMAL 45 kata."
+  ],
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Turn 1: total maksimal 40 kata",
+    "check": {
+     "kind": "max_words",
+     "value": 40,
+     "turn": 0
+    }
+   },
+   {
+    "id": "c2",
+    "text": "Turn 2: total maksimal 45 kata",
+    "check": {
+     "kind": "max_words",
+     "value": 45,
+     "turn": 1
+    }
+   },
+   {
+    "id": "c3",
+    "text": "Turn 2: wajib memuat frasa persis T4 GPU",
+    "check": {
+     "kind": "contains_all",
+     "values": [
+      "T4 GPU"
+     ],
+     "turn": 1
+    }
+   },
+   {
+    "id": "c4",
+    "text": "Turn 1 dan Turn 2 sama-sama tepat 3 bullet tanpa pembuka/penutup, dan bullet ke-1 serta ke-3 pada Turn 2 identik dengan Turn 1"
+   }
+  ]
+ },
+ {
+  "id": "dp-code-win-subproc",
+  "category": "coding-fix",
+  "prompt": "Fungsi Python berikut sering error `UnicodeDecodeError: charmap codec can't decode` di Windows saat output CLI berisi karakter UTF-8, dan juga rawan shell injection serta hang kalau server tidak merespons:\n\n```python\nimport subprocess\n\ndef fetch_json(url: str) -> str:\n    res = subprocess.run(f\"curl -s {url}\", shell=True, capture_output=True, text=True)\n    return res.stdout\n```\n\nJelaskan singkat penyebabnya lalu tulis perbaikan minimal yang aman di Windows.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Menjelaskan bahwa text=True di Windows memakai locale default (seperti cp1252) bukan UTF-8, dan shell=True rawan injection"
+   },
+   {
+    "id": "c2",
+    "text": "Menghapus shell=True dan memakai list argumen [\"curl\", \"-s\", url]"
+   },
+   {
+    "id": "c3",
+    "text": "Menetapkan encoding=\"utf-8\" dan errors=\"replace\" (atau decode UTF-8 eksplisit)"
+   },
+   {
+    "id": "c4",
+    "text": "Menambahkan timeout pada subprocess.run serta memeriksa returncode / check=True"
+   }
+  ]
+ },
+ {
+  "id": "dp-code-sse-parser",
+  "category": "coding-fix",
+  "prompt": "Parser SSE client OpenAI-compatible berikut bermasalah: tidak benar-benar streaming, crash saat server mengirim komentar keepalive (`: ping`), dan gagal pada `[DONE]`:\n\n```python\nimport json\n\ndef parse_sse(resp):\n    body = resp.read().decode()\n    out = []\n    for block in body.split(\"\\n\\n\"):\n        data = block.replace(\"data: \", \"\")\n        j = json.loads(data)\n        out.append(j[\"choices\"][0][\"delta\"].get(\"content\", \"\"))\n    return \"\".join(out)\n```\n\nTulis perbaikan minimalnya sebagai generator/fungsi streaming per baris yang tangguh.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Membaca per baris secara streaming (iterasi langsung pada resp) alih-alih resp.read() sekaligus"
+   },
+   {
+    "id": "c2",
+    "text": "Mengabaikan baris kosong dan komentar SSE (yang diawali titik dua) serta berhenti/skip pada [DONE]"
+   },
+   {
+    "id": "c3",
+    "text": "Hanya memproses baris data: dengan strip prefix secara aman (mis. line[5:].strip()), bukan replace() global"
+   },
+   {
+    "id": "c4",
+    "text": "Menangani JSONDecodeError atau choices kosong secara aman tanpa crash"
+   }
+  ]
+ },
+ {
+  "id": "dp-json-tool-plan",
+  "category": "structured-json",
+  "prompt": "Kamu agent dengan 3 tool:\n1. `read_file` -> args: `{\"path\": str, \"start_line\": int, \"end_line\": int}`\n2. `edit_file` -> args: `{\"path\": str, \"target\": str, \"replacement\": str}`\n3. `run_command` -> args: `{\"command\": str}`\n\nUser melapor: \"Di `C:/proj/app.py` kayaknya ada bug di fungsi `hitung_skor`, tolong cek dulu.\" Kamu belum pernah membaca file itu.\n\nBalas HANYA dengan 1 objek JSON valid (tanpa markdown fence/backtick, tanpa teks lain) berformat `{\"tool\": \"...\", \"arguments\": {...}}` untuk langkah pertama paling aman.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Output adalah JSON object valid tanpa markdown fence",
+    "check": {
+     "kind": "valid_json",
+     "expect": "dict",
+     "no_fence": true
+    }
+   },
+   {
+    "id": "c2",
+    "text": "Memilih tool read_file (bukan langsung edit_file atau perintah destruktif)",
+    "check": {
+     "kind": "contains_all",
+     "values": [
+      "\"read_file\""
+     ]
+    }
+   },
+   {
+    "id": "c3",
+    "text": "Argumen menggunakan path persis C:/proj/app.py tanpa mengarang isi target/replacement"
+   },
+   {
+    "id": "c4",
+    "text": "Struktur key sesuai schema: top-level hanya tool dan arguments dengan nama field argumen valid"
+   }
+  ]
+ },
+ {
+  "id": "dp-json-extract-audit",
+  "category": "structured-json",
+  "prompt": "Ekstrak data dari catatan tes lab berikut menjadi JSON array berisi 3 objek. Setiap objek wajib punya tepat 5 key: `model`, `gpu`, `eval_tps` (number/null), `prompt_eval_tps` (number/null), `status` (`\"ok\"` atau `\"oom\"`). Jika angka tidak tertulis di catatan, isi `null` (jangan mengarang!).\n\nCatatan:\n- Tes 1: gemma4:e4b di T4 16GB, generate 48.79 tok/s, prompt eval 1995.93 tok/s, lancar.\n- Tes 2: qwen3.5:4b di RTX 3050 4GB, generate 31.4 tok/s, lupa catat prompt eval, selesai normal.\n- Tes 3: gemma4:26b di T4 16GB, langsung crash CUDA out of memory sebelum generate.\n\nBalas HANYA dengan JSON array valid tanpa markdown fence atau teks pengantar.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Output adalah JSON array valid tanpa markdown fence",
+    "check": {
+     "kind": "valid_json",
+     "expect": "list",
+     "no_fence": true
+    }
+   },
+   {
+    "id": "c2",
+    "text": "Berisi 3 objek dengan nilai angka tepat: 48.79, 1995.93, dan 31.4"
+   },
+   {
+    "id": "c3",
+    "text": "Field prompt_eval_tps untuk qwen3.5:4b dan angka kecepatan untuk gemma4:26b bernilai null (tidak dikarang)"
+   },
+   {
+    "id": "c4",
+    "text": "Status gemma4:26b adalah \"oom\" dan dua tes lainnya \"ok\""
+   }
+  ]
+ }
+]

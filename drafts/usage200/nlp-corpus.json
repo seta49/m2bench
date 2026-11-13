@@ -1,0 +1,342 @@
+[
+  {
+    "id": "nlp-001",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Kurasi sumber teks Banjar: memutuskan teks mana yang boleh masuk dataset berdasarkan lisensi",
+    "prompt": "Kamu menemukan kumpulan cerita rakyat Banjar di sebuah blog. File bisa diunduh bebas tanpa login, tapi di halaman itu tidak ada pernyataan lisensi apa pun. Rencanamu memakainya untuk melatih model bahasa Banjar dan akan kamu publikasikan. Apa langkah yang paling tepat?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Langsung pakai, karena selama bisa diunduh gratis berarti bebas dipakai untuk apa saja.",
+      "B) Pakai saja, cukup tambahkan catatan 'sumber: internet' di data card supaya legal.",
+      "C) Jangan masukkan dulu ke dataset; cari lisensi atau izin yang jelas dan catat asal-usul (provenance) setiap dokumen.",
+      "D) Pakai selama tujuannya riset akademik, karena riset selalu otomatis dianggap fair use."
+    ],
+    "answer": { "value": "C" },
+    "solution": "Bisa diunduh != berlisensi. Tanpa lisensi/izin eksplisit, teks tidak layak dimasukkan ke dataset yang dipublikasikan; provenance harus dicatat. Fair use bukan lisensi otomatis."
+  },
+  {
+    "id": "nlp-002",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Memahami syarat lisensi dataset (CC-BY vs CC-BY-NC) sebelum memakai korpus untuk produk",
+    "prompt": "Sebuah korpus teks Banjar dirilis dengan lisensi CC BY-NC 4.0. Nanti hasil modelmu akan dipakai untuk fitur berbayar di sebuah aplikasi komersial. Apa masalah utamanya?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Tidak ada masalah, CC BY cuma butuh atribusi.",
+      "B) Bagian NC berarti penggunaan non-komersial; memakai korpus itu di produk berbayar melanggar syarat lisensi.",
+      "C) Masalahnya cuma harus mencantumkan nama pembuat di layar aplikasi.",
+      "D) CC BY-NC melarang kita mengubah teks, jadi harus dipakai apa adanya."
+    ],
+    "answer": { "value": "B" },
+    "solution": "BY = atribusi, NC = NonCommercial (membatasi penggunaan komersial). Memakai korpus ini di produk berbayar melanggar. Atribusi tetap wajib, tapi bukan satu-satunya syarat."
+  },
+  {
+    "id": "nlp-003",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Menilai apakah memakai karya berhak cipta utuh bisa dibenarkan sebagai fair use untuk korpus",
+    "prompt": "Untuk menambah data, kamu berencana memindai seluruh isi sebuah novel berhak cipta dan memasukkan seluruh teksnya ke korpus pretrain, dengan alasan 'kan cuma untuk riset, itu fair use'. Apa penilaian paling tepat?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Fair use memang selalu membolehkan semua penggunaan untuk riset, jadi aman.",
+      "B) Selama tidak dijual, menggandakan seluruh karya berhak cipta ke dataset selalu boleh.",
+      "C) Menggandakan seluruh karya secara utuh sulit dibenarkan sebagai fair use; riset bukan lisensi otomatis, sebaiknya cari sumber berlisensi terbuka atau izin pemegang hak.",
+      "D) Fair use berlaku otomatis asalkan kita cantumkan judul bukunya."
+    ],
+    "answer": { "value": "C" },
+    "solution": "Fair use adalah doktrin terbatas (tujuan, sifat karya, proporsi yang diambil, dampak pasar), bukan izin otomatis untuk riset. Memakai karya utuh berisiko; utamakan sumber terbuka atau izin."
+  },
+  {
+    "id": "nlp-004",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Pembersihan noise OCR buku Banjar lama: homoglyph dan karakter tertukar",
+    "prompt": "Hasil OCR buku Banjar lama sering menghasilkan karakter tertukar: angka '0' terbaca 'O', '1' terbaca 'l' atau 'I', dan pasangan 'rn' terbaca 'm' (misal 'barnar' padahal seharusnya 'banar', kata Banjar). Strategi pembersihan mana yang paling masuk akal?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Hapus semua angka dan huruf besar dari korpus supaya tidak ada yang tertukar.",
+      "B) Ganti paksa semua 'rn' jadi 'm' dan semua '0' jadi 'O', lalu selesai.",
+      "C) Pakai kombinasi kamus kata Banjar plus aturan konteks (dan normalisasi Unicode) untuk mengoreksi kandidat homoglyph, bukan penggantian buta.",
+      "D) Abaikan saja, karena model bahasa pasti belajar sendiri semua variasi noise."
+    ],
+    "answer": { "value": "C" },
+    "solution": "Homoglyph perlu koreksi sadar konteks. Penggantian buta ('rn'->'m') merusak kata asli. Kamus/wordlist + konteks + normalisasi Unicode lebih tepat; membuang angka/huruf besar menghilangkan informasi."
+  },
+  {
+    "id": "nlp-005",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Menangani kata terpotong akibat hyphenation di hasil OCR teks Banjar",
+    "prompt": "Saat menyalin teks dari hasil OCR, banyak kata terlihat terpotong di akhir baris karena pemenggalan (contoh: baris berakhir 'kese-' lalu baris berikutnya 'hadiran', dan ada baris berakhir 'dangan-'). Dua sinyal paling jelas bahwa ini kata terpotong baris (bukan kata asli) adalah...\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Kata diakhiri tanda hubung tepat di akhir baris dan lanjutannya ada di baris berikutnya.",
+      "B) Kata tidak ada di kamus dan panjangnya lebih dari sepuluh huruf.",
+      "C) Kata ditulis dengan huruf kapital semua.",
+      "D) Kata muncul lebih dari sekali di dokumen yang sama."
+    ],
+    "answer": { "value": "A" },
+    "solution": "Ciri hyphenation pada OCR: tanda hubung di akhir baris ditambah lanjutan kata di baris berikutnya. Harus digabung saat normalisasi baris. Sinyal lain tidak andal."
+  },
+  {
+    "id": "nlp-006",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Dedup korpus: menyadari keterbatasan dedup exact sebelum memakai data web",
+    "prompt": "Kamu menjalankan dedup exact (hash persis per dokumen) pada korpus berita Banjar. Dokumen yang isinya sama tapi beda satu tanda baca, beda spasi, atau beda blok iklan di footer tidak terbuang. Apa yang sebenarnya kurang?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Tidak kurang apa-apa; dokumen yang beda sedikit memang bukan duplikat.",
+      "B) Yang kurang adalah dedup near-duplicate (mis. berbasis shingle n-gram + Jaccard/MinHash) untuk menangkap duplikat yang tidak identik byte-per-byte.",
+      "C) Yang kurang adalah menghapus semua tanda baca sebelum hashing persis.",
+      "D) Yang kurang adalah membuat hash dari judul saja, bukan dari isi."
+    ],
+    "answer": { "value": "B" },
+    "solution": "Dedup exact hanya menangkap dokumen identik. Duplikat hampir sama (beda tanda baca/spasi/boilerplate) butuh near-duplicate detection: shingle n-gram + Jaccard, dioptimalkan dengan MinHash/LSH."
+  },
+  {
+    "id": "nlp-007",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Dedup skala besar (jutaan dokumen) memakai MinHash + LSH, memahami cara kerjanya",
+    "prompt": "Korpusmu berisi 2 juta dokumen. Menghitung Jaccard semua pasangan (O(n^2)) tidak mungkin. Kamu mau pakai MinHash + LSH. Mana pernyataan yang paling benar tentang cara kerjanya?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) MinHash menyimpan seluruh isi dokumen, dan LSH cuma mengurutkan hasil Jaccard agar cepat dibaca.",
+      "B) MinHash meringkas tiap dokumen jadi vektor tanda tangan (signature) dari hash shingle, dan LSH membucket vektor serupa supaya hanya pasangan kandidat yang dihitung Jaccard-nya.",
+      "C) MinHash menghitung vektor TF-IDF, lalu LSH mengelompokkan kata yang sering muncul bersamaan.",
+      "D) MinHash mengganti Jaccard dengan cosine similarity, dan LSH menyamakan panjang semua dokumen."
+    ],
+    "answer": { "value": "B" },
+    "solution": "MinHash: signature per dokumen dari hash shingle; Jaccard diestimasi dari fraksi hash yang sama. LSH membucket dokumen serupa sehingga hanya kandidat mirip yang diuji, menghindari O(n^2)."
+  },
+  {
+    "id": "nlp-008",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Kontaminasi benchmark: mengenali data uji yang bocor ke training saat panen web",
+    "prompt": "Setelah model SFT-mu skornya sangat tinggi pada benchmark pemahaman bahasa daerah, ternyata sebagian contoh di benchmark itu juga ada di data trainingmu (dipanen dari web yang sama). Ini disebut apa, dan kenapa masalahnya serius?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Overfitting normal; tidak masalah selama skor naik.",
+      "B) Kontaminasi benchmark (data uji bocor ke training); skor evaluasi jadi menggelembung dan tidak lagi mencerminkan kemampuan pada data baru.",
+      "C) Data leakage label; tidak berpengaruh karena model tetap harus belajar.",
+      "D) Domain shift; malah bagus karena model mengenali gaya benchmark."
+    ],
+    "answer": { "value": "B" },
+    "solution": "Contoh benchmark yang juga ada di training = kontaminasi data uji. Skor jadi optimistis palsu. Mitigasi: pisahkan test set lebih dulu, deteksi overlap n-gram train vs test, buang yang bocor."
+  },
+  {
+    "id": "nlp-009",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Split train/val/test untuk korpus dwi-dialek Banjar (Kuala vs Hulu) yang tidak seimbang",
+    "prompt": "Korpusmu punya dua kelompok: teks dialek Banjar Kuala (mayoritas, dari media) dan dialek Banjar Hulu (lebih sedikit, dari cerita rakyat). Kamu membagi train/val/test dengan split acak 80/10/10 lalu menyiapkan evaluasi. Masalah paling mungkin?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Tidak ada; split acak selalu paling adil.",
+      "B) Kelas Banjar Hulu bisa hampir tidak muncul di val/test (atau hanya menumpuk di satu split), sehingga evaluasi tidak mewakili kemampuan model pada dialek minoritas.",
+      "C) Split acak akan membuat data val dan test identik.",
+      "D) Split acak menghapus semua dokumen dialek Hulu dari train."
+    ],
+    "answer": { "value": "B" },
+    "solution": "Split acak mengabaikan distribusi dialek. Untuk data tidak seimbang, pakai stratified split: proporsi tiap dialek dijaga di train/val/test supaya evaluasi per-dialek bermakna."
+  },
+  {
+    "id": "nlp-010",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Membedakan peran data pretraining vs data SFT di pipeline model Banjar",
+    "prompt": "Mana perbedaan inti antara data untuk pretraining dan data untuk SFT (supervised fine-tuning)?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Pretraining pakai JSONL, SFT pakai CSV.",
+      "B) Pretraining memakai teks berjalan bebas untuk memprediksi token berikutnya; SFT memakai pasangan instruksi-jawaban (format percakapan) yang mengajarkan perilaku menjawab.",
+      "C) Pretraining hanya bahasa Inggris, SFT bahasa daerah.",
+      "D) Pretraining butuh label manusia, SFT tidak butuh label."
+    ],
+    "answer": { "value": "B" },
+    "solution": "Pretrain = next-token prediction pada teks mentah. SFT = fine-tuning pada pasangan instruction/response, mengajarkan format dan perilaku menjawab."
+  },
+  {
+    "id": "nlp-011",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Keputusan kualitas vs kuantitas saat menambah data SFT berbahasa Banjar",
+    "prompt": "Kamu punya 2.000 pasangan instruksi-jawaban untuk SFT. Kalau harus menambah data, pilihan mana yang paling masuk akal untuk kualitas model?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Lipatgandakan 5x dengan terjemahan mesin dari bahasa Indonesia ke Banjar tanpa diperiksa penutur asli.",
+      "B) Tambah beberapa ratus contoh baru yang benar, alami, dan diverifikasi penutur Banjar asli (termasuk ragam dialek), daripada ribuan contoh sintetis tak terverifikasi.",
+      "C) Hapus semua contoh sulit supaya data bersih dan seragam.",
+      "D) Tambah sebanyak mungkin contoh dengan pertanyaan yang hampir sama persis dan berulang."
+    ],
+    "answer": { "value": "B" },
+    "solution": "Untuk SFT, kualitas > kuantitas. Terjemahan mesin tanpa verifikasi mengajarkan kesalahan; contoh berulang/mudah tidak menambah sinyal. Contoh terverifikasi penutur asli lebih bernilai."
+  },
+  {
+    "id": "nlp-012",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Training tokenizer BPE untuk bahasa Banjar: memilih vocab size",
+    "prompt": "Kamu melatih tokenizer BPE untuk bahasa Banjar dengan vocab size sangat kecil (misalnya 500). Mana dampak yang paling mungkin terjadi?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Setiap kata langsung jadi satu token sehingga sekuens jadi lebih pendek.",
+      "B) Kata jarang/panjang terpecah jadi banyak sub-kata, sekuens jadi lebih panjang, dan untuk karakter/kata yang tak terwakili muncul token <unk>.",
+      "C) Tokenizer jadi tidak butuh tahap normalisasi teks.",
+      "D) Vocab kecil selalu lebih akurat untuk bahasa apa pun."
+    ],
+    "answer": { "value": "B" },
+    "solution": "Vocab terlalu kecil -> kompresi buruk, banyak sub-kata per kata, sekuens panjang, dan lebih banyak <unk> bila karakter tidak terwakili. Vocab terlalu besar -> embedding membengkak. Perlu di-tuning."
+  },
+  {
+    "id": "nlp-013",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Penanganan PII di korpus hasil panen web sebelum publikasi dataset",
+    "prompt": "Hasil panen web korpus Banjar ternyata memuat nomor HP, alamat lengkap, dan nama lengkap orang dari kolom komentar. Apa penanganan yang paling tepat sebelum data dipakai/dipublikasikan?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Biarkan saja karena itu data publik yang diunggah sendiri oleh pemiliknya.",
+      "B) Ganti nomor HP jadi angka acak tapi biarkan nama dan alamat apa adanya.",
+      "C) Deteksi lalu hapus/redaksi (de-identifikasi) PII (nomor HP, alamat, identitas) atau buang dokumennya, dan catat kebijakannya di data card.",
+      "D) Enkripsi seluruh file dataset supaya PII tidak terlihat."
+    ],
+    "answer": { "value": "C" },
+    "solution": "PII harus di-deidentifikasi (deteksi + hapus/redaksi) sebelum dataset dipublikasikan, atau dokumennya dibuang. Enkripsi file tidak menyelesaikan masalah saat data dipakai; 'sudah publik' bukan izin."
+  },
+  {
+    "id": "nlp-014",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Evaluasi generatif bahasa Banjar: keterbatasan BLEU sebagai satu-satunya metrik",
+    "prompt": "Untuk mengevaluasi model generatif teks Banjar (misalnya meringkas cerita rakyat), kamu hanya mengandalkan BLEU terhadap satu referensi. Apa keterbatasan paling serius pada bahasa rendah sumber daya?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) BLEU tidak bisa dihitung tanpa GPU.",
+      "B) BLEU berbasis kecocokan n-gram terhadap referensi terbatas; hasil Banjar yang benar tapi beda pilihan kata (atau ragam dialek) dihukum, sehingga skor rendah belum tentu berarti output buruk.",
+      "C) BLEU selalu memberi skor 100 untuk bahasa daerah.",
+      "D) BLEU hanya berlaku untuk bahasa Inggris dan tidak bisa jalan pada teks Unicode."
+    ],
+    "answer": { "value": "B" },
+    "solution": "BLEU mengukur tumpang-tindih n-gram dari referensi terbatas; variasi leksikal/dialek yang sah dihukum. Untuk low-resource sebaiknya digabung dengan human evaluation (penutur asli) dan metrik semantik."
+  },
+  {
+    "id": "nlp-015",
+    "category": "nlp-corpus",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Memilih metode evaluasi output Banjar: kenapa judge LLM kurang ideal untuk bahasa jarang",
+    "prompt": "Kamu ingin menilai kualitas output bahasa Banjar memakai 'LLM judge' (model besar sebagai penilai). Kenapa ini kurang ideal untuk bahasa Banjar?\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Karena LLM judge selalu menilai lebih tinggi bahasa yang jarang.",
+      "B) Karena kemampuan model penilai pada bahasa yang sangat jarang belum tentu andal/kalibrasi; ia bisa menganggap teks Banjar yang keliru sebagai benar dan bias ke bahasa Indonesia atau bentuk yang dikenalnya.",
+      "C) Karena LLM judge hanya bisa menilai kode program, bukan teks.",
+      "D) Karena LLM judge butuh data berlabel emas dari benchmark resmi Banjar."
+    ],
+    "answer": { "value": "B" },
+    "solution": "Judge LLM mewarisi keterbatasan pemahaman pada bahasa low-resource: kualitas penilaian tidak terjamin dan rawan bias ke bahasa mayoritas/varian yang familier. Karena itu validasi penutur asli tetap diperlukan; judge hanya pendamping."
+  },
+  {
+    "id": "nlp-016",
+    "category": "nlp-corpus",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Dokumentasi dataset korpus Banjar sebelum rilis (data card / datasheet)",
+    "prompt": "Sebelum dataset korpus Banjar-mu dirilis, kamu menulis satu dokumen yang memuat komposisi data, sumber, lisensi, proses pembersihan, dan keterbatasan (bias dialek, PII). Nama umum dokumen ini (satu istilah, bahasa Inggris) adalah ...?\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "data card", "accept": ["datasheet", "dataset card", "data sheet"] },
+    "solution": "Dokumen yang mendokumentasikan dataset disebut data card / dataset card (Bender & Friedman) atau datasheet for datasets (Gebru et al.)."
+  },
+  {
+    "id": "nlp-017",
+    "category": "nlp-corpus",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Format penyimpanan dataset instruksi korpus Banjar",
+    "prompt": "Format berkas di mana setiap baris berisi tepat satu objek JSON (tanpa koma pemisah antar baris) — format yang kamu pakai untuk dataset instruksi — disebut ... (singkatan).\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "jsonl", "accept": ["json lines", "jsonlines", "json-lines"] },
+    "solution": "JSON Lines (JSONL): satu objek JSON per baris; mudah dibaca streaming dan di-append."
+  },
+  {
+    "id": "nlp-018",
+    "category": "nlp-corpus",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Validasi kealamian teks Banjar dalam korpus oleh manusia",
+    "prompt": "Kamu ingin memastikan teks Banjar dalam korpus benar-benar alami dan gramatikalnya wajar, bukan hasil terjemahan kaku. Kelompok orang paling tepat untuk memvalidasi adalah ... (dua kata).\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "penutur asli", "accept": ["native speaker", "native speakers", "penutur jati", "penutur asli banjar"] },
+    "solution": "Validasi kealamian/kebenaran bahasa harus oleh penutur asli (native speaker). Terjemahan mesin tanpa verifikasi penutur tidak dianggap layak."
+  },
+  {
+    "id": "nlp-019",
+    "category": "nlp-corpus",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Training tokenizer sub-kata untuk bahasa Banjar",
+    "prompt": "Algoritma tokenisasi sub-kata yang membangun kosakata dengan menggabungkan pasangan byte/karakter paling sering secara iteratif (dipakai banyak LLM) disingkat ...\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "bpe", "accept": ["byte pair encoding", "byte-pair encoding", "byte pair encoding (bpe)"] },
+    "solution": "Byte Pair Encoding (BPE) menggabungkan pasangan simbol paling sering secara iteratif untuk membentuk kosakata sub-kata."
+  },
+  {
+    "id": "nlp-020",
+    "category": "nlp-corpus",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Dedup near-duplicate skala besar pada korpus Banjar",
+    "prompt": "Teknik dedup near-duplicate skala besar yang meringkas tiap dokumen jadi signature hash dari shingle dan lalu membucket dokumen mirip agar tidak perlu membandingkan semua pasangan disingkat ...\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "minhash", "accept": ["minhash lsh", "minhash+lsh", "minhash-lsh", "minhash dan lsh"] },
+    "solution": "MinHash (dengan LSH) meringkas dokumen jadi signature dan membucket kandidat mirip; mengestimasi Jaccard tanpa O(n^2)."
+  },
+  {
+    "id": "nlp-021",
+    "category": "nlp-corpus",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Mengenali kategori data yang harus disamarkan di korpus panen web",
+    "prompt": "Di korpus panen web ditemukan nama lengkap, nomor HP, dan alamat orang. Semua itu termasuk kategori data yang disingkat ... (tiga kata, bahasa Inggris).\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "pii", "accept": ["personally identifiable information", "personal identifiable information", "personal data", "data pribadi"] },
+    "solution": "PII = Personally Identifiable Information; harus dideidentifikasi (dihapus/diredaksi) sebelum dataset dipublikasikan."
+  },
+  {
+    "id": "nlp-022",
+    "category": "nlp-corpus",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Menyatukan varian ejaan teks Banjar lama dan modern sebelum training",
+    "prompt": "Dalam korpus Banjar, satu kata bisa muncul dengan ejaan berbeda (mis. ejaan lama 'tjoba' vs 'coba', atau varian diakritik 'muhammad' vs 'muhammád'). Mengubah semua varian ini ke satu bentuk standar sebelum training disebut ...\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "normalisasi", "accept": ["normalisasi teks", "text normalization", "normalization", "normalisasi ejaan", "spelling normalization"] },
+    "solution": "Normalisasi ejaan/teks: memetakan varian ejaan ke bentuk kanonik supaya token tidak terpecah dan model tidak menganggapnya kata berbeda. Harus konsisten antara training dan inference."
+  },
+  {
+    "id": "nlp-023",
+    "category": "nlp-corpus",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Memvalidasi skema dan integritas file JSONL dataset sebelum training",
+    "prompt": "Kamu menulis skrip kecil yang memeriksa setiap baris JSONL dataset: field wajib ada, tipe benar, tidak ada id duplikat, tidak ada jawaban kosong. Kumpulan pemeriksaan otomatis ini (istilah pengujian perangkat lunak) disebut ... (dua kata).\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "unit test", "accept": ["unit tests", "unit testing", "unittest", "uji unit", "pengujian unit", "schema validation", "validasi skema"] },
+    "solution": "Unit test / schema validation untuk dataset: menjamin skema dan integritas data sebelum training, mencegah error di tengah pipeline."
+  },
+  {
+    "id": "nlp-024",
+    "category": "nlp-corpus",
+    "type": "short",
+    "difficulty": "hard",
+    "usage_source": "Mendiagnosis skor test yang menggelembung akibat panen web yang tumpang-tindih dengan set uji",
+    "prompt": "Setelah training, skor modelmu di set test jauh lebih tinggi daripada di set validasi. Setelah dicek, banyak contoh test juga muncul di set training karena semuanya dipanen dari web yang sama. Nama masalah ini adalah ... (satu kata, istilah Inggris).\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "contamination", "accept": ["data contamination", "benchmark contamination", "kontaminasi", "kontaminasi data", "leakage", "data leakage"] },
+    "solution": "Kontaminasi data / data leakage: contoh test bocor ke training sehingga skor test menggelembung. Pencegahan: pisahkan test set lebih dulu, deteksi overlap n-gram lintas split, dedup."
+  },
+  {
+    "id": "nlp-025",
+    "category": "nlp-corpus",
+    "type": "short",
+    "difficulty": "hard",
+    "usage_source": "Menghitung dampak pipeline dedup bertahap pada korpus hasil panen",
+    "prompt": "Hasil panen korpus awal 48.000 dokumen. Dedup exact membuang 25% dokumen, lalu near-duplicate removal membuang 1/3 dari sisa dokumen (dokumen unik). Berapa dokumen siap pakai setelah kedua tahap?\nJawab singkat (angka). Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": { "value": "24000", "accept": ["24.000", "24 000"] },
+    "solution": "48000 x 0.75 = 36000 sisa setelah exact dedup. Membuang 1/3 berarti menyisakan 2/3: 36000 x (2/3) = 24000 dokumen siap pakai."
+  }
+]

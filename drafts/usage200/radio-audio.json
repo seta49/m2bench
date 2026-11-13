@@ -1,0 +1,146 @@
+[
+ {
+  "id": "rad-001",
+  "category": "radio-audio",
+  "type": "mcq",
+  "difficulty": "easy",
+  "usage_source": "RTL-SDR: apa yang menentukan lebar spektrum yang bisa dilihat sekaligus.",
+  "prompt": "Kamu pakai dongle RTL-SDR (chip RTL2832U + tuner R820T2) untuk mengintip spektrum. Apa yang paling menentukan lebar pita frekuensi yang bisa kamu lihat sekaligus dari satu pengaturan?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Angka gain tuner yang kamu set.",
+   "B) Sample rate yang diset ke dongle, dengan batas praktis sekitar 2,4-3,2 MHz untuk tuner R820T2.",
+   "C) Panjang kabel USB yang dipakai.",
+   "D) Frekuensi center saja, tanpa bergantung setelan lain."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "Bandwidth instan SDR dibatasi sample rate (Nyquist). Untuk RTL-SDR dengan tuner R820T2, sample rate stabil maksimum sekitar 2,4-3,2 MHz, jadi lebar spektrum yang tampak sekaligus kira-kira sebesar itu. Gain memengaruhi kekuatan sinyal (bukan lebar pita); frekuensi center hanya menggeser posisi, bukan lebar. Jawaban B."
+ },
+ {
+  "id": "rad-002",
+  "category": "radio-audio",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "Membandingkan kelas Xiegu G90 (HF QRP SDR) vs Baofeng UV-5R (HT VHF/UHF FM).",
+  "prompt": "Kamu membandingkan Xiegu G90 dan Baofeng UV-5R. Pernyataan mana yang paling tepat menggambarkan perbedaan kelasnya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) G90 adalah radio HF (1,8-30 MHz) keluaran sekitar 20 W dengan mode SSB/CW/digital, sedangkan UV-5R adalah HT VHF/UHF keluaran sekitar 5 W bermode FM.",
+   "B) Keduanya sama-sama radio HF 50 W dengan fitur identik.",
+   "C) G90 hanya bekerja di VHF, sedangkan UV-5R hanya di HF.",
+   "D) G90 adalah HT 5 W FM, sedangkan UV-5R adalah base HF 20 W SSB."
+  ],
+  "answer": {
+   "value": "A"
+  },
+  "solution": "Xiegu G90 = transceiver SDR HF (kira-kira 1,8-30 MHz) QRP sekitar 20 W, mode SSB/CW/AM/digital. Baofeng UV-5R = handheld VHF/UHF (2 m/70 cm) sekitar 5 W, mode FM (termasuk repeater dengan offset/CTCSS). Jadi A. B salah kelas dan daya; C menukar band; D menukar peran keduanya. Jawaban A."
+ },
+ {
+  "id": "rad-003",
+  "category": "radio-audio",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "Repeater: alasan offset frekuensi dan fungsi CTCSS.",
+  "prompt": "Di radio kamu, repeater 2 m butuh offset dan CTCSS supaya bisa dipakai. Penjelasan paling tepat soal keduanya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Offset dipakai untuk menghemat baterai, sedangkan CTCSS untuk mempercepat scan.",
+   "B) Offset memisahkan frekuensi pancar dan terima (umumnya sekitar +-600 kHz di 2 m dan +-5 MHz di 70 cm), sedangkan CTCSS memakai tone sub-audible supaya repeater hanya membuka untuk sinyal yang tonenya cocok.",
+   "C) Offset selalu 600 kHz di semua band, dan CTCSS wajib ada di semua radio.",
+   "D) CTCSS menggantikan kebutuhan gain antenna."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "Repeater memancar dan menerima pada frekuensi berbeda agar tidak saling mengganggu (dupleks): offset standar kira-kira +-600 kHz di 2 m dan +-5 MHz di 70 cm (bukan sama di semua band). CTCSS adalah tone frekuensi rendah sub-audible; repeater hanya membuka squelch bila tone pemancar cocok, mengurangi gangguan. Jawaban B."
+ },
+ {
+  "id": "rad-004",
+  "category": "radio-audio",
+  "type": "mcq",
+  "difficulty": "easy",
+  "usage_source": "Antenna: arti SWR rendah/tinggi dan konsekuensinya.",
+  "prompt": "Kamu cek SWR antenna. Pernyataan mana yang paling tepat tentang SWR?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) SWR 1:1 berarti tidak ada daya yang dipancarkan sama sekali.",
+   "B) SWR 1:1 adalah match sempurna (tidak ada daya terpantul); makin tinggi SWR makin banyak daya terpantul, sebagian berubah panas di final/feeder dan daya pancar efektif turun.",
+   "C) SWR hanya memengaruhi kualitas audio, bukan daya pancar.",
+   "D) SWR yang tinggi selalu menambah jangkauan karena pantulan memperkuat sinyal."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "SWR (Standing Wave Ratio) mengukur kecocokan impedansi antenna/feeder terhadap sumber. 1:1 = match sempurna, daya terpantul minimal. Semakin tinggi SWR, semakin besar bagian daya yang kembali (mismatch loss) dan berisiko berubah panas di transistor final; daya teradiasi efektif menurun. Jawaban B."
+ },
+ {
+  "id": "rad-005",
+  "category": "radio-audio",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "Modulasi: kenapa SSB lebih efisien daripada AM.",
+  "prompt": "Kenapa emisi SSB dianggap lebih efisien dibanding AM biasa?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Karena SSB memancarkan carrier penuh sehingga sinyalnya selalu lebih kuat.",
+   "B) Karena SSB hanya memancarkan satu sideband tanpa carrier (umumnya sekitar 2,4-3 kHz), sehingga hemat daya dan bandwidth dibanding AM yang mengirim carrier plus dua sideband.",
+   "C) Karena SSB adalah modulasi digital, sedangkan AM analog.",
+   "D) Karena AM sebenarnya lebih sempit bandnya daripada SSB."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "AM standar mengirim carrier + dua sideband (total ikut carrier yang tidak membawa informasi, bandwidth sekitar 6 kHz untuk audio yang sama). SSB menyaring carrier dan salah satu sideband, menyisakan satu sideband sekitar 2,4-3 kHz sehingga daya dan bandwidth lebih hemat. SSB tetap modulasi analog. Jawaban B."
+ },
+ {
+  "id": "rad-006",
+  "category": "radio-audio",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "Propagasi HF: pengaruh ionisasi ionosfer siang vs malam terhadap MUF.",
+  "prompt": "Kontak HF jauh lebih lancar di 14 MHz saat siang, tetapi malam justru band 7 MHz yang bagus. Penjelasan paling tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Karena frekuensi rendah hanya bisa bekerja siang hari.",
+   "B) Karena ionisasi lapisan ionosfer (terutama F) lebih kuat siang hari sehingga MUF lebih tinggi, sedangkan malam ionisasi menurun, band atas menutup dan band bawah seperti 7 MHz jadi lebih baik.",
+   "C) Karena kabel antenna memuai saat panas siang.",
+   "D) Karena lapisan D menghilang saat siang hari."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "Radiasi matahari meningkatkan ionisasi lapisan F, sehingga frekuensi maksimum yang bisa dipantulkan (MUF) lebih tinggi pada siang hari dan band tinggi (mis. 14 MHz) terbuka. Malam hari ionisasi turun, MUF menurun, band tinggi tertutup dan band bawah (mis. 7 MHz) lebih baik. Lapisan D justru ada pada siang dan menyerap frekuensi rendah. Jawaban B."
+ },
+ {
+  "id": "rad-007",
+  "category": "radio-audio",
+  "type": "mcq",
+  "difficulty": "hard",
+  "usage_source": "IEM & output impedance DAC: rule of eight dan perubahan frequency response.",
+  "prompt": "Kamu colok IEM impedansi rendah (16 ohm) ke sebuah DAC. Kenapa output impedance DAC perlu diperhatikan?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Output impedance tidak berpengaruh selama daya output cukup besar.",
+   "B) Output impedance yang tidak cukup kecil dibanding impedansi IEM (aturan praktis: <= 1/8 impedansi IEM) membuat pembagian tegangan berubah antar frekuensi, sehingga frequency response bisa bergeser (misalnya bass berubah); makin rendah impedansi IEM, makin sensitif terhadap hal ini.",
+   "C) Output impedance tinggi pasti selalu menambah bass pada semua IEM.",
+   "D) Impedansi IEM hanya menentukan warna kabel yang cocok."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "Output impedance DAC/sumber membentuk pembagi tegangan dengan impedansi IEM yang biasanya bervariasi terhadap frekuensi (terutama puncak di bass untuk dynamic driver). Bila output impedance tidak cukup rendah (rule of eight: <= 1/8 impedansi IEM), pembagian tegangan berubah per frekuensi sehingga frequency response bergeser. Efeknya tidak selalu menambah bass dan bisa berbeda tiap IEM. Jawaban B."
+ },
+ {
+  "id": "rad-008",
+  "category": "radio-audio",
+  "type": "mcq",
+  "difficulty": "hard",
+  "usage_source": "EQ parametrik: arti Q (lebar pita filter).",
+  "prompt": "Di EQ parametrik, kamu menaikkan +6 dB di 100 Hz. Apa pengaruh nilai Q terhadap hasilnya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Q hanya mengatur volume total keluaran.",
+   "B) Q menentukan lebar pita (bandwidth) filter: Q rendah menghasilkan pita lebar sehingga frekuensi tetangga ikut terpengaruh, sedangkan Q tinggi menghasilkan pita sempit/bertarget.",
+   "C) Q tinggi berarti pita lebar, Q rendah berarti pita sempit.",
+   "D) Q tidak berpengaruh selama nilai gain kecil."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "Pada EQ parametrik, Q mengatur ketajaman/lebar pita di sekitar frekuensi center. Q rendah = pita lebar (dampak melebar ke frekuensi tetangga), Q tinggi = puncak sempit dan bertarget. Q tidak mengatur volume total dan tetap berpengaruh walau gain kecil. Jawaban B."
+ }
+]

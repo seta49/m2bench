@@ -1,0 +1,301 @@
+[
+ {
+  "id": "x-id-discord-update",
+  "category": "id-instruction",
+  "prompt": "Tulis pesan update progres proyek untuk channel Discord tim.\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) total MAKSIMAL 120 kata;\n(b) isi pesan TEPAT 3 baris bullet (tanpa kalimat pembuka/penutup di luar bullet);\n(c) bullet TERAKHIR harus berupa kalimat tanya (diakhiri '?');\n(d) string 'v2.4' muncul TEPAT 2 kali di seluruh pesan;\n(e) dilarang emoji apa pun;\n(f) jam '21.30' disebut di bullet ke-2 (paruh tengah pesan).\nGaya santai khas Discord.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Isi pesan TEPAT 3 baris bullet tanpa teks di luar bullet, dan bullet terakhir berupa kalimat tanya (diakhiri '?')"
+   },
+   {
+    "id": "c2",
+    "text": "String 'v2.4' muncul TEPAT 2 kali di seluruh pesan"
+   },
+   {
+    "id": "c3",
+    "text": "Total MAKSIMAL 120 kata DAN tanpa emoji sama sekali"
+   },
+   {
+    "id": "c4",
+    "text": "Jam '21.30' disebut di bullet ke-2 (paruh tengah pesan)"
+   }
+  ]
+ },
+ {
+  "id": "x-id-report-table",
+  "category": "id-instruction",
+  "prompt": "Tulis mini report hasil uji beban mingguan.\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) TEPAT 1 kalimat sebelum tabel;\n(b) tabel markdown berisi 4 baris data × 3 kolom (baris header TIDAK dihitung);\n(c) TEPAT 2 kalimat setelah tabel;\n(d) total MAKSIMAL 90 kata (termasuk isi tabel);\n(e) angka 6120 muncul PERSIS SEKALI dan HARUS di dalam tabel (bukan di kalimat);\n(f) dilarang memakai kata 'sangat'.\nBahasa Indonesia formal ringkas.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Struktur benar: TEPAT 1 kalimat sebelum tabel, tabel 4 baris data × 3 kolom, TEPAT 2 kalimat sesudah tabel"
+   },
+   {
+    "id": "c2",
+    "text": "Angka 6120 muncul PERSIS SEKALI di seluruh jawaban dan berada DI DALAM tabel"
+   },
+   {
+    "id": "c3",
+    "text": "Total MAKSIMAL 90 kata termasuk isi tabel"
+   },
+   {
+    "id": "c4",
+    "text": "Tidak memakai kata 'sangat' sama sekali"
+   }
+  ]
+ },
+ {
+  "id": "x-id-abstrak",
+  "category": "id-instruction",
+  "prompt": "Tulis abstrak penelitian tentang adopsi sistem informasi desa.\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) abstrak TEPAT 5 kalimat;\n(b) tiap kalimat MAKSIMAL 18 kata;\n(c) kalimat ke-3 HARUS memuat kata 'Kandangan';\n(d) kalimat TERAKHIR berupa pertanyaan (diakhiri '?');\n(e) kata 'data' muncul TEPAT 3 kali.\nBahasa Indonesia akademik.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Abstrak TEPAT 5 kalimat dan tiap kalimat MAKSIMAL 18 kata"
+   },
+   {
+    "id": "c2",
+    "text": "Kalimat ke-3 memuat kata 'Kandangan'"
+   },
+   {
+    "id": "c3",
+    "text": "Kalimat terakhir berupa pertanyaan (diakhiri '?')"
+   },
+   {
+    "id": "c4",
+    "text": "Kata 'data' muncul TEPAT 3 kali"
+   }
+  ]
+ },
+ {
+  "id": "x-id-changelog",
+  "category": "id-instruction",
+  "prompt": "Tulis changelog rilis aplikasi tentang perubahan backend.\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) jawaban DIAWALI heading markdown yang berisi persis 'Rilis 2.4';\n(b) TEPAT 5 bullet di bawah heading;\n(c) bullet URUT ALFABETIS berdasarkan kata pertama tiap bullet;\n(d) tiap bullet MAKSIMAL 8 kata;\n(e) TEPAT SATU bullet memuat inline code (backtick).",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Diawali heading markdown berisi persis 'Rilis 2.4' dan TEPAT 5 bullet di bawahnya"
+   },
+   {
+    "id": "c2",
+    "text": "Bullet urut alfabetis berdasarkan kata pertama tiap bullet"
+   },
+   {
+    "id": "c3",
+    "text": "Tiap bullet MAKSIMAL 8 kata"
+   },
+   {
+    "id": "c4",
+    "text": "TEPAT SATU bullet memuat inline code (backtick)"
+   }
+  ]
+ },
+ {
+  "id": "x-id-email-dosen",
+  "category": "id-instruction",
+  "prompt": "Tulis email ke dosen pembimbing untuk meminta jadwal bimbingan.\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) baris 'Subjek:' ada dan MAKSIMAL 6 kata;\n(b) badan email TEPAT 2 paragraf (tanpa bullet);\n(c) kata 'saya' MAKSIMAL 2 kali di seluruh email;\n(d) frasa 'Jumat, 14.00' WAJIB muncul (persis, termasuk koma);\n(e) salam penutup PERSIS 'Terima kasih,' di baris sendiri.\nBahasa Indonesia sopan.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Baris 'Subjek:' ada dan isinya MAKSIMAL 6 kata"
+   },
+   {
+    "id": "c2",
+    "text": "Badan email TEPAT 2 paragraf tanpa bullet"
+   },
+   {
+    "id": "c3",
+    "text": "Frasa 'Jumat, 14.00' muncul persis DAN salam penutup persis 'Terima kasih,'"
+   },
+   {
+    "id": "c4",
+    "text": "Kata 'saya' MAKSIMAL 2 kali di seluruh email"
+   }
+  ]
+ },
+ {
+  "id": "x-id-json-only",
+  "category": "id-instruction",
+  "prompt": "Tiga sensor lapangan punya pembacaan yang jika dijumlahkan tepat 86.4. Susun laporan status dari pembacaan itu.\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) jawaban HANYA berupa SATU objek JSON valid — tanpa teks lain, tanpa markdown fence;\n(b) skema persis: {\"status\": \"...\", \"values\": [3 angka], \"total\": ..., \"note\": \"...\"};\n(c) nilai 'total' PERSIS 86.4;\n(d) 'values' TEPAT 3 elemen angka dan jumlah ketiganya PERSIS 86.4;\n(e) 'status' dan 'note' berupa string tidak kosong.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Output HANYA satu objek JSON valid tanpa teks lain dan tanpa markdown fence"
+   },
+   {
+    "id": "c2",
+    "text": "'total' bernilai number PERSIS 86.4"
+   },
+   {
+    "id": "c3",
+    "text": "'values' array TEPAT 3 elemen angka dengan jumlah PERSIS 86.4"
+   },
+   {
+    "id": "c4",
+    "text": "Semua key (status, values, total, note) ada; 'status' dan 'note' string tidak kosong"
+   }
+  ]
+ },
+ {
+  "id": "x-id-caption",
+  "category": "id-instruction",
+  "prompt": "Tulis caption produk untuk tumbler stainless premium di marketplace.\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) MAKSIMAL 45 kata;\n(b) TANPA emoji;\n(c) harga ditulis PERSIS dengan format 'Rp1.250.000' (tanpa spasi setelah Rp);\n(d) TEPAT SATU kalimat tanya (tepat satu tanda '?');\n(e) dilarang kata 'mantap'.\nNada jualan elegan.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Total MAKSIMAL 45 kata"
+   },
+   {
+    "id": "c2",
+    "text": "Harga ditulis PERSIS 'Rp1.250.000' (tanpa spasi setelah Rp)"
+   },
+   {
+    "id": "c3",
+    "text": "TEPAT SATU kalimat tanya (tepat satu tanda '?')"
+   },
+   {
+    "id": "c4",
+    "text": "Tanpa emoji DAN tanpa kata 'mantap'"
+   }
+  ]
+ },
+ {
+  "id": "x-id-nested-list",
+  "category": "id-instruction",
+  "prompt": "Buat checklist setup lingkungan pengembangan dalam bentuk nested list.\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) nested list 2 level dengan TEPAT 3 item parent;\n(b) parent KEDUA punya sublist BERNOMOR berisi TEPAT 3 item; parent lain tanpa sublist;\n(c) tiap baris parent memuat TEPAT SATU `code span`;\n(d) total seluruh jawaban MAKSIMAL 70 kata (isi code span dihitung satu kata).",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Nested list 2 level dengan TEPAT 3 item parent"
+   },
+   {
+    "id": "c2",
+    "text": "Parent kedua punya sublist bernomor TEPAT 3 item; parent lain tanpa sublist"
+   },
+   {
+    "id": "c3",
+    "text": "Tiap baris parent memuat TEPAT SATU `code span`"
+   },
+   {
+    "id": "c4",
+    "text": "Total MAKSIMAL 70 kata"
+   }
+  ]
+ },
+ {
+  "id": "x-id-exact-words",
+  "category": "id-instruction",
+  "prompt": "Tulis catatan singkat perbandingan peralatan lab: SDR untuk akuisisi sinyal dan SSD untuk penyimpanan hasil.\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) total kata HARUS berada di rentang 61 sampai 67;\n(b) kata 'SDR' muncul TEPAT 4 kali;\n(c) TIDAK ADA kalimat yang lebih dari 12 kata;\n(d) dilarang karakter CJK (huruf China/Jepang/Korea).\nBahasa Indonesia netral teknis.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Total kata berada di rentang 61 sampai 67"
+   },
+   {
+    "id": "c2",
+    "text": "Kata 'SDR' muncul TEPAT 4 kali"
+   },
+   {
+    "id": "c3",
+    "text": "Tidak ada kalimat yang lebih dari 12 kata"
+   },
+   {
+    "id": "c4",
+    "text": "Tanpa karakter CJK sama sekali"
+   }
+  ]
+ },
+ {
+  "id": "x-id-sum-table",
+  "category": "id-instruction",
+  "prompt": "Susun ringkasan biaya operasional bulanan (bebas pilih item dan nominalnya).\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) ada tabel markdown berisi TEPAT 4 item biaya dengan kolom nama item dan nominal;\n(b) SATU nama item HARUS memuat karakter '2' (mis. 'Hosting Tier-2');\n(c) kalimat TERAKHIR menyebut angka total biaya secara eksplisit;\n(d) angka total di kalimat penutup HARUS PERSIS sama dengan penjumlahan kolom nominal di tabel (hitung sendiri, jangan kira-kira);\n(e) total jawaban MAKSIMAL 100 kata.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Tabel markdown berisi TEPAT 4 item biaya dengan kolom nama dan nominal; satu nama item memuat karakter '2'"
+   },
+   {
+    "id": "c2",
+    "text": "Angka total di kalimat terakhir PERSIS sama dengan penjumlahan kolom nominal di tabel"
+   },
+   {
+    "id": "c3",
+    "text": "Kalimat terakhir eksplisit menyebut angka total (bukan hanya lewat tabel)"
+   },
+   {
+    "id": "c4",
+    "text": "Total MAKSIMAL 100 kata"
+   }
+  ]
+ },
+ {
+  "id": "x-id-no-digits",
+  "category": "id-instruction",
+  "prompt": "Tulis pengumuman internal tentang rencana migrasi server.\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) SEMUA angka ditulis sebagai kata (tiga, dua puluh, dst) KECUALI '2026' yang tetap memakai digit;\n(b) '2026' adalah SATU-SATUNYA rangkaian digit yang boleh muncul;\n(c) total MAKSIMAL 80 kata;\n(d) TEPAT dua paragraf;\n(e) paragraf KEDUA diawali persis 'Catatan:'.\nBahasa Indonesia internal comms.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Tidak ada digit kecuali '2026' (semua angka lain ditulis sebagai kata)"
+   },
+   {
+    "id": "c2",
+    "text": "Total MAKSIMAL 80 kata"
+   },
+   {
+    "id": "c3",
+    "text": "TEPAT dua paragraf"
+   },
+   {
+    "id": "c4",
+    "text": "Paragraf kedua diawali persis 'Catatan:'"
+   }
+  ]
+ },
+ {
+  "id": "x-id-quote-block",
+  "category": "id-instruction",
+  "prompt": "Tulis ringkasan hasil optimasi performa API. Wajib mengutip frasa berikut dari laporan: 'latensi p95 turun di bawah 90 ms'.\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) total MAKSIMAL 90 kata;\n(b) frasa tersebut dikutip PERSIS (tanpa mengubah kata) di dalam blockquote markdown (baris diawali '> ');\n(c) blockquote berada di PALING AKHIR jawaban, tanpa teks setelahnya;\n(d) frasa yang sama juga muncul TEPAT 1 kali di badan jawaban (total seluruh jawaban TEPAT 2 kemunculan).\nBahasa Indonesia profesional.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Total MAKSIMAL 90 kata"
+   },
+   {
+    "id": "c2",
+    "text": "Frasa 'latensi p95 turun di bawah 90 ms' dikutip PERSIS tanpa perubahan kata"
+   },
+   {
+    "id": "c3",
+    "text": "Blockquote markdown (baris diawali '> ') berada di paling akhir, tanpa teks setelahnya"
+   },
+   {
+    "id": "c4",
+    "text": "Frasa muncul TEPAT 1 kali di badan jawaban (total TEPAT 2 kemunculan)"
+   }
+  ]
+ },
+ {
+  "id": "x-id-mixed-lang",
+  "category": "id-instruction",
+  "prompt": "Tulis ringkasan status deploy untuk tim internasional.\n\nATURAN FORMAT — SEMUA wajib dipenuhi, cek ulang sebelum finalize:\n(a) struktur: 1 kalimat pembuka berbahasa Indonesia + TEPAT 3 bullet berbahasa INGGRIS + 1 kalimat penutup berbahasa Indonesia;\n(b) tiap bullet MAKSIMAL 7 kata;\n(c) kata 'because' muncul TEPAT 2 kali;\n(d) total MAKSIMAL 75 kata.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Struktur: 1 kalimat pembuka Indonesia + TEPAT 3 bullet berbahasa Inggris + 1 kalimat penutup Indonesia"
+   },
+   {
+    "id": "c2",
+    "text": "Tiap bullet MAKSIMAL 7 kata dan berbahasa Inggris"
+   },
+   {
+    "id": "c3",
+    "text": "Kata 'because' muncul TEPAT 2 kali"
+   },
+   {
+    "id": "c4",
+    "text": "Total MAKSIMAL 75 kata"
+   }
+  ]
+ }
+]

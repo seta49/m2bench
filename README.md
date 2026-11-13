@@ -1,171 +1,132 @@
 # m2bench
 
-Personal LLM benchmark CLI. Test models on coding, honesty, literal precision, and instruction following — then compare results head-to-head.
+**Personal LLM benchmark CLI + local web leaderboard.** Evaluate open-weight and API models across practical engineering skills — bug-fixing without false positives, honesty under fake premises, strict Indonesian instruction following, long-context needle retrieval, and multi-turn consistency — using **Python stdlib only** (zero external dependencies).
 
-Supports **any OpenAI-compatible provider**: OpenCode Go, OpenAI, Anthropic, DeepSeek, Xiaomi MiMo, OpenRouter, or your own endpoint.
+> Supports **Ollama** (local or Google Colab GPU), **OpenAI**, **Anthropic**, **DeepSeek**, **OpenRouter**, **Xiaomi MiMo**, **OpenCode Go**, **CommandCode**, and any custom OpenAI-compatible endpoint.
 
-## Quick Start
+---
 
-```bash
-# Validate task sets
-py m2bench.py validate
+## Why `m2bench`?
 
-# List available models from your provider
-py m2bench.py models --provider opencode-go
+- **4-Criterion Rubrics, Not Regex Guessing:** Every task is scored against 4 explicit criteria (`pass = 1.0`, `partial = 0.5`, `fail = 0.0`, `DNF = 0`) with anti-false-positive traps so models cannot pass by nitpicking valid code.
+- **Hybrid Deterministic + LLM-Judge Grading:** Format, JSON validity, word-count, and exact-substring constraints are verified programmatically (`_eval_check`), while reasoning and fixes are graded by a judge model.
+- **Honesty & Hallucination Resistance:** Dedicated prompts with fake APIs, nonexistent journals/DOIs, impossible hardware specs, and scam listings test whether models admit uncertainty or play along.
+- **Local Web Leaderboard (`leaderboard.html`):** Generates a self-contained dashboard with category breakdowns, Intelligence vs Speed (`t/s`) scatter plot, and per-task drilldown from your own runs.
 
-# Run inference
-py m2bench.py run --provider opencode-go --models mimo-v2.5 --set easy --name my-test
-
-# Grade with judge
-py m2bench.py grade --run my-test
-
-# See results
-py m2bench.py report --run my-test
-```
-
-## Providers
-
-Pass `--provider` to use a preset, or `--base-url` + `--api-key` for any endpoint.
-
-```bash
-# OpenCode Go (default)
-py m2bench.py run --models mimo-v2.5 --set easy --name t1
-
-# OpenAI
-py m2bench.py run --provider openai --models gpt-4o --set easy --name t1
-
-# Anthropic
-py m2bench.py run --provider anthropic --models claude-sonnet-4 --set easy --name t1
-
-# DeepSeek
-py m2bench.py run --provider deepseek --models deepseek-v4-flash --set easy --name t1
-
-# Xiaomi MiMo
-py m2bench.py run --provider xiaomi --models mimo-v2.5 --set easy --name t1
-
-# OpenRouter
-py m2bench.py run --provider openrouter --models anthropic/claude-sonnet-4 --set easy --name t1
-
-# Custom endpoint
-py m2bench.py run --base-url http://localhost:11434/v1 --api-key dummy --models llama3 --set easy --name t1
-```
-
-API keys are read from env vars: `OPENCODE_GO_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `DEEPSEEK_API_KEY`, `XIAOMI_API_KEY`, `OPENROUTER_API_KEY`. Or pass `--api-key` directly.
+---
 
 ## Task Sets
 
-Three difficulty levels, each with 8 tasks across 4 categories:
+| Set | Tasks | Focus & Categories | Status |
+|---|---|---|---|
+| **`expert`** *(default)* | 50 | `literal-precision` (12), `coding-fix` (13), `honesty` (12), `id-instruction` (13) | Active |
+| **`daily_plus`** | 8 | `long-context` (2), `multi-turn` (2), `coding-fix` (2), `structured-json` (2) | Active |
+| `usage200` | 200 | High-volume stress-test suite (skipped by default `validate`) | Experimental |
+| `easy` / `medium` / `hard` | 8 each | Historical 8-task benchmark sets kept for legacy run reproducibility | Legacy |
 
-| Set | Difficulty | What it tests |
-|---|---|---|
-| `easy` | Basic competence | Simple data extraction, syntax errors, obvious uncertainty |
-| `medium` | One trap each | Precise extraction, async bugs, fake products, format constraints |
-| `hard` | Multiple traps | False premises, race conditions, position-sensitive constraints |
+---
 
-**Categories:**
-- **literal-precision** — extract exact numbers from data tables
-- **coding-fix** — find and fix bugs in code snippets
-- **honesty** — admit uncertainty, reject fake products/premises
-- **id-instruction** — follow multi-constraint format rules
+## Sample Results (`expert` Set)
 
-## Commands
+Snapshot from personal runs on `expert` (50 tasks, `DNF = 0`):
 
+| Model | Provider | Score | DNF | Speed | Context / Mode |
+|---|---|---:|---:|---|---|
+| `mimo-v2.6-pro` | `xiaomi` | **97.5%** | 0 | 26.2 t/s | `reasoning=high` |
+| `mimo-v2.6-flash` | `xiaomi` | **94.8%** | 0 | 40.5 t/s | `reasoning=high` |
+| `gemma4:26b` | `ollama` (L4) | **94.2%** | 0 | **85.9 t/s** | 16k ctx, `temp=default` |
+| `mimo-v2.5-pro` | `xiaomi` | **91.5%** | 0 | 67.4 t/s | `reasoning=high` |
+| `mimo-v2.5` | `xiaomi` | **90.2%** | 0 | 29.2 t/s | `reasoning=high` |
+| `qwen3.5-4b-128k` | `ollama` | **67.2%** | 0 | - | 128k ctx, `reasoning=none` |
+
+---
+
+## Quick Start
+
+### 1. Validate task sets
+```bash
+py m2bench.py validate
 ```
-py m2bench.py models                                    # list available models
-py m2bench.py validate                                  # validate task JSONs
-py m2bench.py run    --models a,b --set easy --name t1  # run inference
-py m2bench.py grade  --run t1                           # grade responses
-py m2bench.py pair   --run t1                           # pairwise blind compare
-py m2bench.py report --run t1                           # markdown report
-py m2bench.py report --run t1 --compare-to t2           # report with deltas
-py m2bench.py compare --run-a t1 --run-b t2             # head-to-head comparison
-py m2bench.py history                                   # list all runs
+
+### 2. Run a standardized benchmark
+Use `--temp -1` so each model uses its own recommended sampling defaults (important for reasoning/thinking models like Gemma 4, Qwen 3.5, and LFM3), and set `OLLAMA_CONTEXT_LENGTH=16384` (or higher) when serving via Ollama so reasoning chains do not hit Ollama's default 4096 context cap:
+
+```bash
+# Ollama (Linux / Colab)
+OLLAMA_CONTEXT_LENGTH=16384 ollama serve &
+python3 m2bench.py run --provider ollama --models gemma4:26b,qwen3.5:9b --set expert,daily_plus --name l4-std --temp -1 --workers 1
+
+# OpenRouter / Cloud API
+py m2bench.py run --provider openrouter --models vendor/model-name --set expert,daily_plus --name cloud-std --temp -1 --workers 4
+
+# Resume an interrupted run (skips completed tasks, retries DNF/errors)
+py m2bench.py run --provider ollama --models gemma4:26b --set expert --name l4-std --temp -1 --workers 1 --resume
 ```
 
-### Run Options
+### 3. Grade, report, and build the web leaderboard
+```bash
+py m2bench.py grade   --run l4-std-expert --provider openai --judge <judge-model>
+py m2bench.py report  --run l4-std-expert
+py m2bench.py compare --run-a baseline-run --run-b l4-std-expert
+py tools/build_leaderboard.py
+```
 
-| Flag | Description |
+`tools/build_leaderboard.py` scans every graded run in `data/m2bench/runs/` and outputs:
+- `data/m2bench/leaderboard.html` — self-contained interactive web UI (tabs, sorting, filters, SVG Intelligence vs Speed scatter plot, and per-task modal)
+- `data/m2bench/leaderboard.json` — structured JSON snapshot for downstream scripts
+
+---
+
+## CLI Reference
+
+Running `py m2bench.py` with no arguments launches the interactive TUI menu.
+
+| Command | Purpose |
 |---|---|
-| `--models` | Comma-separated model ids (required) |
-| `--provider` | Provider name: `opencode-go`, `openai`, `anthropic`, `deepseek`, `xiaomi`, `openrouter` |
-| `--base-url` | API base URL (overrides provider) |
-| `--api-key` | API key (overrides env var) |
-| `--set` | Task set: `easy`, `medium`, `hard` (default: `easy`) |
-| `--name` | Run name — output goes to `data/m2bench/runs/<name>/` |
-| `--reasoning` | `reasoning_effort`: `none`/`low`/`medium`/`high`/`max` |
-| `--tasks` | Run specific tasks only (comma-separated ids) |
-| `--workers` | Parallel API calls (default: 2) |
+| `py m2bench.py models --provider <p>` | List available models from a provider |
+| `py m2bench.py validate` | Validate task JSON schemas and IDs |
+| `py m2bench.py run ...` | Run inference on a task set (supports `--set`, `--tasks`, `--temp`, `--reasoning`, `--resume`, `--no-guardrail`) |
+| `py m2bench.py grade --run <name>` | Auto-check deterministic rules + grade rubric criteria via judge model |
+| `py m2bench.py pair --run <name>` | Blind pairwise A/B evaluation across models |
+| `py m2bench.py report --run <name>` | Generate `report.md` (with optional `--compare-to`) |
+| `py m2bench.py compare --run-a <a> --run-b <b>` | Head-to-head comparison of the same model across two runs |
+| `py m2bench.py history` | Print summary table of all local runs |
 
-### Comparing Runs
+---
 
-**Option A — inline deltas in report:**
-```bash
-py m2bench.py report --run baseline --compare-to improved
+## Supported Providers
+
+Configured in `providers.json`: `ollama` (keyless local), `opencode-go`, `openai`, `anthropic`, `deepseek`, `xiaomi`, `openrouter`, `commandcode`, and `custom` (`--base-url` + `--api-key`).
+
+API keys are read automatically from environment variables (`OPENAI_API_KEY`, `OPENROUTER_API_KEY`, etc.) or passed inline with `--api-key`. Set `Hermes_Output` to redirect run data (useful when saving directly to Google Drive on Colab).
+
+---
+
+## Benchmark Guardrails
+
+Every inference call injects a uniform system guardrail (`--no-guardrail` to disable):
+- **No web search or browsing**
+- **No code execution or external tools**
+- **Single final response per turn**
+
+---
+
+## Repository Layout
+
+```text
+athabench/
+├── m2bench.py              # Core benchmark CLI & interactive TUI (stdlib only)
+├── providers.json          # Provider endpoints & auth env var registry
+├── tasks/                  # Task sets (expert.json, daily_plus.json, legacy sets)
+├── tools/
+│   ├── build_leaderboard.py    # Generates leaderboard.html + leaderboard.json
+│   ├── build_expert_set.py     # Builds expert.json from drafts/
+│   ├── compare_all_models.py   # Legacy cross-run Markdown table
+│   └── ...
+└── drafts/                 # Modular task source files
 ```
 
-**Option B — full head-to-head:**
-```bash
-py m2bench.py compare --run-a baseline --run-b improved
-```
-Shows summary, per-category, per-task tables, and highlights key differences (|delta| >= 0.25).
-
-### Reasoning Effort
-
-Compare model performance with different reasoning levels:
-```bash
-py m2bench.py run --models mimo-v2.5 --set hard --name test-none --reasoning none
-py m2bench.py run --models mimo-v2.5 --set hard --name test-high --reasoning high
-py m2bench.py grade --run test-none
-py m2bench.py grade --run test-high
-py m2bench.py compare --run-a test-none --run-b test-high
-```
-
-## Scoring
-
-- **pass** = 1.0, **partial** = 0.5, **fail** = 0.0
-- **DNF** (truncated/error) = 0 in aggregate
-- 4 criteria per task, score averaged across all criteria
-- Judge model grades independently against rubric criteria
-
-## Setup
-
-1. Set API key: env var (`OPENCODE_GO_API_KEY`, `OPENAI_API_KEY`, etc.) or `--api-key` flag
-2. Install Python 3.10+ (no external dependencies — stdlib only)
-3. Run `py m2bench.py validate` to verify task sets
-
-## Output Structure
-
-```
-data/m2bench/runs/<name>/
-├── meta.json              # run config (models, set, tasks, provider)
-├── responses/             # raw model outputs
-│   ├── <model>__<task>.json
-├── grades/                # judge verdicts
-│   ├── <judge>__<model>__<task>.json
-├── pairs/                 # pairwise comparison (optional)
-└── report.md              # generated report
-```
-
-## Custom Tasks
-
-Add JSON files to `tasks/`. Each task:
-```json
-{
-  "id": "my-task-id",
-  "category": "coding-fix",
-  "prompt": "Your task prompt here...",
-  "criteria": [
-    {"id": "c1", "text": "What counts as pass for criterion 1"},
-    {"id": "c2", "text": "What counts as pass for criterion 2"},
-    {"id": "c3", "text": "What counts as pass for criterion 3"},
-    {"id": "c4", "text": "What counts as pass for criterion 4"}
-  ]
-}
-```
-
-Categories: `literal-precision`, `coding-fix`, `honesty`, `id-instruction`
-
-Run `py m2bench.py validate` to check your tasks before benchmarking.
+Output runs live outside the repo under `data/m2bench/runs/<run-name>/` (`meta.json`, `responses/`, `grades/`, `pairs/`, `report.md`).
 
 ## License
 

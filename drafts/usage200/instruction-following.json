@@ -1,0 +1,915 @@
+[
+  {
+    "id": "if-001",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "easy",
+    "usage_source": "Pesan update progres harian untuk channel Discord tim (gaya #dev-log).",
+    "prompt": "Kamu mau kirim update progres harian ke channel #dev-log di Discord tim kampus. Tulis pesan itu dalam Bahasa Indonesia dengan aturan format berikut: (1) tepat 6 baris non-kosong, dan tepat 5 di antaranya adalah baris bullet yang diawali '- ' (satu baris boleh bukan bullet/judul); (2) total maksimal 60 kata; (3) baris terakhir wajib berupa kalimat tanya yang diakhiri tanda '?'; (4) wajib menyebut kata 'backend'; (5) tidak boleh ada emoji. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "bullet_count_exact",
+        "value": 5
+      },
+      {
+        "id": "c2",
+        "kind": "line_count_exact",
+        "value": 6
+      },
+      {
+        "id": "c3",
+        "kind": "word_max",
+        "value": 60
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "\\?\\s*$"
+      },
+      {
+        "id": "c5",
+        "kind": "regex",
+        "value": "(?i)backend"
+      },
+      {
+        "id": "c6",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "Judul singkat + 5 bullet '- ...'; bullet terakhir kalimat tanya berakhir '?'; ada kata 'backend'; tanpa emoji; total <60 kata."
+  },
+  {
+    "id": "if-002",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "easy",
+    "usage_source": "Pesan commit git yang deskriptif untuk perbaikan bug.",
+    "prompt": "Tulis satu pesan commit Git berbahasa Indonesia untuk perbaikan bug yang membuat sesi login tidak tersimpan. Aturan: (1) baris pertama adalah judul singkat, lalu tepat 2 baris bullet yang diawali '- ' (total tepat 3 baris non-kosong); (2) total maksimal 40 kata; (3) wajib memuat kata 'sesi'; (4) tidak boleh ada emoji. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "line_count_exact",
+        "value": 3
+      },
+      {
+        "id": "c2",
+        "kind": "bullet_count_exact",
+        "value": 2
+      },
+      {
+        "id": "c3",
+        "kind": "word_max",
+        "value": 40
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "(?i)sesi"
+      },
+      {
+        "id": "c5",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "Contoh: 'fix: perbaiki penyimpanan sesi login' / '- sesi kini tersimpan di cache' / '- tambah tes regresi'. 3 baris, 2 bullet, ada 'sesi', tanpa emoji, <40 kata."
+  },
+  {
+    "id": "if-003",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "easy",
+    "usage_source": "Catatan ringkas ala Google Keep untuk daftar belanja.",
+    "prompt": "Buat catatan singkat ala Google Keep berisi daftar belanja alat tulis. Aturan: (1) tepat 4 baris, dan keempatnya bullet yang diawali '- '; (2) total maksimal 25 kata; (3) wajib menyebut kata 'pulpen'; (4) tidak boleh ada emoji. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "line_count_exact",
+        "value": 4
+      },
+      {
+        "id": "c2",
+        "kind": "bullet_count_exact",
+        "value": 4
+      },
+      {
+        "id": "c3",
+        "kind": "word_max",
+        "value": 25
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "(?i)pulpen"
+      },
+      {
+        "id": "c5",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "Empat baris '- ...', salah satunya memuat 'pulpen', tanpa emoji, <25 kata."
+  },
+  {
+    "id": "if-004",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "easy",
+    "usage_source": "Pengumuman singkat untuk grup kelas.",
+    "prompt": "Tulis pengumuman singkat untuk grup kelas tentang penggantian jadwal praktikum. Aturan: (1) total maksimal 40 kata; (2) baris terakhir harus persis token '[PIN]' dan menjadi akhir respons; (3) wajib menyebut kata 'praktikum'; (4) tidak boleh ada emoji. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "word_max",
+        "value": 40
+      },
+      {
+        "id": "c2",
+        "kind": "regex",
+        "value": "\\[PIN\\]\\s*$"
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "(?i)praktikum"
+      },
+      {
+        "id": "c4",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "Pengumuman <40 kata menyebut 'praktikum', diakhiri baris '[PIN]', tanpa emoji."
+  },
+  {
+    "id": "if-016",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "easy",
+    "usage_source": "Pengumuman singkat untuk grup kelas.",
+    "prompt": "Tulis pengumuman singkat maksimal 30 kata untuk grup kelas tentang pembagian kelompok tugas. Aturan: (1) total maksimal 30 kata; (2) wajib menyebut kata 'kelompok'; (3) karakter terakhir respons harus tanda seru '!'; (4) tidak boleh ada emoji. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "word_max",
+        "value": 30
+      },
+      {
+        "id": "c2",
+        "kind": "regex",
+        "value": "(?i)kelompok"
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "!\\s*$"
+      },
+      {
+        "id": "c4",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "Kalimat <30 kata memuat 'kelompok', berakhir '!', tanpa emoji."
+  },
+  {
+    "id": "if-018",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "easy",
+    "usage_source": "Pesan update singkat untuk channel Discord.",
+    "prompt": "Tulis satu pesan update singkat untuk channel #umum Discord. Aturan: (1) total maksimal 20 kata; (2) tepat 1 baris non-kosong; (3) wajib menyebut kata 'deploy'; (4) tidak boleh ada emoji. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "word_max",
+        "value": 20
+      },
+      {
+        "id": "c2",
+        "kind": "line_count_exact",
+        "value": 1
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "(?i)deploy"
+      },
+      {
+        "id": "c4",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "Satu baris <20 kata memuat 'deploy', tanpa emoji."
+  },
+  {
+    "id": "if-022",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "easy",
+    "usage_source": "Catatan singkat ala Google Keep (satu baris).",
+    "prompt": "Buat catatan singkat ala Google Keep (satu baris) tentang reminder backup. Aturan: (1) tepat 1 baris non-kosong; (2) total maksimal 15 kata; (3) wajib menyebut kata 'backup'; (4) baris harus diawali kata 'Ingat'. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "line_count_exact",
+        "value": 1
+      },
+      {
+        "id": "c2",
+        "kind": "word_max",
+        "value": 15
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "(?i)backup"
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "^Ingat"
+      }
+    ],
+    "solution": "Satu baris diawali 'Ingat', memuat 'backup', <=15 kata."
+  },
+  {
+    "id": "if-005",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "medium",
+    "usage_source": "Template JSON laporan harian untuk dikirim ke server.",
+    "prompt": "Buat template laporan harian dalam JSON valid. Respons HARUS berupa JSON valid dan hanya JSON (tanpa teks pembuka/penutup). Struktur: objek dengan field 'tanggal' (string), 'kehadiran' (angka), dan 'catatan' (string). Aturan: (1) field 'tanggal' berisi persis '2026-10-04'; (2) field 'kehadiran' berisi angka 24; (3) field 'catatan' memuat kata 'rapat'. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "json_valid",
+        "value": true
+      },
+      {
+        "id": "c2",
+        "kind": "json_field",
+        "param": "tanggal",
+        "value": "2026-10-04"
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "\"kehadiran\"\\s*:\\s*24"
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "(?i)rapat"
+      }
+    ],
+    "solution": "Mis. {\"tanggal\":\"2026-10-04\",\"kehadiran\":24,\"catatan\":\"rapat mingguan divisi\"}. JSON valid, tanggal benar, kehadiran 24, catatan memuat rapat."
+  },
+  {
+    "id": "if-006",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "medium",
+    "usage_source": "Laporan pembacaan sensor untuk dikirim ke server.",
+    "prompt": "Tulis payload teks (bukan JSON) untuk dikirim ke server monitoring, berisi pembacaan sensor suhu dan kelembapan. Aturan: (1) tepat 3 baris non-kosong; (2) baris pertama diawali kata 'SENSOR'; (3) total maksimal 30 kata; (4) kata 'suhu' harus muncul tepat 2 kali; (5) tidak boleh ada emoji. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "line_count_exact",
+        "value": 3
+      },
+      {
+        "id": "c2",
+        "kind": "regex",
+        "value": "^SENSOR"
+      },
+      {
+        "id": "c3",
+        "kind": "word_max",
+        "value": 30
+      },
+      {
+        "id": "c4",
+        "kind": "count_exact",
+        "param": "suhu",
+        "value": 2
+      },
+      {
+        "id": "c5",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "Mis. 'SENSOR suhu ruang 28 derajat' / 'kelembapan 65 persen' / 'suhu stabil'. 3 baris, diawali SENSOR, 'suhu' 2x, tanpa emoji, <30 kata."
+  },
+  {
+    "id": "if-007",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "medium",
+    "usage_source": "Pesan status deploy ke channel ops.",
+    "prompt": "Tulis pesan status deploy ke channel ops dalam Bahasa Indonesia. Aturan: (1) tepat 2 baris non-kosong (dua paragraf, masing-masing satu baris); (2) salah satu baris wajib memuat jam dengan format HH:MM (dua digit, titik dua, dua digit, mis. 14:30); (3) wajib memuat kata 'rollback'; (4) total maksimal 60 kata; (5) tidak boleh ada emoji. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "line_count_exact",
+        "value": 2
+      },
+      {
+        "id": "c2",
+        "kind": "regex",
+        "value": "\\b([01]\\d|2[0-3]):[0-5]\\d\\b"
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "(?i)rollback"
+      },
+      {
+        "id": "c4",
+        "kind": "word_max",
+        "value": 60
+      },
+      {
+        "id": "c5",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "Dua baris; salah satu memuat jam HH:MM valid; ada 'rollback'; <60 kata; tanpa emoji."
+  },
+  {
+    "id": "if-008",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "medium",
+    "usage_source": "Draf README proyek singkat.",
+    "prompt": "Tulis draf README proyek singkat dalam Bahasa Indonesia. Aturan: (1) baris pertama adalah judul proyek dan diawali '# ' (pagar lalu spasi); (2) setelah judul ada tepat 3 baris bullet yang diawali '- ' (total tepat 4 baris non-kosong); (3) salah satu bullet wajib memuat kata 'instalasi'; (4) total maksimal 50 kata; (5) tidak boleh ada emoji. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "regex",
+        "value": "^#\\s"
+      },
+      {
+        "id": "c2",
+        "kind": "line_count_exact",
+        "value": 4
+      },
+      {
+        "id": "c3",
+        "kind": "bullet_count_exact",
+        "value": 3
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "(?i)instalasi"
+      },
+      {
+        "id": "c5",
+        "kind": "word_max",
+        "value": 50
+      },
+      {
+        "id": "c6",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "Baris1 '# NamaProyek', lalu 3 bullet; salah satu memuat 'instalasi'; 4 baris total; <50 kata; tanpa emoji."
+  },
+  {
+    "id": "if-009",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "medium",
+    "usage_source": "Catatan rapat singkat (bullet + pertanyaan penutup).",
+    "prompt": "Buat catatan rapat singkat dalam Bahasa Indonesia. Aturan: (1) tepat 5 baris non-kosong dan semuanya bullet yang diawali '- '; (2) baris terakhir wajib kalimat tanya yang diakhiri '?'; (3) total maksimal 60 kata; (4) wajib menyebut kata 'deadline'; (5) tidak boleh ada emoji. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "bullet_count_exact",
+        "value": 5
+      },
+      {
+        "id": "c2",
+        "kind": "line_count_exact",
+        "value": 5
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "\\?\\s*$"
+      },
+      {
+        "id": "c4",
+        "kind": "word_max",
+        "value": 60
+      },
+      {
+        "id": "c5",
+        "kind": "regex",
+        "value": "(?i)deadline"
+      },
+      {
+        "id": "c6",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "5 bullet; salah satu memuat 'deadline'; bullet terakhir diakhiri '?'; <60 kata; tanpa emoji."
+  },
+  {
+    "id": "if-010",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "medium",
+    "usage_source": "Pesan update progres sprint ke channel Discord.",
+    "prompt": "Tulis update progres sprint untuk channel #sprint dalam Bahasa Indonesia. Aturan: (1) total maksimal 50 kata; (2) kata 'selesai' harus muncul tepat 3 kali; (3) tidak boleh ada emoji; (4) respons harus diakhiri persis dengan frasa huruf kecil 'terima kasih'. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "word_max",
+        "value": 50
+      },
+      {
+        "id": "c2",
+        "kind": "count_exact",
+        "param": "selesai",
+        "value": 3
+      },
+      {
+        "id": "c3",
+        "kind": "no_emoji",
+        "value": true
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "terima kasih\\s*$"
+      }
+    ],
+    "solution": "<50 kata; kata 'selesai' tepat 3x; diakhiri 'terima kasih' (huruf kecil); tanpa emoji."
+  },
+  {
+    "id": "if-015",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "medium",
+    "usage_source": "Catatan ringkas ala Google Keep berisi langkah setup.",
+    "prompt": "Buat catatan ringkas ala Google Keep berisi 3 langkah setup proyek. Aturan: (1) tepat 3 baris bullet yang diawali '- '; (2) total maksimal 35 kata; (3) wajib menyebut kata 'npm' dan kata 'config'; (4) tidak boleh ada emoji. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "bullet_count_exact",
+        "value": 3
+      },
+      {
+        "id": "c2",
+        "kind": "word_max",
+        "value": 35
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "(?i)npm"
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "(?i)config"
+      },
+      {
+        "id": "c5",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "3 baris '- ...'; memuat 'npm' dan 'config'; <35 kata; tanpa emoji."
+  },
+  {
+    "id": "if-017",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "medium",
+    "usage_source": "Pesan commit git untuk penambahan endpoint API.",
+    "prompt": "Tulis pesan commit Git berbahasa Indonesia untuk penambahan endpoint API baru. Aturan: (1) baris pertama diawali 'feat:'; (2) setelahnya tepat 2 baris bullet yang diawali '- ' (total tepat 3 baris non-kosong); (3) wajib menyebut kata 'endpoint'; (4) total maksimal 35 kata; (5) tidak boleh ada emoji. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "regex",
+        "value": "^feat:"
+      },
+      {
+        "id": "c2",
+        "kind": "line_count_exact",
+        "value": 3
+      },
+      {
+        "id": "c3",
+        "kind": "bullet_count_exact",
+        "value": 2
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "(?i)endpoint"
+      },
+      {
+        "id": "c5",
+        "kind": "word_max",
+        "value": 35
+      },
+      {
+        "id": "c6",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "Baris1 'feat: ...', lalu 2 bullet; ada 'endpoint'; 3 baris; <35 kata; tanpa emoji."
+  },
+  {
+    "id": "if-019",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "medium",
+    "usage_source": "Ringkasan laporan praktikum (dua paragraf).",
+    "prompt": "Tulis ringkasan laporan praktikum dalam Bahasa Indonesia tepat 2 paragraf, masing-masing satu baris (jadi tepat 2 baris non-kosong, dipisah satu baris kosong). Aturan: (1) tepat 2 baris non-kosong; (2) salah satu baris wajib memuat angka desimal dengan satu angka di belakang koma (mis. 3.5); (3) wajib menyebut kata 'praktikum'; (4) tidak boleh memuat kata 'error'; (5) total maksimal 55 kata. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "line_count_exact",
+        "value": 2
+      },
+      {
+        "id": "c2",
+        "kind": "regex",
+        "value": "\\d+\\.\\d"
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "(?i)praktikum"
+      },
+      {
+        "id": "c4",
+        "kind": "not_contains",
+        "value": "error"
+      },
+      {
+        "id": "c5",
+        "kind": "word_max",
+        "value": 55
+      }
+    ],
+    "solution": "Dua baris; ada 'praktikum'; ada angka seperti 3.5; tanpa kata 'error'; <55 kata."
+  },
+  {
+    "id": "if-021",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "medium",
+    "usage_source": "Pesan status deploy ke channel ops.",
+    "prompt": "Tulis pesan status deploy dalam Bahasa Indonesia. Aturan: (1) total maksimal 40 kata; (2) kata 'sukses' harus muncul tepat 2 kali; (3) wajib menyebut kata 'staging'; (4) tidak boleh ada emoji; (5) baris terakhir harus persis token 'SELESAI' dan menjadi akhir respons. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "word_max",
+        "value": 40
+      },
+      {
+        "id": "c2",
+        "kind": "count_exact",
+        "param": "sukses",
+        "value": 2
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "(?i)staging"
+      },
+      {
+        "id": "c4",
+        "kind": "no_emoji",
+        "value": true
+      },
+      {
+        "id": "c5",
+        "kind": "regex",
+        "value": "SELESAI\\s*$"
+      }
+    ],
+    "solution": "<40 kata; 'sukses' tepat 2x; ada 'staging'; diakhiri baris 'SELESAI'; tanpa emoji."
+  },
+  {
+    "id": "if-023",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "medium",
+    "usage_source": "Catatan rapat singkat (bullet + pertanyaan penutup).",
+    "prompt": "Buat catatan rapat singkat dalam Bahasa Indonesia tentang koordinasi tugas akhir. Aturan: (1) tepat 4 baris non-kosong dan semuanya bullet yang diawali '- '; (2) baris terakhir wajib kalimat tanya yang diakhiri '?'; (3) wajib menyebut kata 'bab'; (4) total maksimal 55 kata; (5) tidak boleh memuat kata 'bingung'. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "bullet_count_exact",
+        "value": 4
+      },
+      {
+        "id": "c2",
+        "kind": "line_count_exact",
+        "value": 4
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "\\?\\s*$"
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "(?i)bab"
+      },
+      {
+        "id": "c5",
+        "kind": "word_max",
+        "value": 55
+      },
+      {
+        "id": "c6",
+        "kind": "not_contains",
+        "value": "bingung"
+      }
+    ],
+    "solution": "4 bullet; ada 'bab'; bullet terakhir diakhiri '?'; <55 kata; tanpa 'bingung'."
+  },
+  {
+    "id": "if-011",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "hard",
+    "usage_source": "Template JSON laporan kelas (array nama siswa).",
+    "prompt": "Buat laporan absensi kelas dalam JSON valid. Respons HARUS berupa JSON valid dan hanya JSON (tanpa teks lain). Struktur: objek dengan field 'kelas' (string) dan 'siswa' (array berisi string). Aturan: (1) field 'kelas' berisi persis 'TI-3A'; (2) array 'siswa' berisi tepat 3 nama string, berurutan; (3) elemen pertama array adalah 'Andi'; (4) elemen ketiga array adalah 'Dewi'. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "json_valid",
+        "value": true
+      },
+      {
+        "id": "c2",
+        "kind": "json_field",
+        "param": "kelas",
+        "value": "TI-3A"
+      },
+      {
+        "id": "c3",
+        "kind": "json_field",
+        "param": "siswa.0",
+        "value": "Andi"
+      },
+      {
+        "id": "c4",
+        "kind": "json_field",
+        "param": "siswa.2",
+        "value": "Dewi"
+      },
+      {
+        "id": "c5",
+        "kind": "regex",
+        "value": "\"siswa\"\\s*:\\s*\\[\\s*\"[^\"]+\"\\s*,\\s*\"[^\"]+\"\\s*,\\s*\"[^\"]+\"\\s*\\]"
+      }
+    ],
+    "solution": "Mis. {\"kelas\":\"TI-3A\",\"siswa\":[\"Andi\",\"Budi\",\"Dewi\"]}. JSON valid; kelas TI-3A; array tepat 3 string; [0]=Andi; [2]=Dewi."
+  },
+  {
+    "id": "if-012",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "hard",
+    "usage_source": "Ringkasan laporan praktikum dengan larangan kata.",
+    "prompt": "Tulis ringkasan laporan praktikum dalam Bahasa Indonesia, total maksimal 70 kata. Aturan: (1) tidak boleh memuat kata 'sangat'; (2) tepat 2 baris bullet yang diawali '- '; (3) wajib memuat kata 'praktikum' dan kata 'kesimpulan'; (4) baris terakhir harus persis token 'SELESAI' dan menjadi akhir respons. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "bullet_count_exact",
+        "value": 2
+      },
+      {
+        "id": "c2",
+        "kind": "word_max",
+        "value": 70
+      },
+      {
+        "id": "c3",
+        "kind": "not_contains",
+        "value": "sangat"
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "(?i)praktikum"
+      },
+      {
+        "id": "c5",
+        "kind": "regex",
+        "value": "(?i)kesimpulan"
+      },
+      {
+        "id": "c6",
+        "kind": "regex",
+        "value": "SELESAI\\s*$"
+      }
+    ],
+    "solution": "<70 kata; 2 bullet; ada 'praktikum' & 'kesimpulan'; tanpa 'sangat'; diakhiri 'SELESAI'."
+  },
+  {
+    "id": "if-013",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "hard",
+    "usage_source": "Pesan status deploy dengan format jam HH:MM.",
+    "prompt": "Tulis pesan status deploy dalam Bahasa Indonesia. Aturan: (1) tepat 3 baris non-kosong; (2) salah satu baris wajib memuat jam dengan format HH:MM yang valid (mis. 09:15); (3) tidak boleh memuat kata 'gagal'; (4) total maksimal 45 kata; (5) baris pertama harus diawali kata 'DEPLOY'. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "line_count_exact",
+        "value": 3
+      },
+      {
+        "id": "c2",
+        "kind": "regex",
+        "value": "\\b([01]\\d|2[0-3]):[0-5]\\d\\b"
+      },
+      {
+        "id": "c3",
+        "kind": "not_contains",
+        "value": "gagal"
+      },
+      {
+        "id": "c4",
+        "kind": "word_max",
+        "value": 45
+      },
+      {
+        "id": "c5",
+        "kind": "regex",
+        "value": "^DEPLOY"
+      }
+    ],
+    "solution": "3 baris; diawali 'DEPLOY'; ada jam HH:MM valid; tanpa 'gagal'; <45 kata."
+  },
+  {
+    "id": "if-014",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "hard",
+    "usage_source": "Payload JSON pembacaan sensor untuk server monitoring.",
+    "prompt": "Buat payload JSON valid berisi pembacaan sensor. Respons HARUS berupa JSON valid dan hanya JSON (tanpa teks lain). Struktur: objek dengan field 'lokasi' (string), 'suhu' (angka), dan 'kelembapan' (angka). Aturan: (1) field 'lokasi' berisi persis 'lab-iot'; (2) field 'suhu' berisi angka 28; (3) field 'kelembapan' berisi angka 65. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "json_valid",
+        "value": true
+      },
+      {
+        "id": "c2",
+        "kind": "json_field",
+        "param": "lokasi",
+        "value": "lab-iot"
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "\"suhu\"\\s*:\\s*28"
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "\"kelembapan\"\\s*:\\s*65"
+      }
+    ],
+    "solution": "Mis. {\"lokasi\":\"lab-iot\",\"suhu\":28,\"kelembapan\":65}. JSON valid; lokasi lab-iot; suhu 28; kelembapan 65."
+  },
+  {
+    "id": "if-020",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "hard",
+    "usage_source": "Template JSON laporan harian dengan array tugas.",
+    "prompt": "Buat laporan harian dalam JSON valid. Respons HARUS berupa JSON valid dan hanya JSON (tanpa teks lain). Struktur: objek dengan field 'tanggal' (string), 'tasks' (array string), dan 'jam_mulai' (string). Aturan: (1) field 'tanggal' berisi persis '2026-10-04'; (2) array 'tasks' berisi tepat 3 string; (3) elemen ketiga 'tasks' adalah 'review PR'; (4) field 'jam_mulai' berisi persis '08:30'. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "json_valid",
+        "value": true
+      },
+      {
+        "id": "c2",
+        "kind": "json_field",
+        "param": "tanggal",
+        "value": "2026-10-04"
+      },
+      {
+        "id": "c3",
+        "kind": "json_field",
+        "param": "tasks.2",
+        "value": "review PR"
+      },
+      {
+        "id": "c4",
+        "kind": "json_field",
+        "param": "jam_mulai",
+        "value": "08:30"
+      },
+      {
+        "id": "c5",
+        "kind": "regex",
+        "value": "\"tasks\"\\s*:\\s*\\[\\s*\"[^\"]+\"\\s*,\\s*\"[^\"]+\"\\s*,\\s*\"[^\"]+\"\\s*\\]"
+      }
+    ],
+    "solution": "Mis. {\"tanggal\":\"2026-10-04\",\"tasks\":[\"standup\",\"coding\",\"review PR\"],\"jam_mulai\":\"08:30\"}. JSON valid; tanggal benar; tasks tepat 3; [2]=\"review PR\"; jam_mulai \"08:30\"."
+  },
+  {
+    "id": "if-024",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "hard",
+    "usage_source": "Payload JSON status sistem tanpa emoji.",
+    "prompt": "Buat payload JSON valid berisi status sistem. Respons HARUS berupa JSON valid dan hanya JSON (tanpa teks lain) dan tidak boleh ada emoji. Struktur: objek dengan field 'status' (string), 'jumlah_alert' (angka), dan 'catatan' (string). Aturan: (1) field 'status' berisi persis 'ok'; (2) field 'jumlah_alert' berisi angka 0; (3) field 'catatan' memuat kata 'normal'. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "json_valid",
+        "value": true
+      },
+      {
+        "id": "c2",
+        "kind": "json_field",
+        "param": "status",
+        "value": "ok"
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "\"jumlah_alert\"\\s*:\\s*0"
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "(?i)normal"
+      },
+      {
+        "id": "c5",
+        "kind": "no_emoji",
+        "value": true
+      }
+    ],
+    "solution": "Mis. {\"status\":\"ok\",\"jumlah_alert\":0,\"catatan\":\"semua sensor normal\"}. JSON valid; status \"ok\"; jumlah_alert 0; catatan memuat normal; tanpa emoji."
+  },
+  {
+    "id": "if-025",
+    "category": "instruction-following",
+    "type": "format",
+    "difficulty": "hard",
+    "usage_source": "Ringkasan status mingguan (dua paragraf + kata penutup).",
+    "prompt": "Tulis ringkasan status mingguan dalam Bahasa Indonesia. Aturan: (1) tepat 2 baris non-kosong (dua paragraf, masing-masing satu baris); (2) kata 'selesai' harus muncul tepat 2 kali; (3) salah satu baris wajib memuat jam dengan format HH:MM valid (mis. 21:00); (4) respons harus diakhiri persis dengan kata huruf kecil 'beres'; (5) tidak boleh ada emoji; (6) total maksimal 60 kata. Cek ulang seluruh konstrain sebelum menjawab.",
+    "checks": [
+      {
+        "id": "c1",
+        "kind": "line_count_exact",
+        "value": 2
+      },
+      {
+        "id": "c2",
+        "kind": "count_exact",
+        "param": "selesai",
+        "value": 2
+      },
+      {
+        "id": "c3",
+        "kind": "regex",
+        "value": "\\b([01]\\d|2[0-3]):[0-5]\\d\\b"
+      },
+      {
+        "id": "c4",
+        "kind": "regex",
+        "value": "beres\\s*$"
+      },
+      {
+        "id": "c5",
+        "kind": "no_emoji",
+        "value": true
+      },
+      {
+        "id": "c6",
+        "kind": "word_max",
+        "value": 60
+      }
+    ],
+    "solution": "2 baris; 'selesai' tepat 2x; ada jam HH:MM; diakhiri kata 'beres'; tanpa emoji; <60 kata."
+  }
+]

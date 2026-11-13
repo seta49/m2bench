@@ -1,0 +1,278 @@
+[
+ {
+  "id": "x-literal-thermal-throttle",
+  "category": "literal-precision",
+  "prompt": "Log sensor CPU desktop (sampling tiap 1 menit, 12 baris). Definisi throttle di soal ini: CPU dianggap throttle kalau Clock <= 3600 MHz BERSAMAAN dengan Tctl > 95.0 C pada sample yang sama.\n\n```\nTime    Tctl(C)  Clock MHz\n14:00     78.2      4300\n14:01     88.5      4250\n14:02     93.1      4200\n14:03     96.4      3900\n14:04     97.8      3550\n14:05     98.2      3500\n14:06     97.1      3480\n14:07     96.0      3620\n14:08     96.8      3520\n14:09     95.2      3700\n14:10     94.8      4100\n14:11     91.3      4250\n```\n\nJawab persis dari data di atas (tunjukkan hitungan singkat):\n1. Throttle mulai jam berapa (sample PERTAMA yang memenuhi syarat)?\n2. Total berapa sample (menit) yang ter-throttle menurut definisi itu?\n3. Clock tertinggi SEBELUM throttle dimulai (angka + jam)?\nJangan menambahkan data yang tidak ada di tabel.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Throttle pertama = 14:04 (97.8 C, 3550 MHz), bukan 14:03 (jam itu clock masih 3900 > 3600)"
+   },
+   {
+    "id": "c2",
+    "text": "Total ter-throttle = 4 menit (14:04, 14:05, 14:06, 14:08; 14:07 clock 3620 > 3600 TIDAK masuk, 14:09 suhu 95.2 > 95 tapi clock 3700 TIDAK masuk)"
+   },
+   {
+    "id": "c3",
+    "text": "Clock tertinggi sebelum throttle = 4300 MHz di 14:00"
+   },
+   {
+    "id": "c4",
+    "text": "Tidak ada data dikarang dan syarat dua-kondisi (suhu DAN clock pada sample yang sama) diterapkan benar di seluruh jawaban"
+   }
+  ]
+ },
+ {
+  "id": "x-literal-dht-offset",
+  "category": "literal-precision",
+  "prompt": "Log sensor DHT22 (10 baris). Satu baris invalid: nilai -999 berarti pembacaan gagal dan HARUS dibuang. Sensor ini terbukti membaca suhu 0.8 C TERLALU TINGGI, jadi semua suhu valid harus dikoreksi -0.8. Kelembapan tidak perlu dikoreksi.\n\n```\nTime   Temp(C)  Hum(%)\n10:00   24.6     61.2\n10:05   25.1     60.8\n10:10   25.9     59.5\n10:15   26.4     58.9\n10:20   -999     -999\n10:25   27.2     57.7\n10:30   27.8     57.1\n10:35   28.3     56.4\n10:40   27.6     56.9\n10:45   26.9     58.3\n```\n\nJawab persis dari data di atas (tunjukkan hitungan singkat):\n1. Rata-rata suhu TERKORESI (2 desimal).\n2. Suhu terkoreksi MAKSIMUM (1 desimal).\n3. Jumlah baris valid.\n4. Rata-rata kelembapan dari baris valid (2 desimal).\nJangan pakai baris -999 dalam hitungan apa pun.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Rata-rata suhu terkoreksi = 25.84 C (jumlah suhu valid 239.8, dikurangi 9x0.8 = 7.2 jadi 232.6, dibagi 9 = 25.8444 dibulatkan 25.84)"
+   },
+   {
+    "id": "c2",
+    "text": "Suhu terkoreksi maksimum = 27.5 C (dari 28.3 - 0.8 di 10:35, BUKAN 28.3)"
+   },
+   {
+    "id": "c3",
+    "text": "Jumlah baris valid = 9 (baris 10:20 dibuang karena -999)"
+   },
+   {
+    "id": "c4",
+    "text": "Rata-rata kelembapan = 58.53 % (526.8 / 9, dari 9 baris valid tanpa koreksi)"
+   }
+  ]
+ },
+ {
+  "id": "x-literal-iperf-retr",
+  "category": "literal-precision",
+  "prompt": "Output iperf3, 5 stream paralel lewat jaringan yang mulai bermasalah. Kolom terakhir adalah Retr (retransmit TCP).\n\n```\n[  1] sender :  88.4 MBytes    88.4 Mbits/sec    12 retries\n[  2] sender :  91.2 MBytes    91.2 Mbits/sec     0 retries\n[  3] sender :  84.7 MBytes    84.7 Mbits/sec    27 retries\n[  4] sender :  89.9 MBytes    89.9 Mbits/sec     5 retries\n[  5] sender :  86.1 MBytes    86.1 Mbits/sec    26 retries\n```\n\nJawab persis dari data di atas (tunjukkan hitungan singkat):\n1. Stream dengan retransmit TERBANYAK (ID + angka).\n2. Total retransmit kelima stream.\n3. Rata-rata throughput Mbits/sec kelima stream (1 desimal).\nJangan menambahkan data yang tidak ada di tabel.",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Stream retransmit terbanyak = stream 3 dengan 27 retransmit"
+   },
+   {
+    "id": "c2",
+    "text": "Total retransmit = 70 (12+0+27+5+26)"
+   },
+   {
+    "id": "c3",
+    "text": "Rata-rata throughput = 73.9 Mbits/sec (88.4+91.2+84.7+89.9+86.1 = 440.3; 440.3/5 = 88.06 MBytes tidak diterima sebagai jawaban; 369.5/5 = 73.9)"
+   },
+   {
+    "id": "c4",
+    "text": "Tidak menghitung rata-rata dari kolom MBytes (88.06) sebagai throughput, dan tidak ada data dikarang"
+   }
+  ]
+ },
+ {
+  "id": "x-literal-log-timezone",
+  "category": "literal-precision",
+  "prompt": "Log server yang jarum waktunya di-set UTC+8. Empat event tercatat:\n\n```\ne1  2026-09-30 23:40  deploy backend v2.4.1\n    (log ini pakai zona UTC+8)\ne2  2026-10-01 00:15  alarm error-rate naik\ne3  2026-10-01 08:30  oncall ack alarm\ne4  2026-10-01 16:05  error-rate normal\n```\n\nKamu di Indonesia pakai WIB (UTC+7), jadi semua jam di atas harus dikonversi mundur 1 jam.\n\nJawab persis (tunjukkan hitungan singkat):\n1. Jam WIB tiap event (format YYYY-MM-DD HH:MM).\n2. Durasi dari e2 sampai e3 dalam MENIT (pakai waktu WIB; hasilnya sama di zona mana pun).\n3. Ada berapa event yang tanggal WIB-nya BERBEDA dari tanggal yang tertulis di log?",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Konversi WIB benar: e1 = 2026-09-30 22:40, e2 = 2026-09-30 23:15, e3 = 2026-10-01 07:30, e4 = 2026-10-01 15:05 (semua dikurangi 1 jam)"
+   },
+   {
+    "id": "c2",
+    "text": "Durasi e2 ke e3 = 495 menit (8 jam 15 menit; dari 23:15 ke 07:30 lewat tengah malam)"
+   },
+   {
+    "id": "c3",
+    "text": "Hanya 1 event yang tanggal WIB-nya beda dari log: e2 (tulis 2026-10-01 di log, WIB-nya 2026-09-30)"
+   },
+   {
+    "id": "c4",
+    "text": "Tidak ada event lain yang diklaim pindah tanggal (e1 tetap 09-30, e3 dan e4 tetap 10-01) dan tidak ada konversi arah terbalik (ditambah 1 jam)"
+   }
+  ]
+ },
+ {
+  "id": "x-literal-powerbank-wh",
+  "category": "literal-precision",
+  "prompt": "Powerbank memiliki sel di dalamnya 20.000 mAh pada tegangan sel 3.7 V. Output USB-nya 5 V, dan efisiensi konversi tegangan 85% (15% hilang jadi panas). HP yang mau diisi punya baterai 4.500 mAh pada 3.85 V, dan dianggap bisa terisi penuh tanpa sisa.\n\nRumus yang boleh dipakai: Wh = (mAh / 1000) x V.\n\nJawab dengan langkah hitung yang jelas:\n1. Energi teoretis powerbank dalam Wh (1 desimal).\n2. Energi berguna setelah efisiensi, pada sisi output 5 V, dalam Wh (2 desimal).\n3. Energi yang dibutuhkan untuk mengisi HP penuh dalam Wh (3 desimal).\n4. Berapa KALI penuh HP bisa diisi (bulatkan ke bawah, tunjukkan pembagiannya).",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Wh teoretis = 74.0 Wh (20.000 mAh x 3.7 V / 1000)"
+   },
+   {
+    "id": "c2",
+    "text": "Energi berguna = 62.90 Wh (74.0 x 0.85)"
+   },
+   {
+    "id": "c3",
+    "text": "Kebutuhan HP = 17.325 Wh (4.500 mAh x 3.85 V / 1000)"
+   },
+   {
+    "id": "c4",
+    "text": "Jumlah isi penuh = 3 kali (62.90 / 17.325 = 3.63 dibulatkan KE BAWAH; menjawab 3.63 sebagai jumlah kali dianggap salah)"
+   }
+  ]
+ },
+ {
+  "id": "x-literal-bench-trimmed",
+  "category": "literal-precision",
+  "prompt": "Enam hasil skor benchmark (skor 0-100, makin tinggi makin bagus), dijalankan berurutan:\n\n```\nrun 1 : 82.4\nrun 2 : 91.2\nrun 3 : 88.5\nrun 4 : 79.8\nrun 5 : 95.3\nrun 6 : 86.7\n```\n\nJawab persis dari data di atas (tunjukkan hitungan singkat):\n1. Trimmed mean: buang skor TERENDAH dan TERTINGGI, lalu rata-rata 4 skor sisanya (2 desimal).\n2. Median dari 6 skor (6 angka berarti rata-rata dua nilai tengah setelah diurutkan).\n3. Selisih persentase skor TERTINGGI terhadap trimmed mean (rumus (max - trimmed) / trimmed x 100, 2 desimal).",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Trimmed mean = 87.20 (buang 79.8 dan 95.3; (82.4+91.2+88.5+86.7)/4 = 348.8/4)"
+   },
+   {
+    "id": "c2",
+    "text": "Median = 87.60 (urut: 79.8, 82.4, 86.7, 88.5, 91.2, 95.3; (86.7+88.5)/2)"
+   },
+   {
+    "id": "c3",
+    "text": "Selisih = 9.29% ((95.3 - 87.2)/87.2 x 100 = 8.1/87.2 x 100 = 9.2890)"
+   },
+   {
+    "id": "c4",
+    "text": "Tidak tertukar: yang dibuang untuk trimmed mean benar 2 skor (79.8 dan 95.3), dan median dihitung dari 6 angka bukan dari 4 angka trimmed (median 4 angka trimmed 87.45 dianggap salah)"
+   }
+  ]
+ },
+ {
+  "id": "x-literal-audio-db",
+  "category": "literal-precision",
+  "prompt": "Empat IEM dengan spesifikasi sensitivitas dan impedansi (sensitivitas diukur per 1 mW):\n\n```\nModel  Sensitivity  Impedansi\nA      105 dB/mW    32 ohm\nB      111 dB/mW    16 ohm\nC      102 dB/mW    64 ohm\nD      105 dB/mW    32 ohm\n```\n\nAturan yang berlaku di soal ini: setiap +3 dB butuh daya 2x lipat, setiap -3 dB butuh daya 1/2x.\n\nJawab persis (tunjukkan hitungan singkat):\n1. Model mana yang paling keras pada daya yang sama (semua dapat 1 mW)?\n2. Berapa selisih dB antara model B dan model C pada daya sama?\n3. Berapa daya (mW) yang harus diberikan ke model C supaya sama kerasnya dengan model B yang dapat 1 mW?\n4. Model D diberi 4 mW, model B tetap 1 mW: sekarang mana yang lebih keras, dan selisihnya berapa dB?",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Paling keras = model B (111 dB/mW), bukan karena impedansi terendah dijawab sebagai alasan utama"
+   },
+   {
+    "id": "c2",
+    "text": "Selisih B vs C = 9 dB (111 - 102)"
+   },
+   {
+    "id": "c3",
+    "text": "Model C butuh 8 mW (9 dB = 3 x 3 dB = 2 pangkat 3 = 8x dari 1 mW)"
+   },
+   {
+    "id": "c4",
+    "text": "Model B tetap lebih keras: 4 mW = 2 x 2 mW = +6 dB jadi D hanya 111 dB, sama dengan B 111 dB pada 1 mW; selisih akhir 0 dB (menjawab D lebih keras dianggap salah; 'sama keras' diterima)"
+   }
+  ]
+ },
+ {
+  "id": "x-literal-wifi-loss",
+  "category": "literal-precision",
+  "prompt": "Enam hasil tes speedtest wifi dari posisi yang sama. Baris C sempat dicurigai gangguan, jadi C diulang satu kali. ATURAN di soal ini: pakai hasil ulangan (C-ulangan) dan BUANG hasil C yang pertama.\n\n```\nTes        Throughput   Loss\nA          184.2 Mbit/s  0.4%\nB          141.7 Mbit/s  1.8%\nC          96.3 Mbit/s   4.1%\nC-ulangan  88.9 Mbit/s   5.6%\nD          152.6 Mbit/s  1.2%\nE          120.4 Mbit/s  2.7%\n```\n\nJawab persis sesuai aturan di atas (tunjukkan hitungan singkat):\n1. Rata-rata throughput setelah aturan diterapkan (Mbit/s, 1 desimal).\n2. Selisih throughput terbaik vs terburuk dari data yang dipakai (Mbit/s).\n3. Rata-rata loss dari data yang dipakai (%, 2 desimal).",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Rata-rata throughput = 137.6 Mbit/s (184.2+141.7+88.9+152.6+120.4 = 687.8; dibagi 5, bukan 6; 114.6 dari pembagian 6 dianggap salah)"
+   },
+   {
+    "id": "c2",
+    "text": "Selisih terbaik-terburuk = 95.3 Mbit/s (184.2 - 88.9; terburuk C-ulangan, bukan C lama 96.3)"
+   },
+   {
+    "id": "c3",
+    "text": "Rata-rata loss = 2.34% ((0.4+1.8+5.6+1.2+2.7)/5 = 11.7/5)"
+   },
+   {
+    "id": "c4",
+    "text": "Aturan diterapkan konsisten: C lama (96.3 / 4.1%) tidak muncul di hitungan mana pun, dan tidak ada data lain yang dibuang"
+   }
+  ]
+ },
+ {
+  "id": "x-literal-fan-ramp",
+  "category": "literal-precision",
+  "prompt": "Log RPM fan casing, sampling tiap 10 menit (10 baris):\n\n```\nTime   Fan RPM\n09:00    1200\n09:10    1250\n09:20    1980\n09:30    2600\n09:40    2450\n09:50    3150\n10:00    2950\n10:10    3400\n10:20    3200\n10:30    3050\n```\n\nJawab persis dari data di atas (tunjukkan hitungan singkat):\n1. LONJAKAN (kenaikan) terbesar antara dua sampel berturut-turut: berapa RPM kenaikannya dan di jam berapa ke jam berapa?\n2. Ada berapa sampel yang RPM-nya TURUN dibanding sampel sebelumnya?\n3. RPM tertinggi KEDUA (second max)?",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Lonjakan terbesar = +730 RPM dari 09:10 (1250) ke 09:20 (1980), lebih besar dari 09:40 ke 09:50 yang cuma +700"
+   },
+   {
+    "id": "c2",
+    "text": "Sampel yang turun = 4 (09:40 dari 2600, 10:00 dari 3150, 10:20 dari 3400, 10:30 dari 3200)"
+   },
+   {
+    "id": "c3",
+    "text": "RPM tertinggi kedua = 3200 (tertinggi 3400 di 10:10, kedua 3200 di 10:20)"
+   },
+   {
+    "id": "c4",
+    "text": "Tidak tertukar lonjakan dengan nilai absolut: pasangan 09:30-09:40 (-150) dan 10:00-10:10 (+450) tidak dijawab sebagai lonjakan terbesar"
+   }
+  ]
+ },
+ {
+  "id": "x-literal-stok-gudang",
+  "category": "literal-precision",
+  "prompt": "Kartu stok gudang satu SKU, saldo awal 120 unit. Transaksi urut waktu (positif = masuk, negatif = keluar):\n\n```\nNo   Waktu   Masuk/Keluar\n1    08:00   +250\n2    08:30   -400\n3    09:15   +180\n4    10:00   -220\n5    10:45   +300\n6    11:20   -95\n7    12:10   +120\n8    11:50   -350\n9    13:00   +90\n10   13:40   +260\n11   14:20   -180\n12   15:00   +140\n```\n\nJawab persis dari data di atas (tunjukkan hitungan saldo bertahap):\n1. Saldo akhir setelah transaksi terakhir.\n2. Saldo TERENDAH yang pernah terjadi: angkanya dan setelah transaksi nomor berapa.\n3. Berapa KALI saldo posisi berubah jadi NEGATIF (kurang dari 0) di sepanjang urutan?",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Saldo akhir = 215 unit (urutan saldo: 370, -30, 150, -70, 230, 135, 255, -95, -5, 255, 75, 215)"
+   },
+   {
+    "id": "c2",
+    "text": "Saldo terendah = -95 unit, setelah transaksi no 8 (11:50); bukan -70 (no 4) dan bukan -30 (no 2)"
+   },
+   {
+    "id": "c3",
+    "text": "Saldo negatif terjadi 4 kali (setelah no 2 = -30, no 4 = -70, no 8 = -95, no 9 = -5)"
+   },
+   {
+    "id": "c4",
+    "text": "Menjawab sesuai urutan TABEL (menghitung no 8 sebelum no 7, karena itu urutannya salah; urutan yang benar mengikuti kolom No bukan jam) DAN tidak ada saldo dikarang: setelah no 9 saldo -5 masih negatif lalu pulih di no 10"
+   }
+  ]
+ },
+ {
+  "id": "x-literal-histo",
+  "category": "literal-precision",
+  "prompt": "Histogram intensitas citra grayscale 8-bit, dikelompokkan 5 rentang (jumlah piksel total diketahui dari tabel):\n\n```\nRentang      Jumlah piksel\n0-49         8.400\n50-99        15.200\n100-149      27.800\n150-199      19.600\n200-255      12.500\n```\n\nDefinisi di soal ini: piksel GELAP = intensitas < 100, piksel TERANG = intensitas >= 100.\n\nJawab persis dari data di atas (tunjukkan hitungan singkat):\n1. Persentase piksel gelap terhadap total (1 desimal).\n2. Rasio jumlah piksel terang dibanding piksel gelap (bentuk x : 1, 2 desimal).\n3. Rentang mana yang punya piksel terbanyak?",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Total = 83.500 piksel (8400+15200+27800+19600+12500)"
+   },
+   {
+    "id": "c2",
+    "text": "Piksel gelap = 23.600 (8400+15200) = 28.3% (28.2635 dibulatkan)"
+   },
+   {
+    "id": "c3",
+    "text": "Rasio terang : gelap = 2.54 : 1 (59.900 / 23.600 = 2.5381; menerima 2.54 atau 59900:23600 tanpa pembulatan salah)"
+   },
+   {
+    "id": "c4",
+    "text": "Rentang terbanyak = 100-149 (27.800 piksel), dan batas gelap diterapkan benar: rentang 50-99 masuk gelap, 100-149 masuk terang"
+   }
+  ]
+ },
+ {
+  "id": "x-literal-transfer-time",
+  "category": "literal-precision",
+  "prompt": "Sebuah file berukuran 5.5 GiB dikirim lewat link berkecepatan 940 Mbit/s, tapi 8% bandwidth terpakai overhead protokol, jadi bandwidth efektif hanya 92% dari 940 Mbit/s.\n\nAturan konversi yang WAJIB dipakai di soal ini (jangan pakai konvensi lain): 1 GiB = 1024 pangkat 3 byte; 1 Mbit = 10 pangkat 6 bit; 1 MB = 10 pangkat 6 byte; 1 byte = 8 bit.\n\nJawab persis (tunjukkan hitungan singkat):\n1. Ukuran file dalam BYTE.\n2. Bandwidth efektif dalam Mbit/s.\n3. Waktu transfer dalam DETIK (bulatkan ke bilangan bulat terdekat).\n4. Kecepatan efektif dalam MB (10 pangkat 6 byte) per detik (1 desimal).",
+  "criteria": [
+   {
+    "id": "c1",
+    "text": "Ukuran file = 5.5 x 1024^3 = 5.905.580.032 byte (bukan 5.500.000.000; konversi biner dipakai benar)"
+   },
+   {
+    "id": "c2",
+    "text": "Bandwidth efektif = 864.8 Mbit/s (940 x 0.92), bukan 940 atau 75.2"
+   },
+   {
+    "id": "c3",
+    "text": "Waktu transfer = 55 detik (47.244.640.256 bit / 864.800.000 bit/s = 54.63 dibulatkan ke 55)"
+   },
+   {
+    "id": "c4",
+    "text": "Kecepatan efektif = 108.1 MB/s (864.8 Mbit/s x 10^6 / 8 = 108.100.000 byte/s; mendapat 98.2 dari pembagian 864.8/8.8 dianggap salah; tidak mencampur MB biner)"
+   }
+  ]
+ }
+]

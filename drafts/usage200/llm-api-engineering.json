@@ -1,0 +1,342 @@
+[
+ {
+  "id": "llm-001",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "easy",
+  "usage_source": "bikin wrapper gateway /v1/chat/completions, menyusun array messages",
+  "prompt": "Atha bikin wrapper gateway OpenAI-compatible untuk risetnya. Sebelum kirim ke endpoint `/v1/chat/completions`, ia menyusun array `messages`. Ia mau menaruh instruksi global (aturan gaya bahasa dan batasan) yang harus dipatuhi model sepanjang percakapan, terpisah dari pertanyaan user.\n\nRole apa yang tepat untuk potongan instruksi global itu?\n\nA) `user`\nB) `system`\nC) `assistant`\nD) `tool`\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `user`",
+   "B) `system`",
+   "C) `assistant`",
+   "D) `tool`"
+  ],
+  "answer": {"value": "B"},
+  "solution": "Role `system` dipakai untuk instruksi/konteks global sebelum giliran user; `assistant` = output model, `user` = input pengguna, `tool` = hasil pemanggilan fungsi. Jawaban B."
+ },
+ {
+  "id": "llm-002",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "easy",
+  "usage_source": "menampilkan output bertahap dari streaming SSE",
+  "prompt": "Saat memanggil `/v1/chat/completions` dengan `stream: true`, server mengirim banyak event SSE. Atha ingin mengambil potongan teks yang baru dihasilkan di tiap event agar bisa ditampilkan bertahap (efek mengetik).\n\nField mana yang berisi potongan teks inkremental itu di setiap chunk?\n\nA) `choices[0].delta.content`\nB) `choices[0].message.content`\nC) `choices[0].text`\nD) `usage.completion_tokens`\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `choices[0].delta.content`",
+   "B) `choices[0].message.content`",
+   "C) `choices[0].text`",
+   "D) `usage.completion_tokens`"
+  ],
+  "answer": {"value": "A"},
+  "solution": "Di mode streaming tiap chunk berisi increment di `choices[0].delta.content`; `message.content` dipakai di respons non-stream. Jawaban A."
+ },
+ {
+  "id": "llm-003",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "easy",
+  "usage_source": "debugging header auth & status code di gateway sendiri",
+  "prompt": "Gateway Atha mengirim terlalu banyak request per menit dan sebagian respons balik dengan status HTTP tertentu, body-nya menyebut `rate limit`.\n\nStatus code HTTP mana yang menandakan limit laju (rate limit) terlampaui?\n\nA) `400`\nB) `401`\nC) `429`\nD) `503`\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `400`",
+   "B) `401`",
+   "C) `429`",
+   "D) `503`"
+  ],
+  "answer": {"value": "C"},
+  "solution": "429 = Too Many Requests (rate limit). 400 = request buruk, 401 = auth gagal, 503 = service tak tersedia. Jawaban C."
+ },
+ {
+  "id": "llm-004",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "easy",
+  "usage_source": "mengirim API key ke endpoint OpenAI-compatible",
+  "prompt": "Atha menyimpan API key di environment variable lalu mengirimnya di setiap request. Ia bingung format header autentikasi yang benar untuk endpoint OpenAI-compatible.\n\nFormat header autentikasi yang benar?\n\nA) `Authorization: Bearer sk-xxxx`\nB) `Authorization: sk-xxxx`\nC) `X-Authorization: sk-xxxx`\nD) `Api-Key: Bearer sk-xxxx`\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `Authorization: Bearer sk-xxxx`",
+   "B) `Authorization: sk-xxxx`",
+   "C) `X-Authorization: sk-xxxx`",
+   "D) `Api-Key: Bearer sk-xxxx`"
+  ],
+  "answer": {"value": "A"},
+  "solution": "Standar OpenAI-compatible: header `Authorization` dengan skema `Bearer` lalu spasi lalu key. Jawaban A."
+ },
+ {
+  "id": "llm-005",
+  "category": "llm-api-engineering",
+  "type": "short",
+  "difficulty": "easy",
+  "usage_source": "menangani error auth saat API key salah/kosong",
+  "prompt": "Atha salah menaruh API key (kosong atau sudah kedaluwarsa) sehingga gateway menolak request dengan pesan 'Unauthorized'.\n\nStatus code HTTP berapa yang menandakan autentikasi gagal (API key tidak valid)?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {"value": "401"},
+  "solution": "Autentikasi gagal (key salah/kedaluwarsa) = HTTP 401 Unauthorized. Jawaban: 401."
+ },
+ {
+  "id": "llm-006",
+  "category": "llm-api-engineering",
+  "type": "short",
+  "difficulty": "easy",
+  "usage_source": "mengatur budget token output per request",
+  "prompt": "Atha ingin membatasi panjang jawaban model agar tidak kepanjangan dan tidak boros token.\n\nNama parameter pada request `/v1/chat/completions` yang mengatur batas maksimum jumlah token yang dihasilkan model?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {"value": "max_tokens"},
+  "solution": "Parameter batas token output adalah `max_tokens`. Jawaban: max_tokens."
+ },
+ {
+  "id": "llm-007",
+  "category": "llm-api-engineering",
+  "type": "short",
+  "difficulty": "easy",
+  "usage_source": "mengukur kemiripan semantik dokumen untuk retrieval",
+  "prompt": "Atha mau mengubah teks jadi vektor untuk mengukur kemiripan semantik antar dokumen (untuk retrieval), bukan untuk mengobrol dengan model.\n\nNama endpoint (OpenAI-compatible) yang dipakai untuk menghasilkan embedding teks?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {"value": "embeddings", "accept": ["/v1/embeddings", "v1/embeddings", "embedding"]},
+  "solution": "Vektor teks dihasilkan oleh endpoint `/v1/embeddings` (bukan `/v1/chat/completions`). Jawaban: embeddings."
+ },
+ {
+  "id": "llm-008",
+  "category": "llm-api-engineering",
+  "type": "short",
+  "difficulty": "easy",
+  "usage_source": "membedakan error entitlement (MODEL_NOT_IN_PLAN) dari error auth",
+  "prompt": "Atha memakai model baru lewat gateway, respons balik HTTP 403 dengan body `MODEL_NOT_IN_PLAN`.\n\nStatus code HTTP berapa yang muncul di respons itu?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {"value": "403"},
+  "solution": "Body `MODEL_NOT_IN_PLAN` dikembalikan dengan status HTTP 403. Jawaban: 403."
+ },
+ {
+  "id": "llm-009",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "debugging output kosong dari model reasoning dengan max_tokens kecil",
+  "prompt": "Atha kirim request ke model bertipe 'reasoning'. Responsnya HTTP 200, `finish_reason` = `\"length\"`, `message.content` = `\"\"`, tapi `message.reasoning_content` berisi paragraf panjang. Ia menyetel `max_tokens` kecil (mis. 128).\n\nApa penjelasan paling tepat?\n\nA) API key-nya salah, jadi `content` disembunyikan diam-diam oleh server\nB) Model menghabiskan jatah `max_tokens` untuk `reasoning_content`, sehingga tidak ada sisa untuk `content`; solusinya naikkan `max_tokens` atau matikan reasoning\nC) `reasoning_content` otomatis ikut disalin ke `content`, jadi tinggal dibaca dari sana\nD) Streaming belum ditutup, tinggal tunggu event `[DONE]`\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) API key-nya salah, jadi `content` disembunyikan diam-diam oleh server",
+   "B) Model menghabiskan jatah `max_tokens` untuk `reasoning_content`, sehingga tidak ada sisa untuk `content`; solusinya naikkan `max_tokens` atau matikan reasoning",
+   "C) `reasoning_content` otomatis ikut disalin ke `content`, jadi tinggal dibaca dari sana",
+   "D) Streaming belum ditutup, tinggal tunggu event `[DONE]`"
+  ],
+  "answer": {"value": "B"},
+  "solution": "Pada model reasoning, token proses berpikir memakai jatah output (`max_tokens`). Kalau jatah habis di reasoning, `content` menjadi kosong dan `finish_reason` = length. Fix: naikkan `max_tokens` / nonaktifkan reasoning. Jawaban B."
+ },
+ {
+  "id": "llm-010",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "mengatur sampling (temperature vs top_p) saat bangun benchmark",
+  "prompt": "Atha membaca dokumentasi parameter sampling. Ada dua knob populer: `temperature` dan `top_p`.\n\nApa efek `top_p` (nucleus sampling)?\n\nA) Memilih dari kumpulan token paling mungkin yang jumlah probabilitas kumulatifnya mencapai `p`, sisanya dibuang\nB) Mengalikan semua logit dengan nilai `p`\nC) Menentukan panjang maksimum jawaban\nD) Memberi penalti pada token yang sering muncul\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Memilih dari kumpulan token paling mungkin yang jumlah probabilitas kumulatifnya mencapai `p`, sisanya dibuang",
+   "B) Mengalikan semua logit dengan nilai `p`",
+   "C) Menentukan panjang maksimum jawaban",
+   "D) Memberi penalti pada token yang sering muncul"
+  ],
+  "answer": {"value": "A"},
+  "solution": "`top_p` membatasi sampling ke token-token teratas yang probabilitas kumulatifnya mencapai p (nucleus); sisanya dipangkas. Jawaban A."
+ },
+ {
+  "id": "llm-011",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "membedakan error 401 dan 403 di gateway saat ganti-ganti model",
+  "prompt": "Atha dapat dua respons error berbeda: (1) 401 `invalid_api_key`, (2) 403 `MODEL_NOT_IN_PLAN`. Ia menyimpulkan keduanya sama saja: 'berarti API key gue salah'.\n\nMana pembacaan yang benar?\n\nA) Benar, keduanya selalu berarti API key salah\nB) 401 = key salah/kedaluwarsa (gagal autentikasi); 403 = key valid dan terautentikasi tapi akun/tier tidak punya hak akses ke model itu (masalah entitlement, bukan autentikasi)\nC) 403 = server gateway sedang down\nD) 401 = rate limit sedangkan 403 = key kedaluwarsa\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Benar, keduanya selalu berarti API key salah",
+   "B) 401 = key salah/kedaluwarsa (gagal autentikasi); 403 = key valid dan terautentikasi tapi akun/tier tidak punya hak akses ke model itu (masalah entitlement, bukan autentikasi)",
+   "C) 403 = server gateway sedang down",
+   "D) 401 = rate limit sedangkan 403 = key kedaluwarsa"
+  ],
+  "answer": {"value": "B"},
+  "solution": "401 = gagal autentikasi (key salah), 403 = terautentikasi tapi tidak berwenang (mis. model tak ada di plan). Menyimpulkan '403 = key salah' adalah jebakan klasik. Jawaban B."
+ },
+ {
+  "id": "llm-012",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "menghitung biaya token input vs output untuk atur budget",
+  "prompt": "Atha mengestimasi biaya pakai satu harga token untuk semua (dianggap harga input = harga output). Hasilnya meleset jauh dari tagihan.\n\nPenyebab paling mungkin?\n\nA) Harga per token output biasanya berbeda dan umumnya lebih mahal (sering 2-4x harga input), jadi biaya harus dihitung terpisah untuk `prompt_tokens` dan `completion_tokens`\nB) Harga input dan output selalu identik, jadi yang salah pasti modelnya\nC) Output selalu gratis, hanya input yang ditagih\nD) Biaya selalu dihitung dari jumlah karakter, bukan token\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Harga per token output biasanya berbeda dan umumnya lebih mahal (sering 2-4x harga input), jadi biaya harus dihitung terpisah untuk `prompt_tokens` dan `completion_tokens`",
+   "B) Harga input dan output selalu identik, jadi yang salah pasti modelnya",
+   "C) Output selalu gratis, hanya input yang ditagih",
+   "D) Biaya selalu dihitung dari jumlah karakter, bukan token"
+  ],
+  "answer": {"value": "A"},
+  "solution": "Provider umumnya memberi tarif berbeda: output lebih mahal dari input. Biaya = input_tokens*harga_in + output_tokens*harga_out. Menganggap sama akan meleset. Jawaban A."
+ },
+ {
+  "id": "llm-013",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "memakai stop sequence untuk memangkas output",
+  "prompt": "Atha menyetel `stop: [\"\\n\\n\"]` di request-nya. Ia penasaran perilaku parameter itu.\n\nMana deskripsi yang benar tentang stop sequence?\n\nA) Generasi dihentikan begitu string `stop` muncul, dan string `stop` itu umumnya TIDAK ikut disertakan di `content`\nB) Generasi dihentikan, dan string `stop` selalu ikut disertakan di akhir `content`\nC) `stop` hanya berfungsi di mode streaming\nD) `stop` mengganti string tersebut dengan teks lain di output\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Generasi dihentikan begitu string `stop` muncul, dan string `stop` itu umumnya TIDAK ikut disertakan di `content`",
+   "B) Generasi dihentikan, dan string `stop` selalu ikut disertakan di akhir `content`",
+   "C) `stop` hanya berfungsi di mode streaming",
+   "D) `stop` mengganti string tersebut dengan teks lain di output"
+  ],
+  "answer": {"value": "A"},
+  "solution": "`stop` menghentikan generasi saat sequence muncul; string stop umumnya dipangkas dari `content`. Jawaban A."
+ },
+ {
+  "id": "llm-014",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "memakai response_format json_object lalu parsing hasilnya",
+  "prompt": "Atha menyetel `response_format: {\"type\": \"json_object\"}` supaya output gampang di-parse.\n\nApa yang dijamin (dan TIDAK dijamin) oleh mode ini?\n\nA) Menjamin output berupa JSON yang valid, tapi TIDAK menjamin struktur/field-nya persis sesuai skema yang Atha mau (schema tetap harus dijelaskan di prompt)\nB) Menjamin struktur JSON persis sesuai skema apa pun tanpa perlu diberi tahu\nC) Menjamin semua nilai numerik di dalamnya benar\nD) Mematikan sampling sehingga output deterministik\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Menjamin output berupa JSON yang valid, tapi TIDAK menjamin struktur/field-nya persis sesuai skema yang Atha mau (schema tetap harus dijelaskan di prompt)",
+   "B) Menjamin struktur JSON persis sesuai skema apa pun tanpa perlu diberi tahu",
+   "C) Menjamin semua nilai numerik di dalamnya benar",
+   "D) Mematikan sampling sehingga output deterministik"
+  ],
+  "answer": {"value": "A"},
+  "solution": "JSON mode menjamin sintaks JSON valid, bukan kepatuhan skema. Field yang diinginkan tetap harus didefinisikan di prompt. Jawaban A."
+ },
+ {
+  "id": "llm-015",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "memahami batas context window saat prompt panjang",
+  "prompt": "Atha mengirim prompt panjang. Ia sadar jumlah token (prompt + output) melebihi context window model.\n\nApa yang terjadi kalau `prompt_tokens + max_tokens` melampaui context window, dan apa implikasi praktisnya?\n\nA) Request bisa gagal/error, atau bagian prompt dipotong (truncation) sehingga konteks paling awal/akhir hilang; praktiknya harus dipangkas agar muat\nB) Model otomatis memperbesar context window-nya\nC) Token berlebih otomatis ditagih setengah harga\nD) Tidak masalah, context window bukan batas keras\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Request bisa gagal/error, atau bagian prompt dipotong (truncation) sehingga konteks paling awal/akhir hilang; praktiknya harus dipangkas agar muat",
+   "B) Model otomatis memperbesar context window-nya",
+   "C) Token berlebih otomatis ditagih setengah harga",
+   "D) Tidak masalah, context window bukan batas keras"
+  ],
+  "answer": {"value": "A"},
+  "solution": "Context window adalah batas keras; melebihi itu menyebabkan error atau pemotongan (truncation) sehingga konteks hilang. Jawaban A."
+ },
+ {
+  "id": "llm-016",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "asumsi reproducibility saat eval dengan temperature 0",
+  "prompt": "Atha menyamakan `temperature: 0` dengan 'pasti deterministik, output identik tiap kali dijalankan'.\n\nMana pernyataan yang paling akurat?\n\nA) `temperature: 0` (greedy) cenderung paling stabil, tapi TIDAK menjamin output 100% identik — batching, paralelisme GPU, pembaruan model, dan pembulatan tetap bisa menimbulkan variasi\nB) `temperature: 0` dijamin menghasilkan output byte-identik selamanya\nC) `temperature: 0` sama dengan menonaktifkan sampling sehingga tidak ada token yang dihasilkan\nD) `temperature: 0` hanya berlaku untuk model embedding\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `temperature: 0` (greedy) cenderung paling stabil, tapi TIDAK menjamin output 100% identik — batching, paralelisme GPU, pembaruan model, dan pembulatan tetap bisa menimbulkan variasi",
+   "B) `temperature: 0` dijamin menghasilkan output byte-identik selamanya",
+   "C) `temperature: 0` sama dengan menonaktifkan sampling sehingga tidak ada token yang dihasilkan",
+   "D) `temperature: 0` hanya berlaku untuk model embedding"
+  ],
+  "answer": {"value": "A"},
+  "solution": "Greedy decoding (temp 0) paling stabil tapi bukan jaminan mutlak deterministik di level server. Jangan anggap identik sempurna. Jawaban A."
+ },
+ {
+  "id": "llm-017",
+  "category": "llm-api-engineering",
+  "type": "short",
+  "difficulty": "medium",
+  "usage_source": "menangani 429 dengan retry berjenjang di gateway",
+  "prompt": "Saat kena 429, Atha tidak mau spam ulang instan. Ia menunggu makin lama di tiap percobaan gagal (mis. 1s, 2s, 4s, 8s) sebelum mencoba lagi.\n\nNama strategi retry seperti ini?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {"value": "exponential backoff", "accept": ["exponential backoff", "exponential", "exponential_backoff", "eksponensial", "backoff eksponensial", "backoff"]},
+  "solution": "Menunggu berkali-lipat tiap retry (1,2,4,8...) disebut exponential backoff. Jawaban: exponential backoff."
+ },
+ {
+  "id": "llm-018",
+  "category": "llm-api-engineering",
+  "type": "short",
+  "difficulty": "medium",
+  "usage_source": "menyusun metodologi benchmark dengan sampling ganda",
+  "prompt": "Untuk tiap soal, model disampel k kali; sebuah soal dianggap 'lulus' kalau minimal SATU dari k sampel itu benar.\n\nNama metrik yang mengukur peluang minimal satu sampel benar (biasa ditulis 'pass@k')?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {"value": "pass@k", "accept": ["pass@k", "passk", "pass at k", "pass@ k"]},
+  "solution": "Metrik peluang minimal satu dari k sampel benar adalah pass@k. Jawaban: pass@k."
+ },
+ {
+  "id": "llm-019",
+  "category": "llm-api-engineering",
+  "type": "short",
+  "difficulty": "medium",
+  "usage_source": "memakai LLM-as-judge lalu curiga ada bias",
+  "prompt": "Atha memakai LLM sebagai juri (LLM-as-judge) untuk menilai jawaban. Ia curiga juri cenderung memberi skor lebih tinggi ke jawaban yang lebih panjang/bertele-tele meski isinya tidak lebih benar.\n\nNama bias juri seperti ini?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {"value": "length bias", "accept": ["length bias", "verbosity bias", "bias panjang", "bias verbositas", "length"]},
+  "solution": "Kecenderungan juri mengunggulkan jawaban panjang = length bias (verbosity bias). Jawaban: length bias."
+ },
+ {
+  "id": "llm-020",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "hard",
+  "usage_source": "menghitung total biaya batch request dari tarif input/output",
+  "prompt": "Gateway Atha tarifnya: $0.30 per 1 juta token input dan $1.20 per 1 juta token output. Satu request rata-rata memakai 1.500 token input dan 500 token output. Ia menjalankan 2.000 request.\n\nBerapa total biaya (USD)?\n\nA) $1,50\nB) $2,10\nC) $2,40\nD) $1,20\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) $1,50",
+   "B) $2,10",
+   "C) $2,40",
+   "D) $1,20"
+  ],
+  "answer": {"value": "B"},
+  "solution": "Input: 1.500*2.000 = 3.000.000 token -> 3 * $0.30 = $0.90. Output: 500*2.000 = 1.000.000 token -> 1 * $1.20 = $1.20. Total = $2.10. Jawaban B."
+ },
+ {
+  "id": "llm-021",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "hard",
+  "usage_source": "memilih dataset eval untuk benchmark sendiri",
+  "prompt": "Atha membandingkan dua model pada dataset eval publik. Salah satu model skornya jauh lebih tinggi, tapi belakangan ketahuan soal beserta jawaban dataset itu beredar luas di internet dan besar kemungkinan masuk data latih model tersebut.\n\nApa masalah utama dan kesimpulan yang paling defensible?\n\nA) Itu bagus, berarti modelnya memang lebih pintar\nB) Ini kontaminasi data (data leakage): skor bisa menggelembung karena model 'hafal' soal, jadi perbandingannya tidak valid; perlu dataset baru/tertutup atau soal buatan sendiri\nC) Kontaminasi tidak berpengaruh karena model tidak bisa menghafal\nD) Cukup laporkan skornya tinggi tanpa catatan\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Itu bagus, berarti modelnya memang lebih pintar",
+   "B) Ini kontaminasi data (data leakage): skor bisa menggelembung karena model 'hafal' soal, jadi perbandingannya tidak valid; perlu dataset baru/tertutup atau soal buatan sendiri",
+   "C) Kontaminasi tidak berpengaruh karena model tidak bisa menghafal",
+   "D) Cukup laporkan skornya tinggi tanpa catatan"
+  ],
+  "answer": {"value": "B"},
+  "solution": "Dataset publik yang bocor ke data latih menyebabkan kontaminasi; skor menggelembung dan perbandingan tak valid. Jawaban B."
+ },
+ {
+  "id": "llm-022",
+  "category": "llm-api-engineering",
+  "type": "mcq",
+  "difficulty": "hard",
+  "usage_source": "memutuskan hasil eval mana yang dipercaya saat judge dan checker berlawanan",
+  "prompt": "Evaluasi A (exact-match/checker) bilang Model X lebih unggul; evaluasi B (LLM sebagai juri) bilang Model Y lebih unggul. Atha harus memilih mana yang lebih dipercaya untuk keputusan teknis.\n\nMana penalaran yang paling defensible?\n\nA) Selalu percaya juri LLM karena lebih 'manusiawi'\nB) Exact-match/checker lebih deterministik, reproducible, dan tak punya bias juri (mis. length bias), jadi lebih stabil untuk perbandingan; selisih dengan judge bisa jadi sinyal bias/noise yang layak diinvestigasi, bukan langsung dipercaya\nC) Buang kedua hasil lalu pilih acak\nD) Juri selalu lebih akurat karena menangkap makna\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Selalu percaya juri LLM karena lebih 'manusiawi'",
+   "B) Exact-match/checker lebih deterministik, reproducible, dan tak punya bias juri (mis. length bias), jadi lebih stabil untuk perbandingan; selisih dengan judge bisa jadi sinyal bias/noise yang layak diinvestigasi, bukan langsung dipercaya",
+   "C) Buang kedua hasil lalu pilih acak",
+   "D) Juri selalu lebih akurat karena menangkap makna"
+  ],
+  "answer": {"value": "B"},
+  "solution": "Exact-match/checker deterministik dan bebas bias juri sehingga lebih stabil; judge punya bias (length, posisi, self-preference). Jawaban B."
+ },
+ {
+  "id": "llm-023",
+  "category": "llm-api-engineering",
+  "type": "short",
+  "difficulty": "hard",
+  "usage_source": "mendeteksi output terpotong lewat finish_reason",
+  "prompt": "Atha melihat sebuah respons berhenti tepat saat menyentuh batas `max_tokens` (bukan selesai natural).\n\nNilai `finish_reason` apa yang menandai output terpotong karena batas `max_tokens`?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {"value": "length", "accept": ["length", "max_tokens", "length limit"]},
+  "solution": "Output yang berhenti karena menyentuh `max_tokens` diberi `finish_reason` = \"length\" (selesai natural = \"stop\"). Jawaban: length."
+ },
+ {
+  "id": "llm-024",
+  "category": "llm-api-engineering",
+  "type": "short",
+  "difficulty": "hard",
+  "usage_source": "optimasi biaya/latensi untuk system prompt panjang berulang",
+  "prompt": "Gateway Atha punya system prompt panjang yang identik untuk ribuan request. Ia ingin server tidak mengulang komputasi bagian awal prompt yang sama tiap request, supaya latensi dan biaya turun.\n\nNama fitur/strategi ini?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {"value": "prompt caching", "accept": ["prompt caching", "prefix caching", "prompt cache", "prefix cache", "caching", "context caching", "kv cache"]},
+  "solution": "Meng-cache komputasi prefix prompt yang identik disebut prompt caching / prefix caching. Jawaban: prompt caching."
+ },
+ {
+  "id": "llm-025",
+  "category": "llm-api-engineering",
+  "type": "short",
+  "difficulty": "hard",
+  "usage_source": "mengira token proses berpikir model reasoning itu gratis",
+  "prompt": "Model bertipe reasoning mengembalikan `reasoning_content` (proses berpikir) yang tidak muncul di `content` final yang dibaca user. Atha mengira token proses berpikir itu gratis.\n\nSebenarnya `reasoning_content` biasanya ditagih sebagai token jenis apa (input atau output)?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {"value": "output", "accept": ["output", "output token", "completion", "token output", "completion token"]},
+  "solution": "Token `reasoning_content` ikut dihitung dan ditagih sebagai token output (completion), walau tak tampil di `content`. Jawaban: output."
+ }
+]

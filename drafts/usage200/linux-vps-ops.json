@@ -1,0 +1,442 @@
+[
+ {
+  "id": "vps-001",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "easy",
+  "usage_source": "systemd: service monitoring sensor yang dipindah dari nohup ke unit systemd (start vs enable saat reboot)",
+  "prompt": "Server monitoring sensor di VPS dulu dijalankan lewat nohup, sekarang dijadikan service systemd bernama sensor-mon.service. Atha sudah menjalankan `systemctl start sensor-mon.service` dan jalan normal. Beberapa hari kemudian VPS di-reboot, ternyata sensor-mon.service tidak ikut jalan. Apa yang kurang?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Perlu `systemctl reload sensor-mon.service` supaya definisi unit tersimpan ke disk dan ikut dijalankan saat boot.",
+   "B) Perlu `systemctl daemon-reload` supaya systemd mengingat service ini untuk boot berikutnya.",
+   "C) Perlu `systemctl enable sensor-mon.service`: `start` hanya menjalankan sekarang, sedangkan `enable` membuat symlink unit ke boot target supaya ikut start otomatis saat boot.",
+   "D) Cukup `systemctl start`; yang salah adalah unit file belum memakai `WantedBy=multi-user.target`."
+  ],
+  "answer": {
+   "value": "C"
+  },
+  "solution": "`start` hanya mengaktifkan unit untuk sesi berjalan. Supaya otomatis saat boot harus `enable`, yang membuat symlink unit di direktori .../multi-user.target.wants/. `reload` untuk me-reload konfigurasi aplikasi, `daemon-reload` untuk membaca ulang unit file setelah diedit — keduanya bukan mekanisme boot."
+ },
+ {
+  "id": "vps-002",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "easy",
+  "usage_source": "journalctl: melihat log service systemd yang restart terus",
+  "prompt": "Service bernama sensor-mon.service terus restart sendiri. Atha mau melihat log yang dicatat systemd untuk unit itu, sekaligus memantau secara realtime. Perintah yang tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `journalctl -f`",
+   "B) `journalctl -u sensor-mon.service -f`",
+   "C) `tail -f /var/log/sensor-mon.log`",
+   "D) `systemctl status sensor-mon.service --follow`"
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "`-u <unit>` memfilter log journal hanya untuk unit itu; `-f` mengikuti realtime. `journalctl -f` tanpa `-u` menampilkan semua journal. `tail -f` file mengasumsikan app menulis ke file itu (tidak dijamin). `systemctl status` tidak punya opsi `--follow`."
+ },
+ {
+  "id": "vps-003",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "systemd: direktif Restart= untuk service sensor yang kadang crash (non-zero exit)",
+  "prompt": "Bug di program membuat service sensor kadang keluar dengan exit code non-zero. Atha mau systemd otomatis menghidupkan ulang HANYA saat proses keluar karena error, bukan saat dihentikan normal. Nilai `Restart=` yang tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `Restart=always`",
+   "B) `Restart=on-abnormal`",
+   "C) `Restart=on-success`",
+   "D) `Restart=on-failure`"
+  ],
+  "answer": {
+   "value": "D"
+  },
+  "solution": "`on-failure` restart ketika proses keluar dengan exit code non-zero, dihentikan sinyal abnormal, timeout, atau watchdog. `always` terlalu agresif karena ikut restart saat keluar normal (exit 0). `on-abnormal` hanya menangkap terminasi abnormal (sinyal/timeout), BUKAN exit code non-zero. `on-success` justru kebalikannya: restart hanya saat keluar bersih."
+ },
+ {
+  "id": "vps-004",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "cloudflared tunnel: 502 karena skema origin salah (https padahal service plain http)",
+  "prompt": "App Python listen di port 8000 sebagai plain HTTP (bukan HTTPS). Di config Cloudflare Tunnel, blok `service:` diarahkan ke `https://localhost:8000`. Domain publik selalu membalas 502 Bad Gateway. Penyebab paling mungkin?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Skema origin salah: service cuma HTTP, tapi diarahkan ke https sehingga cloudflared gagal TLS handshake ke localhost:8000, lalu membalas 502.",
+   "B) Port 8000 diblok firewall sehingga cloudflared tidak bisa terhubung ke origin.",
+   "C) DNS belum propagasi sehingga Cloudflare tidak tahu ke mana meneruskan request.",
+   "D) Perlu menambahkan `noTLSVerify: true` supaya cloudflared boleh bicara TLS ke localhost."
+  ],
+  "answer": {
+   "value": "A"
+  },
+  "solution": "cloudflared meneruskan request mengikuti skema yang ditulis di config. Service lokal plain HTTP harus diarahkan ke `http://localhost:8000`. Kalau ditulis `https://`, cloudflared mencoba TLS ke server yang tidak melayani TLS → handshake gagal → 502. `noTLSVerify` hanya relevan kalau origin memang HTTPS self-signed."
+ },
+ {
+  "id": "vps-005",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "timezone: TZ env per-service systemd supaya log pakai WIB tanpa ubah kode",
+  "prompt": "VPS server timezone-nya Asia/Shanghai (UTC+8). Service sensor menulis log pakai `datetime.now()` (tanpa timezone). Atha mau log khusus service itu memakai WIB (UTC+7), sementara timezone sistem tetap Asia/Shanghai karena proses lain membutuhkannya. Tanpa mengubah kode, cara paling tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Jalankan `timedatectl set-timezone Asia/Jakarta`.",
+   "B) `export TZ=Asia/Jakarta` di terminal lalu `systemctl restart sensor-mon.service`.",
+   "C) Tambah `Environment=TZ=Asia/Jakarta` di unit systemd, lalu restart service.",
+   "D) Tambahkan `TZ=Asia/Jakarta` di `/etc/environment`."
+  ],
+  "answer": {
+   "value": "C"
+  },
+  "solution": "`Environment=` menyuntik TZ hanya ke proses service itu; `datetime.now()` (localtime) mengikuti TZ ini. `set-timezone` mengubah seluruh sistem (bertentangan dengan syarat). `export` di shell tidak menular ke service systemd. `/etc/environment` berlaku global, belum tentu terbaca service, dan perlu re-login."
+ },
+ {
+  "id": "vps-006",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "hard",
+  "usage_source": "logrotate: rotasi log dari proses yang membuka file handle sekali (tidak reopen)",
+  "prompt": "File log `sensor.csv` ditulis terus oleh proses Python yang membuka file handle sekali di awal (mode append) dan tidak pernah reopen. Atha memasang logrotate harian. Konfigurasi default (rename file lama ke sensor.csv.1 lalu membuat file baru) membuat proses tetap menulis ke file lama yang sudah dipindah, dan file baru tetap kosong. Direktif logrotate yang tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `create`",
+   "B) `copytruncate`",
+   "C) `rotate 0`",
+   "D) `nocompress`"
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "Karena proses tidak reopen handle, `mv` membuat proses tetap menulis ke inode lama lewat handle-nya. `copytruncate` menyalin isi ke arsip lalu truncate file asli ke nol (inode tetap sama), sehingga proses yang tidak reopen tetap menulis ke file aktif. `create` dipakai bersama mode rename dan tetap butuh proses reopen (mis. via sinyal postrotate). `rotate 0` langsung menghapus, `nocompress` soal kompresi."
+ },
+ {
+  "id": "vps-007",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "easy",
+  "usage_source": "chmod oktal untuk script shell service",
+  "prompt": "File `run_sensor.sh` harus memenuhi: owner bisa baca+tulis+eksekusi (rwx), group bisa baca+eksekusi (r-x), other hanya bisa baca (r--). Perintah chmod oktal yang benar?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `chmod 755 run_sensor.sh`",
+   "B) `chmod 644 run_sensor.sh`",
+   "C) `chmod 764 run_sensor.sh`",
+   "D) `chmod 754 run_sensor.sh`"
+  ],
+  "answer": {
+   "value": "D"
+  },
+  "solution": "rwx=7, r-x=5, r--=4 → 754. `755` membuat other bisa eksekusi juga. `644` tidak punya bit eksekusi. `764` membuat other jadi rw- (bisa tulis)."
+ },
+ {
+  "id": "vps-008",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "kill signal: SIGTERM (graceful, handler flush CSV) vs SIGKILL untuk menghentikan service sensor",
+  "prompt": "Proses Python sensor punya handler SIGTERM untuk flush buffer CSV lalu menutup file dengan rapi. Atha mau menghentikan service supaya data tetap aman. Cara paling tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `sudo systemctl stop sensor-mon.service` — systemd mengirim SIGTERM dulu, proses flush lalu keluar rapi.",
+   "B) `sudo kill -9 <pid>` langsung ke prosesnya.",
+   "C) `sudo systemctl kill -s SIGKILL sensor-mon.service`.",
+   "D) `pkill -9 python`."
+  ],
+  "answer": {
+   "value": "A"
+  },
+  "solution": "Default `systemctl stop` mengirim SIGTERM yang bisa ditangkap handler → buffer CSV ter-flush. SIGKILL (kill -9 atau `-s SIGKILL`) tidak bisa ditangkap, jadi handler tidak jalan dan buffer berisiko hilang."
+ },
+ {
+  "id": "vps-009",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "ss: mengecek port listen dan proses pemiliknya di server tanpa netstat",
+  "prompt": "Atha mau memastikan port 8000 benar-benar dalam keadaan listen (TCP) sekaligus melihat proses yang memilikinya, di server yang tidak menyediakan netstat. Perintah paling tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `ls -l /proc/net/port`",
+   "B) `cat /etc/services | grep 8000`",
+   "C) `ss -tlnp | grep :8000`",
+   "D) `ss -r :8000`"
+  ],
+  "answer": {
+   "value": "C"
+  },
+  "solution": "`ss -t` (tcp) `-l` (listening) `-n` (numeric) `-p` (process) lalu difilter `grep :8000`. Tidak ada file `/proc/net/port`. `/etc/services` cuma daftar nama layanan standar. `-r` bukan cara memfilter port."
+ },
+ {
+  "id": "vps-010",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "hard",
+  "usage_source": "crontab: job 06:00 WIB malah jalan 05:00 karena timezone sistem Asia/Shanghai",
+  "prompt": "VPS memakai timezone Asia/Shanghai (UTC+8). Atha memasang crontab `0 6 * * * python3 /home/atha/sensor_rekap.py` berharap jalan 06:00 WIB. Ternyata job jalan jam 05:00 WIB. Kenapa dan apa solusinya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Cron selalu memakai UTC, jadi karena WIB = UTC+7 jamnya harus dikurangi 7 dari jam 06:00.",
+   "B) Cron mengikuti timezone sistem (Asia/Shanghai); 06:00 di China = 05:00 WIB. Set `CRON_TZ=Asia/Jakarta` di crontab atau ubah jam jadi `0 7 * * *`.",
+   "C) Cron jalan 1 jam lebih cepat karena penyesuaian DST otomatis.",
+   "D) Crontab tidak mendukung timezone, sehingga harus pindah ke systemd timer supaya jam benar."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "cron memakai timezone sistem. Asia/Shanghai = UTC+8, WIB = UTC+7, jadi 06:00 CST = 05:00 WIB. Solusi: `CRON_TZ=Asia/Jakarta` (atau TZ) pada entri itu, atau kompensasi jamnya menjadi `0 7 * * *`. Cron tidak memakai UTC by default dan crontab mendukung timezone per-entri."
+ },
+ {
+  "id": "vps-011",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "systemd: After= dan Wants= supaya service start setelah network online",
+  "prompt": "sensor-mon.service harus start setelah jaringan online, dan unit ini tetap di-enable pada multi-user.target. Direktif mana yang memastikan dependensi sekaligus urutannya benar?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `Requires=network.target` saja.",
+   "B) `Before=network-online.target`.",
+   "C) `WantedBy=network-online.target`.",
+   "D) `After=network-online.target` (urutan) dan `Wants=network-online.target` (menarik target ikut aktif)."
+  ],
+  "answer": {
+   "value": "D"
+  },
+  "solution": "`After=` hanya mengatur urutan start tanpa menarik unit; `Wants=` memastikan target ikut diaktifkan. `Requires=` tanpa `After=` tidak menjamin urutan (bisa start paralel). `Before=` justru kebalikan urutannya. `WantedBy=` menentukan target yang menarik unit ini, bukan dependensi ke jaringan."
+ },
+ {
+  "id": "vps-012",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "easy",
+  "usage_source": "curl: mengambil hanya kode status HTTP dari endpoint health check",
+  "prompt": "Atha mau mengambil HANYA kode status HTTP (misal `200`) dari `http://localhost:8000/health`, tanpa menampilkan body ke layar. Perintah paling tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) `curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/health`",
+   "B) `curl -s http://localhost:8000/health | head -1`",
+   "C) `curl -I http://localhost:8000/health`",
+   "D) `curl --check http://localhost:8000/health`"
+  ],
+  "answer": {
+   "value": "A"
+  },
+  "solution": "`-w \"%{http_code}\"` mencetak kode status; `-o /dev/null` membuang body. `head -1` mengambil baris pertama body. `curl -I` menampilkan seluruh header (bukan sekadar kode). `--check` bukan opsi curl."
+ },
+ {
+  "id": "vps-013",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "hard",
+  "usage_source": "proses zombie: defunct di ps aux dan cara menanganinya",
+  "prompt": "`ps aux` menampilkan beberapa proses python dengan status `Z` / defunct, sementara service utama tetap jalan normal. Penjelasan dan tindakan yang benar?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Zombie = proses hang yang masih jalan; cukup `kill -9` untuk membersihkannya.",
+   "B) Zombie = child sudah selesai tapi parent belum memanggil wait(); entry-nya masih ada di tabel proses, tidak makan CPU/RAM, dan tidak bisa di-kill langsung — perbaikannya ada di parent (wait()/subreaper seperti `--init`).",
+   "C) Zombie = proses rusak; wajib reboot server supaya hilang.",
+   "D) Zombie = proses yang membebani CPU 100%; turunkan prioritasnya dengan `renice`."
+  ],
+  "answer": {
+   "value": "B"
+  },
+  "solution": "Zombie (defunct) adalah proses yang sudah terminate tapi belum di-reap parent. Tidak mengonsumsi CPU/RAM. Tidak bisa dibunuh karena sudah mati; entri hilang saat parent memanggil wait() atau parent mati. Perbaikan ada di parent (waitpid) atau jalankan dengan init penanggung jawab seperti tini/`--init`."
+ },
+ {
+  "id": "vps-014",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "medium",
+  "usage_source": "disk penuh: df besar tapi du kecil karena file log terhapus yang masih dipegang proses",
+  "prompt": "`df -h` bilang partisi `/` penuh 100%, tapi hasil `du -sh /var/log /home /usr` dan folder besar lain jumlahnya kecil semua. Penyebab paling mungkin?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) Inode habis walau blok disk masih banyak kosong.",
+   "B) Partisi ter-remount read-only sehingga `df` salah membaca.",
+   "C) Ada proses yang masih memegang file (misalnya log) yang sudah dihapus; blok-nya belum dibebaskan sampai proses menutup file atau di-restart.",
+   "D) `du` salah menghitung karena file hardlink dihitung berkali-kali."
+  ],
+  "answer": {
+   "value": "C"
+  },
+  "solution": "File yang di-unlink tapi masih open (masih ada handle) tetap memakai blok. `df` menghitung blok terpakai, sedangkan `du` menyusuri filesystem dan tidak menemukan file itu lagi. Cek `lsof +L1` atau isi /proc/<pid>/fd; solusinya restart proses/reopen file. Inode habis muncul di `df -i`, bukan `df -h`."
+ },
+ {
+  "id": "vps-015",
+  "category": "linux-vps-ops",
+  "type": "mcq",
+  "difficulty": "hard",
+  "usage_source": "nohup vs systemd: kenapa nohup bukan pengganti manajer service",
+  "prompt": "Atha dulu menjalankan `nohup python3 sensor.py &`. Kadang proses tetap mati dan tidak ada yang menghidupkan ulang. Kenapa nohup bukan pengganti manajer service seperti systemd?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+  "options": [
+   "A) nohup hanya mengabaikan SIGHUP dan mengalihkan output; kalau proses crash tidak ada yang me-restart dan tidak ada integrasi boot. systemd menyediakan `Restart=`, journal terpusat, dan start otomatis saat boot.",
+   "B) nohup tidak benar-benar melepas terminal, jadi proses selalu ikut mati saat logout SSH.",
+   "C) nohup tidak bisa menjalankan proses di background (`&` diabaikan).",
+   "D) nohup menghapus environment variable sehingga proses sering crash."
+  ],
+  "answer": {
+   "value": "A"
+  },
+  "solution": "nohup = abaikan SIGHUP + tulis output ke nohup.out. Tidak ada auto-restart, ordering, atau integrasi boot; log tersebar. systemd menangani restart policy, journal, dan enable saat boot. B salah (nohup memang melepas dari terminal), C salah, D salah."
+ },
+ {
+  "id": "vps-016",
+  "category": "linux-vps-ops",
+  "type": "short",
+  "difficulty": "easy",
+  "usage_source": "systemd: membaca ulang definisi unit setelah file .service diedit",
+  "prompt": "Atha baru mengedit file /etc/systemd/system/sensor-mon.service. Sebelum menjalankan ulang service, ia harus meminta systemd membaca ulang definisi unit yang berubah. Tulis perintahnya.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {
+   "value": "systemctl daemon-reload",
+   "accept": [
+    "daemon-reload",
+    "sudo systemctl daemon-reload",
+    "systemctl daemon reload"
+   ]
+  },
+  "solution": "`systemctl daemon-reload` membaca ulang unit file dari disk tanpa me-restart service. Setelah itu baru `systemctl restart <unit>` bila perlu menerapkan perubahan."
+ },
+ {
+  "id": "vps-017",
+  "category": "linux-vps-ops",
+  "type": "short",
+  "difficulty": "medium",
+  "usage_source": "cloudflared tunnel: nilai origin URL untuk service Python plain HTTP di port 8000",
+  "prompt": "Service Python berjalan plain HTTP di localhost port 8000. Di config Cloudflare Tunnel, Atha mengisi blok `service:` untuk origin. Tulis nilai URL origin yang benar (skema + host + port).\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {
+   "value": "http://localhost:8000",
+   "accept": [
+    "http://127.0.0.1:8000",
+    "http://localhost:8000/",
+    "http://127.0.0.1:8000/"
+   ]
+  },
+  "solution": "Origin harus sesuai skema service. Service plain HTTP → `http://localhost:8000` (boleh 127.0.0.1). Kalau ditulis https:// → TLS handshake gagal → 502."
+ },
+ {
+  "id": "vps-018",
+  "category": "linux-vps-ops",
+  "type": "short",
+  "difficulty": "easy",
+  "usage_source": "chmod oktal untuk file rahasia .env berisi API key",
+  "prompt": "File `.env` berisi API key dan hanya boleh dibaca/ditulis oleh owner; group dan other sama sekali tidak boleh mengakses. Tulis permission oktal (tiga digit angka) yang dipakai untuk `chmod`.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {
+   "value": "600",
+   "accept": [
+    "0600",
+    "chmod 600",
+    "chmod 0600",
+    "rw-------"
+   ]
+  },
+  "solution": "owner rw = 6, group = 0, other = 0 → 600."
+ },
+ {
+  "id": "vps-019",
+  "category": "linux-vps-ops",
+  "type": "short",
+  "difficulty": "medium",
+  "usage_source": "rsync: menghapus file di tujuan yang sudah tidak ada di sumber (mirror)",
+  "prompt": "Atha menyinkronkan folder data ke VPS memakai `rsync` dan ingin file di tujuan yang sudah tidak ada lagi di sumber ikut terhapus (mirror persis). Tulis opsi/flag rsync yang dipakai untuk itu.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {
+   "value": "--delete",
+   "accept": [
+    "delete",
+    "-delete"
+   ]
+  },
+  "solution": "`rsync --delete` menghapus file di destination yang tidak ada di source. Kombinasi umum: `rsync -av --delete sumber/ tujuan/`."
+ },
+ {
+  "id": "vps-020",
+  "category": "linux-vps-ops",
+  "type": "short",
+  "difficulty": "medium",
+  "usage_source": "awk: flag pemisah field koma untuk membaca kolom log CSV",
+  "prompt": "File `sensor.csv` dipisah koma. Atha memakai `awk` dan mau mengakses kolom lewat `$1, $2, $3, ...`. Tulis flag yang diberikan ke `awk` supaya pemisah field-nya koma (flag-nya saja).\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {
+   "value": "-F,",
+   "accept": [
+    "-f,",
+    "-f ,",
+    "-f','",
+    "-f\",\"",
+    "--field-separator=,"
+   ]
+  },
+  "solution": "`awk -F,` menentukan field separator koma. Bisa juga `-F ','` atau `--field-separator=,`."
+ },
+ {
+  "id": "vps-021",
+  "category": "linux-vps-ops",
+  "type": "short",
+  "difficulty": "hard",
+  "usage_source": "logrotate: direktif untuk proses yang tidak reopen file handle log",
+  "prompt": "Proses Python menulis `sensor.csv` lewat file handle yang dibuka sekali dan tidak pernah reopen. Rotasi default logrotate (rename lalu buat file baru) membuat proses terus menulis ke file lama. Tulis direktif logrotate yang menyalin isi file ke arsip lalu mengosongkan (truncate) file asli agar handle proses tetap valid.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {
+   "value": "copytruncate",
+   "accept": [
+    "copy truncate",
+    "copytruncate"
+   ]
+  },
+  "solution": "`copytruncate` menyalin isi ke file arsip lalu truncate file asli ke nol (inode tetap sama), sehingga proses yang tidak reopen tetap menulis ke file aktif. Alternatif: paksa app reopen via `postrotate` + kirim sinyal (mis. kill -HUP)."
+ },
+ {
+  "id": "vps-022",
+  "category": "linux-vps-ops",
+  "type": "short",
+  "difficulty": "easy",
+  "usage_source": "systemd: Type= untuk proses foreground yang tidak fork/daemonize",
+  "prompt": "Unit systemd menjalankan proses Python yang tetap berjalan di foreground (tidak melakukan fork/daemonize sendiri). Tulis nilai `Type=` yang tepat untuk unit itu.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {
+   "value": "simple",
+   "accept": [
+    "type=simple"
+   ]
+  },
+  "solution": "Proses foreground utama = `Type=simple` (default). `Type=forking` untuk proses yang fork ke background, `Type=oneshot` untuk proses yang selesai lalu keluar."
+ },
+ {
+  "id": "vps-023",
+  "category": "linux-vps-ops",
+  "type": "short",
+  "difficulty": "medium",
+  "usage_source": "systemd: Environment= menyuntik env var ke service",
+  "prompt": "Atha mau service systemd menerima environment variable `MODE` dengan nilai `prod`. Tulis baris direktif di dalam blok `[Service]` unit file untuk itu.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {
+   "value": "Environment=MODE=prod",
+   "accept": [
+    "environment=mode=prod",
+    "environment=\"mode=prod\"",
+    "environment=mode=\"prod\""
+   ]
+  },
+  "solution": "`Environment=MODE=prod` ditulis di bawah `[Service]`. Untuk banyak variabel, pisahkan dengan spasi atau gunakan `EnvironmentFile=`."
+ },
+ {
+  "id": "vps-024",
+  "category": "linux-vps-ops",
+  "type": "short",
+  "difficulty": "hard",
+  "usage_source": "symlink ln -s: urutan argumen target vs nama symlink untuk folder deploy",
+  "prompt": "Atha mau membuat symlink bernama `current` di dalam /home/atha yang menunjuk ke folder /home/atha/releases/2026-10-04. Tulis perintah `ln` lengkapnya (perhatikan urutan argumen).\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {
+   "value": "ln -s /home/atha/releases/2026-10-04 /home/atha/current",
+   "accept": [
+    "ln -s /home/atha/releases/2026-10-04/ /home/atha/current",
+    "sudo ln -s /home/atha/releases/2026-10-04 /home/atha/current"
+   ]
+  },
+  "solution": "`ln -s <target> <nama-symlink>`: target adalah path yang ditunjuk (/home/atha/releases/2026-10-04), nama symlink adalah /home/atha/current. Kalau urutannya dibalik, symlink yang terbentuk salah (pitfall umum)."
+ },
+ {
+  "id": "vps-025",
+  "category": "linux-vps-ops",
+  "type": "short",
+  "difficulty": "medium",
+  "usage_source": "exit code dan operator && di skrip shell",
+  "prompt": "Dalam rangkaian `perintah_A && perintah_B`, perintah_B hanya dijalankan jika perintah_A selesai dengan exit status berapa? Tulis satu angka.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+  "answer": {
+   "value": "0",
+   "accept": [
+    "nol",
+    "exit code 0",
+    "status 0",
+    "kode 0",
+    "sukses"
+   ]
+  },
+  "solution": "Operator `&&` menjalankan sisi kanan hanya bila sisi kiri ber-exit status 0 (sukses). Operator `||` justru menjalankan sisi kanan saat exit status bukan 0."
+ }
+]

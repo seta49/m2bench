@@ -1,0 +1,366 @@
+[
+  {
+    "id": "lit-001",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "easy",
+    "usage_source": "Log suhu/kipas laptop Atha (sampling tiap 5 menit)",
+    "prompt": "Ini log suhu dan RPM kipas laptop Atha, sampling tiap 5 menit:\n\n```\njam,rpm,suhu_c\n08:15,2400,51\n08:20,2650,53\n08:25,2820,55\n08:30,3010,57\n08:35,3180,58\n08:40,2960,54\n08:45,3000,56\n08:50,3520,60\n```\n\nBerapa nilai RPM pada baris paling awal yang RPM-nya >= 3000?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Cek rpm berurutan dari atas:\n- 08:15 2400 (<3000)\n- 08:20 2650 (<3000)\n- 08:25 2820 (<3000)\n- 08:30 3010 (>=3000) -> baris pertama yang lolos.\n\nBaris 08:45 bernilai 3000 dan juga memenuhi >=, tetapi muncul belakangan, jadi bukan yang pertama.\nRPM = 3010.",
+    "answer": {
+      "value": 3010,
+      "unit": "RPM",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-002",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "easy",
+    "usage_source": "Hitungan biaya token API LLM per sesi",
+    "prompt": "Atha menghitung biaya satu sesi chatbot. Harga model:\n\n```\nlayanan, harga_input_usd_per_1jt, harga_output_usd_per_1jt\nllm-x, 0.25, 0.75\n```\n\nPemakaian sesi ini: token input 640.000 dan token output 180.000.\n\nBerapa biaya total sesi ini dalam USD?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Biaya input = 640000/1e6 * 0.25 = 0.64 * 0.25 = 0.16 USD\nBiaya output = 180000/1e6 * 0.75 = 0.18 * 0.75 = 0.135 USD\nTotal = 0.16 + 0.135 = 0.295 USD.",
+    "answer": {
+      "value": 0.295,
+      "unit": "USD",
+      "tolerance": 0.001
+    }
+  },
+  {
+    "id": "lit-003",
+    "category": "data-literal",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Log sensor suhu ESP32 (DHT22) per titik",
+    "prompt": "Log pembacaan beberapa sensor ESP32:\n\n```\nsensor, suhu_c, kelembapan\ndht-01, 30.4, 58\ndht-02, 31.2, 61\ndht-03, 29.8, 55\ndht-04, 32.1, 60\ndht-05, 31.7, 59\n```\n\nSensor mana yang mencatat suhu tertinggi? Tulis id sensor-nya saja.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "solution": "Suhu per sensor: dht-01=30.4, dht-02=31.2, dht-03=29.8, dht-04=32.1, dht-05=31.7.\nTertinggi = 32.1 pada dht-04. (dht-02 unggul di kelembapan, bukan suhu.)\nJawaban: dht-04.",
+    "answer": {
+      "value": "dht-04",
+      "accept": [
+        "dht-04",
+        "dht04",
+        "sensor dht-04"
+      ]
+    }
+  },
+  {
+    "id": "lit-004",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "easy",
+    "usage_source": "Konversi zona waktu server UTC ke WIB",
+    "prompt": "Cron job backup di server Atha dijadwalkan tiap hari pada pukul 22:40 waktu server. Server memakai zona UTC (UTC+0), sedangkan Atha berada di WIB (UTC+7).\n\nKalau job itu jalan sesuai jadwal, pukul berapa di WIB? Jawab dalam angka jam (0-23).\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "22:40 UTC + 7 jam = 05:40 WIB keesokan harinya.\nAngka jam (0-23) = 5.",
+    "answer": {
+      "value": 5,
+      "unit": "jam",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-005",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "easy",
+    "usage_source": "Statistik korpus catatan: jumlah kalimat",
+    "prompt": "Atha mengumpulkan satu paragraf catatan untuk dihitung sebagai korpus teks:\n\n\"Kipas laptop menyala pada pukul 08.15. Suhu CPU naik sampai 78 derajat. Atha membuka 12 tab browser. Fan berputar 3200 RPM. Suhu kembali normal setelah 10 menit.\"\n\nBerapa jumlah kalimat dalam paragraf tersebut?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Setiap kalimat diakhiri tanda titik:\n1) \"Kipas laptop menyala pada pukul 08.15.\"\n2) \"Suhu CPU naik sampai 78 derajat.\"\n3) \"Atha membuka 12 tab browser.\"\n4) \"Fan berputar 3200 RPM.\"\n5) \"Suhu kembali normal setelah 10 menit.\"\nTitik pada \"08.15\" bukan pemisah kalimat (itu format jam).\nJumlah kalimat = 5.",
+    "answer": {
+      "value": 5,
+      "unit": "kalimat",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-006",
+    "category": "data-literal",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Cek ambang batas aman sensor suhu",
+    "prompt": "Atha mengecek apakah ada sensor yang melewati batas aman:\n\n```\nsensor, bacaan, batas_aman\ns1, 31.2, 32.0\ns2, 33.7, 32.0\ns3, 30.5, 32.0\ns4, 32.0, 32.0\n```\n\nSensor mana yang bacaan-nya benar-benar melebihi batas aman (strict lebih besar dari)? Tulis id sensor-nya saja.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "solution": "s1 31.2 < 32.0 (aman). s2 33.7 > 32.0 (melebihi). s3 30.5 < 32.0 (aman).\ns4 32.0 = 32.0, tidak STRICT lebih besar -> tidak dihitung.\nJadi hanya s2.",
+    "answer": {
+      "value": "s2",
+      "accept": [
+        "s2",
+        "s-2",
+        "sensor s2"
+      ]
+    }
+  },
+  {
+    "id": "lit-007",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "easy",
+    "usage_source": "Laporan baterai laptop harian",
+    "prompt": "Laporan daya baterai laptop Atha sepanjang hari:\n\n```\nwaktu, daya_persen\n09:00, 100\n10:00, 88\n11:00, 74\n12:00, 61\n13:00, 47\n14:00, 36\n15:00, 25\n16:00, 18\n```\n\nBerapa total penurunan daya dari pukul 09:00 sampai 16:00 (dalam persen poin)?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Daya awal (09:00) = 100%. Daya akhir (16:00) = 18%.\nTotal penurunan = 100 - 18 = 82 persen poin.",
+    "answer": {
+      "value": 82,
+      "unit": "persen poin",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-008",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "easy",
+    "usage_source": "Budget bulanan mahasiswa",
+    "prompt": "Rekap anggaran bulanan Atha:\n\n```\npos, anggaran_rp, terpakai_rp\ntransport, 300000, 275000\nmakan, 900000, 940000\ninternet, 250000, 250000\nkuota, 150000, 120000\n```\n\nBerapa sisa total anggaran (total anggaran dikurangi total terpakai), dalam rupiah?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Total anggaran = 300000 + 900000 + 250000 + 150000 = 1.600.000\nTotal terpakai = 275000 + 940000 + 250000 + 120000 = 1.585.000\nSisa = 1.600.000 - 1.585.000 = 15.000 rupiah.",
+    "answer": {
+      "value": 15000,
+      "unit": "rupiah",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-009",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "medium",
+    "usage_source": "CSV monitoring server: cari jam CPU puncak",
+    "prompt": "Cuplikan CSV monitoring server (per slot jam):\n\n```\njam, req_count, cpu_persen, mem_mb\n00, 1820, 34, 512\n04, 1450, 41, 620\n08, 5230, 72, 880\n12, 6410, 88, 940\n16, 4980, 67, 810\n20, 3020, 52, 700\n```\n\nBerapa nilai req_count pada jam dengan cpu_persen tertinggi?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "cpu_persen per baris: 34, 41, 72, 88, 67, 52. Tertinggi = 88 pada jam 12.\nreq_count pada jam 12 = 6410.",
+    "answer": {
+      "value": 6410,
+      "unit": "req",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-010",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "medium",
+    "usage_source": "Selisih waktu dua event dari zona server berbeda",
+    "prompt": "Atha mengecek dua event yang tercatat di server dengan zona waktu berbeda:\n\n```\nevent, waktu\nbuild selesai, 2026-03-11 23:40:00 (UTC+8)\nbackup mulai, 2026-03-11 22:15:00 (UTC+7)\n```\n\nBerapa selisih waktu antara kedua event tersebut, dalam menit?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Ubah ke UTC:\n- build selesai: 23:40 (UTC+8) -> 15:40 UTC\n- backup mulai: 22:15 (UTC+7) -> 15:15 UTC\nSelisih = 15:40 - 15:15 = 25 menit.",
+    "answer": {
+      "value": 25,
+      "unit": "menit",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-011",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "medium",
+    "usage_source": "Statistik korpus catatan: hitung baris unik",
+    "prompt": "Atha membersihkan satu file catatan yang berisi baris:\n\n```\nSaya belajar python setiap malam.\nSaya belajar python setiap malam.\nbesok ujian statistika.\nbesok ujian statistika.\nbesok ujian statistika.\npraktikum jaringan di lab 3.\ncatatan krs sudah diisi.\n```\n\nBerapa jumlah baris unik (baris berbeda) di file itu?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Total baris = 7.\nBaris unik: \"Saya belajar python setiap malam.\", \"besok ujian statistika.\", \"praktikum jaringan di lab 3.\", \"catatan krs sudah diisi.\" = 4 baris unik.\n(Baris ke-2, ke-4, ke-5 adalah duplikat.)",
+    "answer": {
+      "value": 4,
+      "unit": "baris",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-012",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "medium",
+    "usage_source": "Biaya token LLM dengan diskon cache input",
+    "prompt": "Atha menghitung biaya API dengan fitur cache. Harga per 1 juta token:\n\n```\njenis, harga_usd_per_1jt\ninput_normal, 0.30\ninput_cached, 0.075\noutput, 1.20\n```\n\nPemakaian: total token input 2.000.000, di antaranya 1.600.000 berasal dari cache; token output 400.000.\n\nBerapa biaya total dalam USD?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Input cached = 1.600.000 -> 1.6 * 0.075 = 0.12 USD\nInput non-cached = 2.000.000 - 1.600.000 = 400.000 -> 0.4 * 0.30 = 0.12 USD\nOutput = 400.000 -> 0.4 * 1.20 = 0.48 USD\nTotal = 0.12 + 0.12 + 0.48 = 0.72 USD.",
+    "answer": {
+      "value": 0.72,
+      "unit": "USD",
+      "tolerance": 0.001
+    }
+  },
+  {
+    "id": "lit-013",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "medium",
+    "usage_source": "KRS: total SKS mata kuliah semester ini",
+    "prompt": "Daftar mata kuliah yang diambil Atha semester ini:\n\n```\nkode, mata_kuliah, sks\nTI301, Pemrograman Web, 3\nTI302, Basis Data, 3\nTI303, Jaringan Komputer, 3\nTI304, Sistem Operasi, 4\nTI305, Statistika, 2\nTI306, Praktikum Basis Data, 1\n```\n\nBerapa total SKS yang diambil Atha?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Jumlahkan kolom sks: 3 + 3 + 3 + 4 + 2 + 1 = 16 SKS.",
+    "answer": {
+      "value": 16,
+      "unit": "SKS",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-014",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "medium",
+    "usage_source": "Konversi satuan ukuran file KB ke KiB",
+    "prompt": "Atha menjumlahkan ukuran beberapa file backup. Catatan ukuran memakai satuan KB (1 KB = 1000 byte), tetapi tool-nya melaporkan dalam KiB (1 KiB = 1024 byte).\n\n```\nfile, ukuran\na.bin, 1536 KB\nb.bin, 3072 KB\nc.bin, 256 KB\n```\n\nBerapa total ukuran ketiga file itu jika dinyatakan dalam KiB?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Total = 1536 + 3072 + 256 = 4864 KB = 4.864.000 byte.\nDalam KiB = 4.864.000 / 1024 = 4750 KiB.",
+    "answer": {
+      "value": 4750,
+      "unit": "KiB",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-015",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "medium",
+    "usage_source": "Rata-rata suhu sensor pada pembacaan terakhir",
+    "prompt": "Log suhu sebuah sensor ESP32 per menit:\n\n```\nmenit, suhu_c\n0, 30.2\n1, 30.6\n2, 31.0\n3, 31.4\n4, 31.8\n5, 32.1\n6, 32.4\n7, 32.7\n```\n\nBerapa rata-rata suhu dari 3 pembacaan terakhir (menit 5, 6, 7)?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Tiga pembacaan terakhir: 32.1, 32.4, 32.7.\nJumlah = 32.1 + 32.4 + 32.7 = 97.2\nRata-rata = 97.2 / 3 = 32.4 derajat Celsius.",
+    "answer": {
+      "value": 32.4,
+      "unit": "C",
+      "tolerance": 0.01
+    }
+  },
+  {
+    "id": "lit-016",
+    "category": "data-literal",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Log aplikasi: hitung error per file",
+    "prompt": "Cuplikan log aplikasi Atha:\n\n```\n16:01:02 INFO a.py job selesai\n16:01:09 ERROR db.py koneksi timeout\n16:01:15 ERROR api.py 500 dari upstream\n16:02:03 ERROR db.py deadlock\n16:02:11 WARN cache.py memori 85%\n16:02:40 ERROR api.py response null\n16:03:00 ERROR db.py rollback\n16:03:20 WARN api.py lambat 2.4s\n```\n\nFile mana yang mencatat ERROR terbanyak? Tulis nama file-nya saja.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "solution": "Hitung baris ERROR per file:\n- db.py: 16:01:09, 16:02:03, 16:03:00 -> 3\n- api.py: 16:01:15, 16:02:40 -> 2\n- a.py, cache.py: tidak ada ERROR.\nTerbanyak = db.py.",
+    "answer": {
+      "value": "db.py",
+      "accept": [
+        "db.py",
+        "db"
+      ]
+    }
+  },
+  {
+    "id": "lit-017",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "medium",
+    "usage_source": "Hitung baris sensor dengan kelembapan >= ambang",
+    "prompt": "Log kelembapan sensor ruangan:\n\n```\nt, rh\n0, 58\n1, 60\n2, 61\n3, 59\n4, 60\n5, 62\n6, 57\n7, 63\n```\n\nBerapa banyak baris yang nilai rh-nya >= 60?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Cek tiap baris dengan syarat >= 60:\nt0=58 tidak, t1=60 ya, t2=61 ya, t3=59 tidak, t4=60 ya, t5=62 ya, t6=57 tidak, t7=63 ya.\nLolos = t1, t2, t4, t5, t7 = 5 baris.",
+    "answer": {
+      "value": 5,
+      "unit": "baris",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-018",
+    "category": "data-literal",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "CSV traffic server: jam tersibuk",
+    "prompt": "Rekap jumlah request per jam di server Atha:\n\n```\njam, req\n08, 412\n09, 897\n10, 1104\n11, 1230\n12, 968\n13, 1043\n14, 1490\n15, 1325\n```\n\nPada jam berapa jumlah request paling banyak? Tulis angka jam-nya saja.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "solution": "req per jam: 412, 897, 1104, 1230, 968, 1043, 1490, 1325.\nTertinggi = 1490 pada jam 14.",
+    "answer": {
+      "value": "14",
+      "accept": [
+        "14",
+        "14:00",
+        "jam 14"
+      ]
+    }
+  },
+  {
+    "id": "lit-019",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "medium",
+    "usage_source": "CSV monitoring: persentase error harian",
+    "prompt": "Ringkasan trafik satu hari di server Atha:\n\n```\nmetrik, nilai\ntotal_request, 4800\ntotal_error, 156\nuptime_persen, 99.7\n```\n\nBerapa persen error (total_error dibagi total_request, dalam persen)?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Persen error = 156 / 4800 * 100 = 0.0325 * 100 = 3.25 %.",
+    "answer": {
+      "value": 3.25,
+      "unit": "%",
+      "tolerance": 0.01
+    }
+  },
+  {
+    "id": "lit-020",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "hard",
+    "usage_source": "Selisih durasi deploy dari log timestamp",
+    "prompt": "Timeline deploy dari log (jam:menit:detik):\n\n```\nevent, waktu\ncache warm, 08:47:12\ndeploy mulai, 09:03:41\nmigrasi db, 09:38:20\ndeploy selesai, 10:12:55\nsmoke test, 10:20:10\n```\n\nBerapa durasi dari \"deploy mulai\" sampai \"deploy selesai\", dalam detik?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "deploy mulai 09:03:41 -> deploy selesai 10:12:55.\nSelisih = (10:12:55) - (09:03:41) = 1 jam 09 menit 14 detik.\n= 3600 + 9*60 + 14 = 3600 + 540 + 14 = 4154 detik.",
+    "answer": {
+      "value": 4154,
+      "unit": "detik",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-021",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "hard",
+    "usage_source": "Rata-rata suhu berbobot waktu dari log sensor",
+    "prompt": "Log suhu prosesor yang sudah diringkas per blok durasi:\n\n```\ndurasi_menit, suhu_c\n6, 68\n12, 72\n9, 75\n3, 70\n```\n\nBerapa rata-rata suhu berbobot durasi (weighted by durasi_menit) dari data ini?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Total durasi = 6 + 12 + 9 + 3 = 30 menit.\nJumlah berbobot = 6*68 + 12*72 + 9*75 + 3*70 = 408 + 864 + 675 + 210 = 2157.\nRata-rata berbobot = 2157 / 30 = 71.9 derajat Celsius.",
+    "answer": {
+      "value": 71.9,
+      "unit": "C",
+      "tolerance": 0.01
+    }
+  },
+  {
+    "id": "lit-022",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "hard",
+    "usage_source": "Durasi lintas zona waktu dua server",
+    "prompt": "Satu insiden tercatat di dua server dengan zona waktu berbeda:\n\n```\npenanda, waktu\ninsiden mulai, 2026-03-11 21:45 (UTC+8)\ninsiden selesai, 2026-03-12 01:20 (WIB / UTC+7)\n```\n\nBerapa durasi insiden tersebut, dalam menit?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Ubah ke UTC:\n- mulai: 2026-03-11 21:45 (UTC+8) -> 13:45 UTC\n- selesai: 2026-03-12 01:20 (UTC+7) -> 2026-03-11 18:20 UTC\nDurasi = 18:20 - 13:45 = 4 jam 35 menit = 275 menit.",
+    "answer": {
+      "value": 275,
+      "unit": "menit",
+      "tolerance": 0
+    }
+  },
+  {
+    "id": "lit-023",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "hard",
+    "usage_source": "Proyeksi biaya token bulan depan",
+    "prompt": "Atha memproyeksikan biaya API bulan depan. Bulan ini pemakaian: token input 1.200.000, token output 300.000. Estimasi bulan depan naik 25% untuk input dan 40% untuk output.\n\nHarga per 1 juta token:\n\n```\njenis, harga_usd_per_1jt\ninput, 0.40\noutput, 1.50\n```\n\nBerapa estimasi biaya total bulan depan, dalam USD?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Input bulan depan = 1.200.000 * 1.25 = 1.500.000 -> 1.5 * 0.40 = 0.60 USD\nOutput bulan depan = 300.000 * 1.40 = 420.000 -> 0.42 * 1.50 = 0.63 USD\nTotal = 0.60 + 0.63 = 1.23 USD.",
+    "answer": {
+      "value": 1.23,
+      "unit": "USD",
+      "tolerance": 0.01
+    }
+  },
+  {
+    "id": "lit-024",
+    "category": "data-literal",
+    "type": "short",
+    "difficulty": "hard",
+    "usage_source": "Daftar device ESP32: cari id dengan konflik firmware",
+    "prompt": "Daftar device ESP32 yang terdaftar:\n\n```\ndevice_id, firmware, lokasi\nesp-01, 1.2.0, lab1\nesp-02, 1.3.1, lab2\nesp-01, 1.2.4, lab1\nesp-03, 1.3.1, lab3\nesp-02, 1.3.1, lab2\nesp-04, 1.2.0, lab1\n```\n\nDevice id mana yang muncul lebih dari sekali DENGAN nilai firmware berbeda? Tulis id device-nya saja.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "solution": "Hitung kemunculan id:\n- esp-01 muncul 2x: firmware 1.2.0 dan 1.2.4 -> BERBEDA (konflik).\n- esp-02 muncul 2x: firmware 1.3.1 dan 1.3.1 -> sama, bukan konflik.\n- esp-03, esp-04: masing-masing 1x.\nJadi id dengan firmware berbeda = esp-01.",
+    "answer": {
+      "value": "esp-01",
+      "accept": [
+        "esp-01",
+        "esp01",
+        "device esp-01"
+      ]
+    }
+  },
+  {
+    "id": "lit-025",
+    "category": "data-literal",
+    "type": "numeric",
+    "difficulty": "hard",
+    "usage_source": "Statistik korpus: rata-rata panjang kalimat unik",
+    "prompt": "Atha menghitung statistik korpus catatan (satu baris = satu kalimat):\n\n```\nKipas laptop berbunyi keras saat render video malam ini\nKipas laptop berbunyi keras saat render video malam ini\nSuhu ruangan naik setelah kipas dibersihkan\nLatihan soal statistika dikerjakan tadi pagi\nLatihan soal statistika dikerjakan tadi pagi\nJadwal praktikum jaringan digeser ke hari jumat\n```\n\nBerapa rata-rata jumlah kata per kalimat jika baris duplikat dihitung sekali saja (hanya kalimat unik)?\n\nAkhiri jawaban dengan baris `#### <angka>` (dalam satuan yang diminta).",
+    "solution": "Kalimat unik (duplikat dibuang):\n1) \"Kipas laptop berbunyi keras saat render video malam ini\" = 9 kata\n2) \"Suhu ruangan naik setelah kipas dibersihkan\" = 6 kata\n3) \"Latihan soal statistika dikerjakan tadi pagi\" = 7 kata\n4) \"Jadwal praktikum jaringan digeser ke hari jumat\" = 8 kata\nTotal kata = 9 + 6 + 7 + 8 = 30; jumlah kalimat unik = 4.\nRata-rata = 30 / 4 = 7.5 kata.",
+    "answer": {
+      "value": 7.5,
+      "unit": "kata",
+      "tolerance": 0.01
+    }
+  }
+]

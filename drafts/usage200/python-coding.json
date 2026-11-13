@@ -1,0 +1,496 @@
+[
+ {
+  "id": "code-001",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "easy",
+  "usage_source": "Parsing file log sensor CSV (waktu,sensor,nilai) hasil logging harian",
+  "prompt": "Di proyekku, tiap sensor nulis log sebagai teks satu baris satu pembacaan dengan format kolom dipisah koma: `waktu,sensor,nilai` (contoh isi kolom: timestamp, nama sensor, angka pembacaan). Buat fungsi `parse_log_sensor(teks)` yang menerima satu string berisi seluruh isi file (baris dipisah newline) dan mengembalikan list of dict dengan key `waktu` (string), `sensor` (string), dan `nilai` (float).\n\nAturan:\n- Baris yang kosong atau isinya cuma spasi diabaikan.\n- Urutan pembacaan dipertahankan (baris atas dulu).\n- Tiap baris data diasumsikan selalu punya tepat 3 kolom.\n- String kosong menghasilkan list kosong.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `parse_log_sensor`.",
+  "solution": "splitlines, skip baris kosong, split koma, konversi kolom nilai ke float, append dict.",
+  "entry_point": "parse_log_sensor",
+  "tests": [
+   "assert parse_log_sensor(\"t1,suhu,27.5\") == [{\"waktu\": \"t1\", \"sensor\": \"suhu\", \"nilai\": 27.5}]",
+   "assert parse_log_sensor(\"t1,suhu,27.5\\nt2,lembab,60\") == [{\"waktu\": \"t1\", \"sensor\": \"suhu\", \"nilai\": 27.5}, {\"waktu\": \"t2\", \"sensor\": \"lembab\", \"nilai\": 60.0}]",
+   "assert parse_log_sensor(\"\") == []",
+   "assert parse_log_sensor(\"t1,suhu,27.5\\n\\n  \\n\") == [{\"waktu\": \"t1\", \"sensor\": \"suhu\", \"nilai\": 27.5}]"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-002",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "easy",
+  "usage_source": "Bersih-bersih teks korpus sebelum diproses NLP (lowercase + rapikan spasi)",
+  "prompt": "Sebelum masuk pipeline NLP, teks korpus perlu dirapikan. Buat fungsi `normalisasi_teks(teks)` yang mengembalikan string hasil: (1) seluruh karakter dijadikan huruf kecil, (2) semua whitespace beruntun (spasi, tab, newline, campurannya) diganti menjadi tepat satu spasi, (3) spasi di ujung awal/akhir dipangkas.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `normalisasi_teks`.",
+  "solution": "lowercase seluruh string, gunakan re.sub(r'\\s+', ' ', ...) untuk menyeragamkan whitespace, lalu strip.",
+  "entry_point": "normalisasi_teks",
+  "tests": [
+   "assert normalisasi_teks(\"  Halo   Dunia  \") == \"halo dunia\"",
+   "assert normalisasi_teks(\"Data\\t\\tSensor\") == \"data sensor\"",
+   "assert normalisasi_teks(\"\") == \"\"",
+   "assert normalisasi_teks(\"SUDAH normal\") == \"sudah normal\"",
+   "assert normalisasi_teks(\"banyak\\n\\nbaris\") == \"banyak baris\""
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-003",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "medium",
+  "usage_source": "Konversi string waktu antar zona waktu Indonesia (WITA UTC+8 -> WIB UTC+7)",
+  "prompt": "Log dari server di Makassar (WITA, UTC+8) mau aku tampilkan dalam WIB (UTC+7). Buat fungsi `wita_ke_wib(waktu)` yang menerima string waktu berformat `YYYY-MM-DD HH:MM` (waktu WITA) dan mengembalikan string waktu WIB pada format yang sama, yaitu satu jam lebih awal.\n\nAturan:\n- Pergantian jam, hari, bulan, dan tahun harus ditangani benar (bukan sekadar mengurangi angka jam).\n- Format keluaran harus tepat `YYYY-MM-DD HH:MM` (dua digit untuk bulan, hari, jam, menit).\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `wita_ke_wib`.",
+  "solution": "datetime.strptime dengan format '%Y-%m-%d %H:%M', kurangi timedelta(hours=1), format balik dengan strftime. datetime menangani lintas hari/bulan/tahun.",
+  "entry_point": "wita_ke_wib",
+  "tests": [
+   "assert wita_ke_wib(\"2026-01-01 08:00\") == \"2026-01-01 07:00\"",
+   "assert wita_ke_wib(\"2026-03-01 00:30\") == \"2026-02-28 23:30\"",
+   "assert wita_ke_wib(\"2026-01-01 00:15\") == \"2025-12-31 23:15\"",
+   "assert wita_ke_wib(\"2026-12-31 23:59\") == \"2026-12-31 22:59\""
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-004",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "medium",
+  "usage_source": "Deduplikasi list nama kategori yang beda kapitalisasi, pertahankan urutan",
+  "prompt": "List kategori dari hasil scraping sering punya entri sama tapi beda kapitalisasi (`Apel` vs `apel`). Buat fungsi `dedupe_casefold(daftar)` yang menerima list string dan mengembalikan list baru tanpa duplikat case-insensitive, dengan aturan:\n\n- Dua string dianggap sama kalau bentuk lowercase-nya sama.\n- Yang dipertahankan adalah kemunculan PERTAMA (ejaan aslinya) dan urutannya tetap seperti input.\n- List kosong mengembalikan list kosong.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `dedupe_casefold`.",
+  "solution": "Iterasi list, simpan set kunci .lower(); kalau belum ada, tambahkan ke hasil dan tandai. Urutan terjaga karena append saat pertama kali lihat.",
+  "entry_point": "dedupe_casefold",
+  "tests": [
+   "assert dedupe_casefold([\"Apel\", \"apel\", \"Jeruk\"]) == [\"Apel\", \"Jeruk\"]",
+   "assert dedupe_casefold([]) == []",
+   "assert dedupe_casefold([\"a\", \"A\", \"a\", \"b\"]) == [\"a\", \"b\"]",
+   "assert dedupe_casefold([\"Bandung\"]) == [\"Bandung\"]",
+   "assert dedupe_casefold([\"X\", \"y\", \"X\", \"Y\", \"z\"]) == [\"X\", \"y\", \"z\"]"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-005",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "medium",
+  "usage_source": "Validasi file JSONL hasil ekspor: hanya baris objek JSON yang valid",
+  "prompt": "File JSONL sering kotor: ada baris rusak, baris kosong, atau baris yang bukan objek JSON. Buat fungsi `validasi_jsonl(teks)` yang menerima seluruh isi file sebagai satu string dan mengembalikan list berisi HANYA objek JSON (dict) yang berhasil di-parse.\n\nAturan:\n- Baris kosong / cuma spasi diabaikan.\n- Baris yang gagal di-parse sebagai JSON diabaikan (tidak boleh melempar error).\n- Baris JSON yang valid tetapi bukan objek (misal array atau angka) juga diabaikan.\n- Urutan objek yang lolos dipertahankan.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `validasi_jsonl`.",
+  "solution": "splitlines, skip blank, coba json.loads tiap baris dalam try/except (JSONDecodeError), lalu cek isinstance(obj, dict) sebelum append.",
+  "entry_point": "validasi_jsonl",
+  "tests": [
+   "assert validasi_jsonl('{\"a\": 1}') == [{\"a\": 1}]",
+   "assert validasi_jsonl('{\"a\": 1}\\n{\"b\": 2}') == [{\"a\": 1}, {\"b\": 2}]",
+   "assert validasi_jsonl('{\"a\": 1}\\nbukan json\\n{\"b\": 2}') == [{\"a\": 1}, {\"b\": 2}]",
+   "assert validasi_jsonl(\"\") == []",
+   "assert validasi_jsonl(\"[1, 2]\") == []"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-006",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "medium",
+  "usage_source": "Tampilkan ukuran file dalam satuan 1024-based (B/KB/MB/GB/TB)",
+  "prompt": "Aku mau ukuran file ditampilkan enak dibaca. Buat fungsi `format_bytes(n)` yang menerima bilangan bulat byte dan mengembalikan string ukuran memakai basis 1024 dengan satuan berurutan `B`, `KB`, `MB`, `GB`, `TB`.\n\nAturan:\n- Selama nilai masih >= 1024 dan satuan belum `TB`, bagi 1024 dan naik satu satuan.\n- Jika satuannya `B`, tampilkan bilangan bulat diikuti ` B` (contoh format: angka lalu spasi lalu satuan).\n- Jika satuannya bukan `B`, tampilkan dengan tepat 2 angka di belakang koma, diikuti spasi dan satuan (mis. `1.50 KB`).\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `format_bytes`.",
+  "solution": "loop bagi 1024 sambil naik indeks satuan; kalau i==0 return f'{int(x)} B' else f'{x:.2f} {satuan[i]}'.",
+  "entry_point": "format_bytes",
+  "tests": [
+   "assert format_bytes(0) == \"0 B\"",
+   "assert format_bytes(1023) == \"1023 B\"",
+   "assert format_bytes(1024) == \"1.00 KB\"",
+   "assert format_bytes(1536) == \"1.50 KB\"",
+   "assert format_bytes(1048576) == \"1.00 MB\""
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-007",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "hard",
+  "usage_source": "Ekstrak angka (int/float, boleh negatif) dari teks campur catatan lapangan",
+  "prompt": "Catatan lapangan sering mencampur angka di dalam kalimat, mis. suhu, persentase, atau delta. Buat fungsi `ekstrak_angka(teks)` yang mengembalikan list berisi semua angka yang ditemukan, sesuai urutan kemunculan.\n\nAturan:\n- Angka bisa bilangan bulat atau desimal bertitik.\n- Boleh bertanda minus; tanda minus yang menempel langsung sebelum angka dianggap bagian angka itu.\n- Angka bulat dikembalikan sebagai `int`, angka desimal sebagai `float`.\n- Teks tanpa angka menghasilkan list kosong.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `ekstrak_angka`.",
+  "solution": "re.findall dengan pola r'-?\\d+(?:\\.\\d+)?'; tiap match dikonversi float kalau mengandung '.' selain itu int.",
+  "entry_point": "ekstrak_angka",
+  "tests": [
+   "assert ekstrak_angka(\"suhu 27.5 derajat, kelembapan 60\") == [27.5, 60]",
+   "assert ekstrak_angka(\"tidak ada angka di sini\") == []",
+   "assert ekstrak_angka(\"\") == []",
+   "assert ekstrak_angka(\"suhu -3.5 dan -10\") == [-3.5, -10]",
+   "assert ekstrak_angka(\"100 lalu 200\") == [100, 200]"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-008",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "hard",
+  "usage_source": "Parsing output tabel monospace (kolom dipisah 2+ spasi) menjadi list of dict",
+  "prompt": "Output `df.to_string()` / pratinjau terminal berupa tabel monospace: baris pertama header, kolom-kolom dipisah dua spasi atau lebih. Buat fungsi `parse_tabel(teks)` yang mengubahnya menjadi list of dict (key = nama kolom dari header, value = string sel yang sudah di-strip).\n\nAturan:\n- Baris kosong (cuma spasi) dibuang sebelum diproses.\n- Baris pertama yang tersisa adalah header; nama kolom dipisah dengan pola dua spasi atau lebih.\n- Tiap baris data juga dipisah dengan pola yang sama.\n- Baris data yang jumlah kolomnya tidak sama dengan jumlah header diabaikan.\n- Input kosong (tanpa baris berisi) menghasilkan list kosong.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `parse_tabel`.",
+  "solution": "filter baris non-kosong, header = re.split(r'\\s{2,}', baris[0].strip()), tiap baris data di-split sama; kalau panjang kolom == panjang header, dict(zip(header, kolom)).",
+  "entry_point": "parse_tabel",
+  "tests": [
+   "assert parse_tabel(\"nama  suhu\\nsensor1  27\") == [{\"nama\": \"sensor1\", \"suhu\": \"27\"}]",
+   "assert parse_tabel(\"\") == []",
+   "assert parse_tabel(\"a  b\\n1  2\\n3  4\") == [{\"a\": \"1\", \"b\": \"2\"}, {\"a\": \"3\", \"b\": \"4\"}]",
+   "assert parse_tabel(\"a  b\\n1  2\\nx\") == [{\"a\": \"1\", \"b\": \"2\"}]"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-009",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "easy",
+  "usage_source": "Hitung median untuk statistik cepat deret pembacaan sensor",
+  "prompt": "Buat fungsi `hitung_median(daftar)` yang menerima list angka dan mengembalikan mediannya.\n\nAturan:\n- Data tidak harus terurut.\n- Kalau panjang data ganjil, median adalah nilai tengah setelah diurutkan.\n- Kalau panjang data genap, median adalah rata-rata dua nilai tengah.\n- List kosong mengembalikan `None`.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `hitung_median`.",
+  "solution": "sort list, n=len; kalau kosong None; kalau n%2==1 ambil s[n//2], kalau genap rata-rata s[n//2-1] dan s[n//2].",
+  "entry_point": "hitung_median",
+  "tests": [
+   "assert hitung_median([1, 2, 3]) == 2",
+   "assert hitung_median([1, 2, 3, 4]) == 2.5",
+   "assert hitung_median([]) is None",
+   "assert hitung_median([5]) == 5",
+   "assert hitung_median([3, 1, 2]) == 2"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-010",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "medium",
+  "usage_source": "Cari nilai paling sering muncul (modus) dengan aturan tie-break pertama",
+  "prompt": "Buat fungsi `hitung_modus(daftar)` yang mengembalikan nilai yang paling sering muncul di list.\n\nAturan:\n- Kalau ada beberapa nilai dengan frekuensi tertinggi yang sama (seri), kembalikan nilai yang kemunculan pertamanya paling awal di list.\n- List kosong mengembalikan `None`.\n- Nilai bisa berupa angka atau string.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `hitung_modus`.",
+  "solution": "hitung frekuensi sekaligus catat urutan kemunculan pertama; cari frekuensi maks, lalu kembalikan nilai pertama (menurut urutan kemunculan) yang frekuensinya == maks.",
+  "entry_point": "hitung_modus",
+  "tests": [
+   "assert hitung_modus([1, 2, 2, 3]) == 2",
+   "assert hitung_modus([1, 1, 2, 2]) == 1",
+   "assert hitung_modus([]) is None",
+   "assert hitung_modus([7]) == 7",
+   "assert hitung_modus([\"a\", \"b\", \"a\", \"c\", \"b\", \"a\"]) == \"a\""
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-011",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "medium",
+  "usage_source": "Jadwal delay retry dengan exponential backoff (pure logic, tanpa sleep)",
+  "prompt": "Buat fungsi `backoff_delays(n, base=1.0, faktor=2.0, cap=None)` yang mengembalikan list berisi `n` nilai delay (detik) untuk percobaan retry ke-1..ke-n, dengan rumus delay ke-i (i mulai 0) = `base * faktor ** i`.\n\nAturan:\n- Kalau `cap` bukan `None`, tiap delay dipotong maksimal sebesar `cap` (nilai yang lebih besar dari cap diganti cap).\n- Kalau `n` = 0, kembalikan list kosong.\n- Fungsi ini murni perhitungan, tidak boleh benar-benar menunggu/sleep.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `backoff_delays`.",
+  "solution": "loop range(n), d = base * faktor**i; kalau cap is not None: d = min(d, cap); append. Tidak ada time.sleep.",
+  "entry_point": "backoff_delays",
+  "tests": [
+   "assert backoff_delays(3) == [1.0, 2.0, 4.0]",
+   "assert backoff_delays(0) == []",
+   "assert backoff_delays(4, base=0.5, faktor=3.0) == [0.5, 1.5, 4.5, 13.5]",
+   "assert backoff_delays(4, base=1.0, cap=5.0) == [1.0, 2.0, 4.0, 5.0]"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-012",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "medium",
+  "usage_source": "Cek rentang nilai sensor dan klasifikasikan status (rendah/normal/tinggi)",
+  "prompt": "Buat fungsi `klasifikasi_suhu(nilai, min_aman=18.0, max_aman=30.0)` yang mengembalikan status string:\n\n- `\"rendah\"` kalau `nilai` < `min_aman`.\n- `\"tinggi\"` kalau `nilai` > `max_aman`.\n- `\"normal\"` kalau nilai berada di antara keduanya, termasuk tepat di batas (`min_aman` dan `max_aman` dianggap normal).\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `klasifikasi_suhu`.",
+  "solution": "if nilai < min_aman: 'rendah'; elif nilai > max_aman: 'tinggi'; else 'normal'. Batas inklusif karena normal diambil sebagai default.",
+  "entry_point": "klasifikasi_suhu",
+  "tests": [
+   "assert klasifikasi_suhu(25) == \"normal\"",
+   "assert klasifikasi_suhu(10) == \"rendah\"",
+   "assert klasifikasi_suhu(35) == \"tinggi\"",
+   "assert klasifikasi_suhu(18) == \"normal\"",
+   "assert klasifikasi_suhu(30) == \"normal\"",
+   "assert klasifikasi_suhu(5, min_aman=0, max_aman=4) == \"tinggi\""
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-013",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "hard",
+  "usage_source": "Gabungkan interval waktu yang tumpang tindih atau bersentuhan",
+  "prompt": "Buat fungsi `merge_interval(daftar)` yang menerima list interval `[mulai, akhir]` (bilangan bulat, `mulai` <= `akhir`) dan mengembalikan list interval gabungan yang sudah terurut naik.\n\nAturan:\n- Dua interval yang tumpang tindih digabung.\n- Dua interval yang hanya bersentuhan di ujung (mis. `[1,2]` dan `[2,3]`) juga digabung menjadi satu.\n- Interval yang benar-benar terpisah tetap terpisah.\n- Input kosong mengembalikan list kosong.\n- Hasil berupa list of list `[mulai, akhir]` yang sudah terurut.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `merge_interval`.",
+  "solution": "sort berdasarkan mulai, mulai hasil dengan interval pertama; untuk tiap interval berikutnya, kalau mulai <= akhir interval terakhir hasil, perluas akhir (max), kalau tidak append baru.",
+  "entry_point": "merge_interval",
+  "tests": [
+   "assert merge_interval([[1, 3], [2, 4]]) == [[1, 4]]",
+   "assert merge_interval([[1, 2], [3, 4]]) == [[1, 2], [3, 4]]",
+   "assert merge_interval([[1, 2], [2, 3]]) == [[1, 3]]",
+   "assert merge_interval([]) == []",
+   "assert merge_interval([[5, 7], [1, 4], [2, 6]]) == [[1, 7]]"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-014",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "easy",
+  "usage_source": "Slugify judul artikel jadi bagian URL yang aman",
+  "prompt": "Buat fungsi `slugify(teks)` yang mengubah judul menjadi slug URL.\n\nAturan:\n- Jadikan huruf kecil semua.\n- Ganti setiap rangkaian karakter selain huruf a-z dan angka 0-9 menjadi satu tanda hubung `-`.\n- Rangkaian pemisah yang beruntun tidak boleh menghasilkan lebih dari satu `-`.\n- Pangkas tanda hubung di ujung awal dan akhir.\n- Kalau hasilnya kosong (mis. teks hanya tanda baca) kembalikan string kosong.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `slugify`.",
+  "solution": "lower, re.sub(r'[^a-z0-9]+', '-', s), lalu .strip('-').",
+  "entry_point": "slugify",
+  "tests": [
+   "assert slugify(\"Belajar Python Itu Seru!\") == \"belajar-python-itu-seru\"",
+   "assert slugify(\"  Spasi   Berlebih  \") == \"spasi-berlebih\"",
+   "assert slugify(\"\") == \"\"",
+   "assert slugify(\"---\") == \"\"",
+   "assert slugify(\"File/Laporan 2026\") == \"file-laporan-2026\""
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-015",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "hard",
+  "usage_source": "Parsing argumen CLI sederhana (flag nilai, --key=value, dan flag boolean)",
+  "prompt": "Buat fungsi `parse_flag(argv)` yang menerima list token argumen (list string) dan mengembalikan dict berisi semua flag yang ditemukan. Format yang didukung:\n\n- `--nama nilai` -> `{nama: \"nilai\"}` (token setelah `--nama` dijadikan nilai string).\n- `--nama=nilai` -> `{nama: \"nilai\"}` (nilai diambil setelah tanda `=`).\n- `--nama` yang TIDAK diikuti nilai (karena token berikutnya dimulai `--` atau sudah habis) -> `{nama: True}`.\n- Token yang bukan flag (tidak diawali `--`) dan tidak dipakai sebagai nilai diabaikan.\n- Nama flag minimal satu karakter setelah `--`.\n- List kosong mengembalikan dict kosong.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `parse_flag`.",
+  "solution": "iterasi dua pointer: token diawali '--'; isi=tok[2:]; kalau '=' di isi -> split sekali; elif token berikut ada dan tidak diawali '--' -> pakai sebagai nilai (maju 2); else True (maju 1); token lain dilewati.",
+  "entry_point": "parse_flag",
+  "tests": [
+   "assert parse_flag([\"--level\", \"3\", \"--verbose\"]) == {\"level\": \"3\", \"verbose\": True}",
+   "assert parse_flag([\"--x=5\", \"--y=6\"]) == {\"x\": \"5\", \"y\": \"6\"}",
+   "assert parse_flag([]) == {}",
+   "assert parse_flag([\"pos\", \"--x\", \"5\"]) == {\"x\": \"5\"}",
+   "assert parse_flag([\"--flag\"]) == {\"flag\": True}"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-016",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "easy",
+  "usage_source": "Konversi satuan suhu Celsius ke Fahrenheit untuk laporan sensor",
+  "prompt": "Buat fungsi `celsius_ke_fahrenheit(c)` yang mengubah suhu dalam Celsius ke Fahrenheit dengan rumus `F = c * 9 / 5 + 32`. Kembalikan hasil sebagai angka (float).\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `celsius_ke_fahrenheit`.",
+  "solution": "return c * 9 / 5 + 32.",
+  "entry_point": "celsius_ke_fahrenheit",
+  "tests": [
+   "assert celsius_ke_fahrenheit(0) == 32.0",
+   "assert celsius_ke_fahrenheit(100) == 212.0",
+   "assert celsius_ke_fahrenheit(-40) == -40.0",
+   "assert celsius_ke_fahrenheit(25) == 77.0"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-017",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "easy",
+  "usage_source": "Konversi satuan kecepatan km/jam ke meter/detik",
+  "prompt": "Buat fungsi `kmh_ke_ms(kmh)` yang mengubah kecepatan dari kilometer per jam ke meter per detik (1 km/jam = 1000/3600 m/detik). Kembalikan hasil sebagai angka.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `kmh_ke_ms`.",
+  "solution": "return kmh * 1000 / 3600.",
+  "entry_point": "kmh_ke_ms",
+  "tests": [
+   "assert kmh_ke_ms(36) == 10.0",
+   "assert kmh_ke_ms(72) == 20.0",
+   "assert kmh_ke_ms(0) == 0.0",
+   "assert kmh_ke_ms(18) == 5.0"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-018",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "easy",
+  "usage_source": "Cek palindrom kalimat (abaikan kapitalisasi dan tanda baca)",
+  "prompt": "Buat fungsi `is_palindrom(teks)` yang mengembalikan `True` kalau teks adalah palindrom setelah dinormalisasi.\n\nAturan:\n- Abaikan kapitalisasi.\n- Abaikan semua karakter selain huruf a-z dan angka 0-9.\n- Bandingkan hasilnya dengan kebalikannya.\n- String kosong dianggap palindrom.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `is_palindrom`.",
+  "solution": "buang non-alnum (lowercase) dengan re.sub(r'[^a-z0-9]', ''), kembalikan s == s[::-1].",
+  "entry_point": "is_palindrom",
+  "tests": [
+   "assert is_palindrom(\"Kasur ini rusak\") is True",
+   "assert is_palindrom(\"A man, a plan, a canal: Panama\") is True",
+   "assert is_palindrom(\"\") is True",
+   "assert is_palindrom(\"Halo\") is False"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-019",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "medium",
+  "usage_source": "Cek keseimbangan kurung (), [], {} pada potongan kode/sintaks",
+  "prompt": "Buat fungsi `kurung_seimbang(teks)` yang memeriksa apakah semua kurung `()`, `[]`, `{}` pada teks seimbang dan bersarang dengan benar.\n\nAturan:\n- Karakter selain kurung diabaikan.\n- Tipe kurung harus cocok (`(` ditutup `)`, dst.).\n- Urutan bersarang harus benar (mis. `([)]` tidak seimbang).\n- Teks kosong dianggap seimbang.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `kurung_seimbang`.",
+  "solution": "stack; push untuk kurung buka, untuk kurung tutup cek stack non-empty dan top == pasangannya lalu pop; di akhir seimbang kalau stack kosong.",
+  "entry_point": "kurung_seimbang",
+  "tests": [
+   "assert kurung_seimbang(\"(a[b]{c})\") is True",
+   "assert kurung_seimbang(\"([)]\") is False",
+   "assert kurung_seimbang(\"\") is True",
+   "assert kurung_seimbang(\"(((\") is False",
+   "assert kurung_seimbang(\"fungsi(x[0])\") is True"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-020",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "hard",
+  "usage_source": "Bagi budget anggaran integer secara proporsional (metode sisa terbesar)",
+  "prompt": "Buat fungsi `alokasi_budget(total, bobot)` yang membagi `total` (bilangan bulat) ke beberapa pos sesuai `bobot` (list angka non-negatif), semuanya berupa bilangan bulat, dan jumlah hasilnya HARUS tepat sama dengan `total`.\n\nAturan:\n- Pembagian proporsional: porsi ideal pos ke-i = `total * bobot[i] / sum(bobot)`.\n- Mulai dari pembulatan ke bawah tiap porsi, lalu bagikan sisa unit satu-satu ke pos dengan bagian pecahan terbesar.\n- Kalau ada seri pecahan, pos dengan indeks lebih kecil didahulukan.\n- Kalau total bobot = 0, bagi rata (sisa dibagikan mulai indeks 0).\n- `bobot` kosong mengembalikan list kosong.\n- Panjang hasil = panjang `bobot`.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `alokasi_budget`.",
+  "solution": "hitung porsi ideal, floor ke int, sisa = total - sum; urutkan indeks by (-(porsi-floor), index) lalu tambah 1 ke sisa indeks teratas. Kasus bobot semua nol: bagi rata lalu distribusikan sisa dari indeks 0.",
+  "entry_point": "alokasi_budget",
+  "tests": [
+   "assert alokasi_budget(100, [1, 1]) == [50, 50]",
+   "assert alokasi_budget(10, [1, 1, 1]) == [4, 3, 3]",
+   "assert alokasi_budget(7, [2, 1]) == [5, 2]",
+   "assert alokasi_budget(0, [1, 2, 3]) == [0, 0, 0]",
+   "assert alokasi_budget(5, [0, 0]) == [3, 2]",
+   "assert sum(alokasi_budget(13, [3, 5, 2])) == 13"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-021",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "medium",
+  "usage_source": "Word count dengan aturan tokenisasi: token tanda baca tidak dihitung",
+  "prompt": "Buat fungsi `hitung_kata(teks)` yang menghitung jumlah kata dengan aturan tokenisasi sederhana:\n\n- Token dipisah berdasarkan whitespace (spasi, tab, newline).\n- Token hanya dihitung kalau mengandung minimal satu karakter huruf atau angka.\n- Token yang seluruhnya tanda baca (mis. `--`, `...`) tidak dihitung.\n- Teks kosong atau hanya spasi menghasilkan 0.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `hitung_kata`.",
+  "solution": "split() lalu hitung token yang cocok re.search(r'[A-Za-z0-9]', tok).",
+  "entry_point": "hitung_kata",
+  "tests": [
+   "assert hitung_kata(\"halo dunia\") == 2",
+   "assert hitung_kata(\"\") == 0",
+   "assert hitung_kata(\"   spasi    banyak  \") == 2",
+   "assert hitung_kata(\"halo -- dunia ...\") == 2",
+   "assert hitung_kata(\"satu\") == 1"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-022",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "medium",
+  "usage_source": "Potong teks panjang dengan elipsis agar muat di lebar kolom",
+  "prompt": "Buat fungsi `truncate(teks, batas)` yang memotong teks agar panjang maksimalnya `batas` karakter:\n\n- Kalau panjang teks <= `batas`, kembalikan teks apa adanya.\n- Kalau dipotong, hasil diakhiri `...` (tiga titik) dan total panjang hasil HARUS tepat `batas` (jadi ambil `batas - 3` karakter pertama lalu tambah `...`).\n- Kalau `batas` <= 3 dan teks lebih panjang, kembalikan `batas` karakter pertama tanpa elipsis.\n- Teks kosong dikembalikan apa adanya.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `truncate`.",
+  "solution": "kalau len<=batas return teks; kalau batas<=3 return teks[:batas]; else teks[:batas-3]+'...'.",
+  "entry_point": "truncate",
+  "tests": [
+   "assert truncate(\"Halo dunia\", 20) == \"Halo dunia\"",
+   "assert truncate(\"Halo dunia\", 10) == \"Halo dunia\"",
+   "assert truncate(\"Halo dunia\", 7) == \"Halo...\"",
+   "assert truncate(\"abc\", 3) == \"abc\"",
+   "assert truncate(\"\", 5) == \"\""
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-023",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "hard",
+  "usage_source": "Rata-rata bergerak (moving average) deret pembacaan sensor",
+  "prompt": "Buat fungsi `rata_rata_bergerak(daftar, jendela)` yang menghitung rata-rata bergerak deret angka dengan lebar jendela `jendela`.\n\nAturan:\n- Keluaran berisi rata-rata tiap posisi jendela yang muat, dari paling kiri ke paling kanan.\n- Panjang keluaran = `len(daftar) - jendela + 1` kalau jendela valid.\n- Kalau `jendela` <= 0 atau `jendela` > `len(daftar)`, kembalikan list kosong.\n- Tiap nilai keluaran berupa float.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `rata_rata_bergerak`.",
+  "solution": "guard jendela; hitung sum window pertama; geser: sum += masuk - keluar, append sum/jendela.",
+  "entry_point": "rata_rata_bergerak",
+  "tests": [
+   "assert rata_rata_bergerak([1, 2, 3, 4, 5], 2) == [1.5, 2.5, 3.5, 4.5]",
+   "assert rata_rata_bergerak([1, 2, 3], 3) == [2.0]",
+   "assert rata_rata_bergerak([1, 2, 3], 4) == []",
+   "assert rata_rata_bergerak([], 2) == []",
+   "assert rata_rata_bergerak([2, 4, 6], 1) == [2.0, 4.0, 6.0]"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-024",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "easy",
+  "usage_source": "Hitung frekuensi kemunculan tiap kata pada korpus",
+  "prompt": "Buat fungsi `hitung_frekuensi(teks)` yang mengembalikan dict berisi frekuensi tiap kata.\n\nAturan:\n- Kata dipisah berdasarkan whitespace.\n- Kapitalisasi diabaikan (semua di-lowercase).\n- Teks kosong mengembalikan dict kosong.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `hitung_frekuensi`.",
+  "solution": "loop teks.lower().split(), akumulasi dict.get.",
+  "entry_point": "hitung_frekuensi",
+  "tests": [
+   "assert hitung_frekuensi(\"a b a\") == {\"a\": 2, \"b\": 1}",
+   "assert hitung_frekuensi(\"\") == {}",
+   "assert hitung_frekuensi(\"Satu satu SATU\") == {\"satu\": 3}",
+   "assert hitung_frekuensi(\"x\") == {\"x\": 1}"
+  ],
+  "answer": {
+   "value": ""
+  }
+ },
+ {
+  "id": "code-025",
+  "category": "python-coding",
+  "type": "code",
+  "difficulty": "medium",
+  "usage_source": "Parsing file config `key = value` (abaikan komentar, tangani duplikat)",
+  "prompt": "Buat fungsi `parse_config(teks)` yang mem-parse isi file konfigurasi sederhana menjadi dict.\n\nAturan:\n- Satu baris satu pasangan `key = value` (pemisah karakter `=`).\n- Baris kosong dan baris yang diawali `#` (komentar) diabaikan.\n- Baris tanpa `=` diabaikan.\n- Spasi di sekitar key dan value di-strip.\n- Kalau ada key yang sama muncul lebih dari sekali, yang berlaku adalah kemunculan TERAKHIR.\n- Nilai tetap berupa string, dan boleh mengandung `=` (hanya `=` pertama yang jadi pemisah).\n- Teks kosong mengembalikan dict kosong.\n\nTulis HANYA kode Python final di dalam satu code fence ```python yang berisi definisi fungsi `parse_config`.",
+  "solution": "loop baris, skip blank/`#`, split('=', 1), strip, assign ke dict (last wins).",
+  "entry_point": "parse_config",
+  "tests": [
+   "assert parse_config(\"a = 1\\nb = 2\") == {\"a\": \"1\", \"b\": \"2\"}",
+   "assert parse_config(\"# komentar\\na = 1\") == {\"a\": \"1\"}",
+   "assert parse_config(\"a = 1\\na = 2\") == {\"a\": \"2\"}",
+   "assert parse_config(\"\") == {}",
+   "assert parse_config(\"url = a=b\") == {\"url\": \"a=b\"}"
+  ],
+  "answer": {
+   "value": ""
+  }
+ }
+]

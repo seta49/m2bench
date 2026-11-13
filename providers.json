@@ -36,6 +36,18 @@
     "reasoning_effort": true,
     "notes": "Aggregator. Model format: provider/model-name."
   },
+  "commandcode": {
+    "base_url": "https://api.commandcode.ai/provider/v1",
+    "auth_env": "COMMANDCODE_API_KEY",
+    "reasoning_effort": true,
+    "notes": "Aggregator (commandcode.ai). Model format: vendor/model."
+  },
+  "ollama": {
+    "base_url": "http://127.0.0.1:11434/v1",
+    "auth_env": "",
+    "reasoning_effort": true,
+    "notes": "Ollama lokal (OpenAI-compatible). Tanpa API key."
+  },
   "custom": {
     "base_url": "",
     "auth_env": "",

@@ -1,0 +1,208 @@
+[
+  {
+    "id": "win-001",
+    "category": "windows-dev",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "git-bash/MSYS: argumen path ke program native Windows tidak ditranslasi",
+    "prompt": "Di git-bash Atha menjalankan `python skrip.py /c/Users/athai/data/input.csv` dari dalam folder `C:\\Users\\athai\\proyek`, padahal `ls /c/Users/athai/data/input.csv` di shell yang sama jelas memperlihatkan file itu ada. Python langsung melempar `FileNotFoundError`. Apa penyebabnya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Program `python` adalah binary Windows native; MSYS tidak mentranslasi argumen `/c/...` menjadi `C:/...`, jadi Python memperlakukan itu sebagai path literal yang tidak ada",
+      "B) Git-bash belum memberi izin baca ke folder `C:\\Users`, sehingga Python tidak boleh mengakses file apa pun di sana",
+      "C) `python` harus selalu dipanggil sebagai `py` agar argumen berformat MSYS dikenali",
+      "D) Nama file memakai huruf besar/kecil berbeda dan Windows bersifat case-sensitive"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "`cd /c/...` adalah builtin git-bash (bekerja), tetapi argumen yang diteruskan ke program native tidak ditranslasi, jadi python.exe menerima `/c/Users/athai/data/input.csv` apa adanya. Solusi: pakai `C:/Users/athai/data/input.csv` (slash miring diterima Windows). Jawaban A."
+  },
+  {
+    "id": "win-002",
+    "category": "windows-dev",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Env var Windows: setx menulis ke HKCU\\Environment, tidak menyentuh proses yang sudah jalan",
+    "prompt": "Atha menjalankan `setx ATHABENCH_HOME \"C:\\Users\\athai\\Hermes-Output\"` dan perintahnya sukses. Tapi skrip Python yang SUDAH berjalan di jendela git-bash lain (dan VS Code yang sudah terbuka) tetap gagal dengan `KeyError: 'ATHABENCH_HOME'`. Setelah ia membuka jendela terminal baru, variabel itu baru muncul. Kenapa?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) `setx` menulis variabel ke registry `HKCU\\Environment`, yang hanya dibaca proses BARU saat start; proses yang sudah jalan memakai salinan environment lama sampai di-restart",
+      "B) `setx` gagal diam-diam karena tidak dijalankan sebagai Administrator",
+      "C) Nama variabelnya kapital semua, sedangkan Windows memperlakukan nama env sebagai case-sensitive",
+      "D) `os.environ` di Python hanya membaca file `.env`, bukan environment sistem"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "setx menulis permanen ke registry user (HKCU\\Environment). Perubahan itu dipropagasi oleh Explorer/shell baru; proses yang sudah berjalan tidak diperbarui. Harus buka proses/terminal baru (atau restart VS Code). Jawaban A."
+  },
+  {
+    "id": "win-003",
+    "category": "windows-dev",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "py launcher vs `python` di PATH (App Execution Alias Microsoft Store)",
+    "prompt": "Atha punya Python 3.11 dari installer python.org dan Python 3.13 dari Microsoft Store. Di git-bash, `py -3.11 -c \"import sys;print(sys.version)\"` menampilkan 3.11, tapi `python -c \"import sys;print(sys.version)\"` justru menampilkan 3.13. Kenapa hasilnya beda?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) `py` adalah Windows Python Launcher yang memilih versi dari daftar internalnya (`py -3.11`), sedangkan `python` mengikuti resolusi PATH dan alias Store (`WindowsApps\\python.exe`) kebetulan muncul lebih dulu",
+      "B) `py` selalu menjalankan versi Python terbaru yang terpasang, dan `python` menjalankan versi paling lama",
+      "C) `python` adalah symlink ke `py`, jadi seharusnya identik dan keluarnya 3.13 memang bug store",
+      "D) `py` hanya bekerja di PowerShell; di git-bash ia diam-diam jatuh ke `python`"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "Python Launcher (`py`) memilih interpreter dari daftar terdaftar tanpa bergantung urutan PATH. `python` murni resolusi PATH; alias eksekusi App Installer di WindowsApps biasanya lebih awal. Jawaban A."
+  },
+  {
+    "id": "win-004",
+    "category": "windows-dev",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "venv di dalam folder OneDrive → file .pyd/.dll terkunci saat sync",
+    "prompt": "Atha membuat venv di `C:\\Users\\athai\\OneDrive\\kuliah\\proyek\\.venv`. Saat mengimpor paket ber-ekstensi native, ia kadang dapat `ImportError: DLL load failed while importing ...`, atau `pip install` gagal dengan `[WinError 32] The process cannot access the file because it is being used by another process`, padahal tak ada program lain yang jelas memakai file itu. Penyebab paling mungkin?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) OneDrive terus menyinkron folder itu dan sementara mengunci/membuka file `.pyd`/`.dll` di dalam `.venv`, sehingga load atau penulisan file bentrok; lebih aman venv ditaruh di luar folder yang disinkron (mis. `C:\\Users\\athai\\venvs\\...`)",
+      "B) Venv tidak boleh berada di dalam repo Git; kehadiran `.git` membuat Python menolak memuat DLL",
+      "C) Windows Defender otomatis menghapus file `.pyd` di folder yang namanya mengandung 'OneDrive'",
+      "D) `pip` versi baru tidak mendukung struktur venv di Windows sehingga harus berpindah ke conda"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "OneDrive menyinkron file di folder yang diawasi dan bisa memegang handle sementara, memicu WinError 32/kegagalan load DLL. Solusi lazim: letakkan venv (yang berisi banyak file .pyd/.dll) di luar OneDrive. Jawaban A."
+  },
+  {
+    "id": "win-005",
+    "category": "windows-dev",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "kill MSYS vs taskkill untuk proses Windows native",
+    "prompt": "Atha melihat di Task Manager `node.exe` memakan CPU dengan PID 8124. Di git-bash ia menjalankan `kill -9 8124`, prompt kembali tanpa error, tapi di Task Manager `node.exe` masih hidup. Kenapa, dan apa yang benar?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) `kill` di git-bash bekerja pada PID ruang MSYS (umumnya hanya proses MSYS), bukan PID Windows dari Task Manager; untuk proses Windows native pakai `taskkill /F /PID 8124`",
+      "B) `kill -9` butuh dijalankan sebagai Administrator, kalau tidak flag `-9` akan diabaikan",
+      "C) PID di Task Manager ditampilkan dalam basis heksadesimal, jadi angka 8124 salah alamat",
+      "D) `node.exe` tidak bisa dibunuh selama dilindungi Windows Defender sampai di-whitelist dulu"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "PID di MSYS berbeda dari PID Windows. `kill` hanya menyasar tabel proses MSYS. Untuk mematikan proses Windows native dari git-bash: `taskkill /F /PID <pid>` (atau `taskkill //F //PID` bila MSYS menerjemahkan slash). Jawaban A."
+  },
+  {
+    "id": "win-006",
+    "category": "windows-dev",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "PATH precedence: shim nvm-windows tetap menang di depan PATH",
+    "prompt": "Atha memasang Node.js 20 dari installer resmi lalu menambahkan `C:\\Program Files\\nodejs` ke PATH user dengan `setx`. Di jendela git-bash yang BARU dibuka, `node -v` tetap menunjukkan v18.19 (versi dari nvm-windows yang lama), padahal folder installer sudah ada di PATH. Penjelasan paling masuk akal?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) nvm-windows menaruh folder shim-nya di depan PATH pada setiap startup shell, sehingga shim nvm masih mengalahkan entri baru tadi",
+      "B) `setx` hanya berpengaruh setelah komputer di-restart penuh, bukan sekadar membuka shell baru",
+      "C) git-bash menyimpan cache lokasi `node`, dan satu-satunya cara memperbaiki adalah men-install ulang git-bash",
+      "D) Node dari installer otomatis dinonaktifkan selama ada `package-lock.json` di direktori home"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "nvm-windows mengelola PATH tiap sesi dan menaruh symlink/shims-nya lebih awal, sehingga entri PATH yang ditambahkan `setx` tetap kalah. Perlu menyesuaikan urutan PATH, melepas nvm, atau memakai `nvm use`. Jawaban A."
+  },
+  {
+    "id": "win-007",
+    "category": "windows-dev",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "uv tool install (terisolasi) vs uv pip install (ke venv aktif)",
+    "prompt": "Atha mengaktifkan venv proyek di git-bash, lalu menjalankan `uv tool install ruff`. `ruff --version` jalan dari terminal mana pun, tetapi `pip list` di venv yang aktif tidak menampilkan `ruff`, dan `python -c \"import ruff\"` gagal. Apa yang sebenarnya terjadi?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) `uv tool install` memasang aplikasi ke environment tool terisolasi milik uv dan menaruh shim-nya di `~/.local/bin`, terpisah dari venv aktif; agar masuk ke venv aktif pakai `uv pip install ruff` (atau `pip install ruff`)",
+      "B) `uv tool install` sebenarnya sama dengan `pip install` ke venv aktif, tapi gagal menulis metadata sehingga `pip list` tidak menampilkannya",
+      "C) `uv tool install` hanya berhasil bila dijalankan sebagai Administrator, dan yang tampak tadi sebenarnya cache lama",
+      "D) `import ruff` memang selalu gagal karena paket `ruff` tidak menyediakan modul Python; itu justru bukti instalasi sudah masuk venv"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "`uv tool install` mengelola 'tools' di environment terpisah (di bawah `~/.local/share/uv/tools`) dan memasang shim exe di `~/.local/bin` — bukan ke venv aktif. Untuk ke venv aktif gunakan `uv pip install`. Jawaban A."
+  },
+  {
+    "id": "win-008",
+    "category": "windows-dev",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Shim corepack (pnpm/yarn) rusak saat dipanggil dari git-bash",
+    "prompt": "Setelah `corepack enable pnpm`, `pnpm -v` di git-bash melempar error `Cannot find module '...\\node_modules\\corepack\\dist\\...'` atau justru menjalankan Node versi lain, sementara di PowerShell `pnpm` normal. Apa penyebab paling mungkin?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Shim corepack (`pnpm`/`yarn` tanpa ekstensi) memanggil `node` dari PATH; bila `node` yang ke-resolve di git-bash berbeda dari Node yang dipakai saat `corepack enable` (mis. alias Store atau shim nvm), corepack tak menemukan modulnya. Pastikan shim dan `node` berasal dari instalasi yang sama",
+      "B) git-bash tidak mendukung shim corepack sama sekali karena hanya mau menjalankan file `.exe`",
+      "C) `corepack enable pnpm` selalu butuh hak Administrator; bila tidak, file shimnya ditulis rusak",
+      "D) PowerShell yang otomatis memperbaiki shim, jadi masalahnya sebenarnya ada di PowerShell"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "Shim corepack yang dieksekusi bergantung pada `node` di PATH. Ketidakcocokan node (versi/instalasi berbeda) menyebabkan corepack tak menemukan dist-nya. Samakan sumber node, atau jalankan `corepack pnpm`/`.cmd` secara eksplisit. Jawaban A."
+  },
+  {
+    "id": "win-009",
+    "category": "windows-dev",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Aktivasi venv Windows dari git-bash: path Scripts/activate",
+    "prompt": "Atha membuat venv dengan `py -3.11 -m venv .venv` di dalam proyek Windows dan sekarang berada di git-bash dalam folder proyek itu. Tulis perintah LENGKAP untuk mengaktifkan venv tersebut dari git-bash (bukan PowerShell).\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": {
+      "value": "source .venv/Scripts/activate",
+      "accept": [
+        "source .venv/scripts/activate",
+        ". .venv/Scripts/activate",
+        ". .venv/scripts/activate",
+        "source ./.venv/Scripts/activate"
+      ]
+    },
+    "solution": "Di venv Windows, script ada di `Scripts\\` (bukan `bin/`). Dari git-bash: `source .venv/Scripts/activate` (atau `. .venv/Scripts/activate`)."
+  },
+  {
+    "id": "win-010",
+    "category": "windows-dev",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": ".gitattributes memaksa LF untuk skrip shell lintas OS",
+    "prompt": "Tim Atha checkout repo yang sama di mesin Windows dan Linux. Mereka ingin file `.sh` SELALU tersimpan dan ter-checkout dengan akhir baris LF, apa pun setelan `core.autocrlf` masing-masing orang. Tulis satu baris direktif yang harus ditambahkan ke `.gitattributes`.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": {
+      "value": "*.sh text eol=lf",
+      "accept": [
+        "*.sh eol=lf text"
+      ]
+    },
+    "solution": "Baris: `*.sh text eol=lf`. `text` menandai normalisasi, `eol=lf` memaksa line ending LF di working tree. Dengan ini hasil checkout konsisten LF."
+  },
+  {
+    "id": "win-011",
+    "category": "windows-dev",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "uv tool install menaruh shim eksekutabel di ~/.local/bin",
+    "prompt": "Secara default, `uv tool install <nama-tool>` di Windows menaruh SHIM eksekutabel tool tersebut ke sebuah direktori bin di dalam profil pengguna. Tulis path direktori itu relatif terhadap home (pakai bentuk `~/...`).\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": {
+      "value": "~/.local/bin",
+      "accept": [
+        ".local/bin",
+        "%userprofile%\\.local\\bin",
+        "%userprofile%/.local/bin"
+      ]
+    },
+    "solution": "uv memasang shim tool ke `~/.local/bin` (`%USERPROFILE%\\.local\\bin` di Windows); bisa dioverride dengan `XDG_BIN_HOME`/konfigurasi uv."
+  },
+  {
+    "id": "win-012",
+    "category": "windows-dev",
+    "type": "short",
+    "difficulty": "hard",
+    "usage_source": "Exit code proses Windows native >255 dipotong mod 256 oleh $? di bash",
+    "prompt": "Sebuah program Windows native crash dan mengembalikan exit code `0xC0000005` (violation access), yang dalam desimal = 3221225477. Atha menjalankannya dari git-bash lalu langsung mengetik `echo $?`. Berapa angka yang ditampilkan bash?\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": {
+      "value": "5"
+    },
+    "solution": "Bash membatasi exit code ke 8 bit (mod 256). 3221225477 mod 256 = 5 (256 x 12582912 = 3221225472). Jadi `$?` menampilkan 5."
+  }
+]

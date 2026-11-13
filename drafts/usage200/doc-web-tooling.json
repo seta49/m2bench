@@ -1,0 +1,204 @@
+[
+  {
+    "id": "doc-001",
+    "category": "doc-web-tooling",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "PDF hasil scan tanpa text layer → get_text() kosong → butuh OCR",
+    "prompt": "Atha memakai `import fitz` (PyMuPDF) lalu `doc[0].get_text()` pada PDF tugas kuliah hasil foto scan. Hasilnya string kosong, padahal saat dibuka di viewer halaman itu jelas berisi paragraf teks. Kenapa?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) PDF itu hasil scan: halamannya cuma gambar raster tanpa lapisan teks, jadi ekstraksi teks mengembalikan kosong; perlu OCR (mis. Tesseract) untuk membacanya",
+      "B) PyMuPDF tidak bisa membaca PDF yang lebih dari satu halaman",
+      "C) PDF-nya ter-enkripsi sehingga semua `get_text()` sengaja dikosongkan",
+      "D) `get_text()` hanya mengembalikan teks dari anotasi, bukan teks isi halaman"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "PDF scan = gambar per halaman, tidak ada text layer. `get_text()` kosong dan harus lewat OCR (Tesseract/pytesseract). Cek cepat: halaman yang di-zoom tetap kasar (gambar), bukan teks tajam. Jawaban A."
+  },
+  {
+    "id": "doc-002",
+    "category": "doc-web-tooling",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "DOCX = arsip OPC (ZIP) berisi XML",
+    "prompt": "Atha ingin membaca teks mentah `laporan.docx` tanpa membuka Word dan tanpa python-docx. Ia mengganti nama file jadi `laporan.zip` dan ternyata berhasil dibuka sebagai arsip berisi banyak folder XML. Ini mengungkap bahwa DOCX sebenarnya adalah ...\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) arsip ZIP (format OPC) berisi beberapa file XML, dengan teks isi dokumen utama di `word/document.xml`",
+      "B) file binary proprietary tunggal yang kebetulan berekstensi .zip tapi isinya terenkripsi",
+      "C) satu file XML tunggal yang di-rename, jadi tidak ada proses unzip yang sebenarnya",
+      "D) basis data SQLite yang menyimpan satu tabel per paragraf"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "DOCX adalah paket OPC = arsip ZIP berisi XML (`[Content_Types].xml`, `word/document.xml`, dll). Itu sebabnya rename ke .zip bisa dibuka. Jawaban A."
+  },
+  {
+    "id": "doc-003",
+    "category": "doc-web-tooling",
+    "type": "mcq",
+    "difficulty": "easy",
+    "usage_source": "Encoding default open() di Windows (cp1252) membuat CSV UTF-8 jadi mojibake",
+    "prompt": "Atha membaca CSV ekspor yang berisi karakter `é`, `ü`, dan kutip tipografis dengan `open('data.csv')` tanpa argumen `encoding` di Windows. Teks yang muncul berantakan (mis. `Ã©`, `Ã¼`). Padahal file sebenarnya disimpan UTF-8. Apa perbaikan yang tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Tambahkan `encoding='utf-8'` (dan `newline=''` untuk CSV); default encoding Windows bukan UTF-8 (sering cp1252), sehingga byte UTF-8 salah ditafsirkan",
+      "B) Ganti `open` dengan `os.open`, karena `open` tidak mendukung Unicode sama sekali",
+      "C) Ubah CSV-nya menjadi `.xlsx`; Python tidak bisa membaca kutip tipografis dari CSV",
+      "D) Tambahkan saja `errors='ignore'`, karena karakter yang berantakan itu memang tidak ada di file asli"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "CPython di Windows memakai encoding ANSI (mis. cp1252) untuk `open()` tanpa `encoding`. File UTF-8 harus dibaca `encoding='utf-8'`. Jawaban A."
+  },
+  {
+    "id": "doc-004",
+    "category": "doc-web-tooling",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "PDF ter-enkripsi/permission → PyMuPDF perlu authenticate",
+    "prompt": "Sebuah PDF e-jurnal yang Atha unduh terbuka di viewer tanpa diminta password, tetapi di Python `fitz.open(path)` melempar error dan `doc.needs_pass` bernilai True. Penjelasan dan penanganan yang tepat?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) PDF pakai enkripsi (owner password/flag permission yang membatasi ekstraksi); panggil `doc.authenticate('')` atau password yang benar sebelum membaca halaman",
+      "B) File PDF rusak saat diunduh; satu-satunya jalan adalah mengunduh ulang",
+      "C) PyMuPDF tidak mendukung PDF yang dibuat setelah 2020 sehingga harus dialihkan ke markitdown",
+      "D) `needs_pass` selalu True untuk semua PDF dan aman diabaikan"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "PDF bisa ter-enkripsi dengan user/owner password. Viewer sering membukanya (user password kosong) tapi PyMuPDF melaporkan `needs_pass`. Panggil `doc.authenticate(password)`. Jawaban A."
+  },
+  {
+    "id": "doc-005",
+    "category": "doc-web-tooling",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Etika scraping: robots.txt + rate limit sebelum crawl",
+    "prompt": "Atha mau mengumpulkan daftar judul artikel dari arsip sebuah portal jurnal (OJS) yang menampilkan halaman per-volume. Sebelum crawler dijalankan, langkah pertama yang benar terkait etika dan kepatuhan adalah ...\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) baca `robots.txt` (dan `sitemap.xml` bila ada) untuk melihat aturan crawl yang diizinkan, lalu terapkan jeda/rate limit yang wajar antar-request",
+      "B) langsung ambil semua URL secara paralel tanpa jeda supaya cepat selesai",
+      "C) pakai rotasi proxy/IP agar tidak terdeteksi, dan itu dianggap sudah etis",
+      "D) tidak perlu memeriksa apa pun selama hanya mengambil halaman HTML, bukan file PDF"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "Praktik etis: cek robots.txt dan sitemap.xml, patuhi aturan, beri jeda/rate limit, set User-Agent jelas. Jawaban A."
+  },
+  {
+    "id": "doc-006",
+    "category": "doc-web-tooling",
+    "type": "mcq",
+    "difficulty": "medium",
+    "usage_source": "Markdown berisi rumus LaTeX → PDF butuh math renderer (KaTeX/MathJax)",
+    "prompt": "Atha menulis catatan Markdown berisi `$E = mc^2$` dan `$$\\int_0^1 x\\,dx$$`, lalu mengubahnya jadi PDF. Hasilnya menampilkan `$E = mc^2$` sebagai teks mentah, bukan rumus terender. Kenapa, dan solusinya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Renderer yang dipakai tidak memproses math; perlu alur yang mengaktifkan KaTeX/MathJax (mis. md-to-pdf dengan KaTeX, atau Pandoc dengan math engine/`--mathjax`)",
+      "B) Rumus LaTeX memang tidak bisa muncul di PDF dan harus diganti jadi gambar lebih dulu",
+      "C) Markdown tidak mendukung sintaks `$...$`, jadi harus diubah ke `\\(...\\)` di semua tempat",
+      "D) PDF selalu salah render, jadi harus memakai DOCX agar rumus tampil"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "Konverter Markdown biasa (atau headless Chrome tanpa MathJax/KaTeX) menampilkan math sebagai teks. Aktifkan KaTeX/MathJax atau pakai Pandoc dengan math engine. Jawaban A."
+  },
+  {
+    "id": "doc-007",
+    "category": "doc-web-tooling",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Pillow tidak bisa buka HEIC tanpa pillow-heif/libheif",
+    "prompt": "Atha memproses foto ponsel `.heic` dengan `PIL.Image.open('foto.heic')` dan mendapat `UnidentifiedImageError`. Ia yakin Pillow versi terbaru pasti bisa membuka format apa saja. Penjelasan dan solusi yang benar?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Pillow tidak menyertakan decoder HEIF/HEIC bawaan (lisensi/native codec); perlu plugin `pillow-heif` (`import pillow_heif; pillow_heif.register_heif_opener()`) atau konversi lewat `libheif`",
+      "B) `.heic` hanyalah thumbnail video, jadi harus mengekstrak videonya lebih dulu",
+      "C) Error muncul karena file `.heic` sebenarnya JPEG yang salah ekstensi; cukup di-rename",
+      "D) Pillow bisa membuka HEIC hanya di Linux, tidak di Windows"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "Pillow tanpa plugin tidak mengenali HEIC. Pasang `pillow-heif` dan daftarkan opener-nya (atau pakai `libheif` untuk konversi). Jawaban A."
+  },
+  {
+    "id": "doc-008",
+    "category": "doc-web-tooling",
+    "type": "mcq",
+    "difficulty": "hard",
+    "usage_source": "Pillow tidak auto-menerapkan EXIF orientation saat resize/save",
+    "prompt": "Atha membuat thumbnail dengan `Image.open('foto.jpg').resize((400,400))` lalu menyimpannya. Di galeri foto, thumbnail-nya tampil MIRING 90°, padahal foto aslinya tegak. Apa penyebab dan perbaikannya?\n\nJawab dengan huruf pilihan saja. Akhiri jawaban dengan baris `#### <huruf>`.",
+    "options": [
+      "A) Orientasi foto disimpan di tag EXIF, bukan di piksel, dan Pillow tidak menerapkannya otomatis; panggil `ImageOps.exif_transpose(img)` sebelum resize/save",
+      "B) `resize((400,400))` memaksa rasio non-persegi sehingga gambar terputar otomatis",
+      "C) EXIF tidak pernah memengaruhi tampilan; masalahnya ada di monitor",
+      "D) Harus dikonversi ke PNG dulu, karena JPEG tidak menyimpan orientasi"
+    ],
+    "answer": {
+      "value": "A"
+    },
+    "solution": "Kamera menulis orientasi di tag EXIF Orientation. Pillow membaca piksel apa adanya. `ImageOps.exif_transpose()` memutar piksel sesuai EXIF dan (opsional) membuang tag agar tidak dobel-putar. Jawaban A."
+  },
+  {
+    "id": "doc-009",
+    "category": "doc-web-tooling",
+    "type": "short",
+    "difficulty": "easy",
+    "usage_source": "Nama import PyMuPDF = fitz",
+    "prompt": "Perpustakaan PyMuPDF diimpor dengan nama yang BERBEDA dari nama paketnya saat instalasi. Tulis nama modul yang dipakai pada `import ...` untuk memakai PyMuPDF.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": {
+      "value": "fitz",
+      "accept": [
+        "pymupdf"
+      ]
+    },
+    "solution": "Paket `pymupdf` (PyMuPDF) diimpor sebagai `import fitz` (versi terbaru juga menyediakan alias `import pymupdf`). Nilai klasik yang diharapkan: `fitz`."
+  },
+  {
+    "id": "doc-010",
+    "category": "doc-web-tooling",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "Teks utama DOCX berada di word/document.xml",
+    "prompt": "Di dalam arsip `laporan.docx` (yang sebenarnya ZIP/OPC), teks isi dokumen utama tersimpan di satu file XML dengan path tertentu relatif terhadap root arsip. Tulis path relatif file tersebut (contoh bentuk: `folder/namafile.xml`).\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": {
+      "value": "word/document.xml",
+      "accept": [
+        "/word/document.xml",
+        "word\\document.xml"
+      ]
+    },
+    "solution": "Isi dokumen ada di `word/document.xml`; metadata lain di `docProps/`, styles di `word/styles.xml`, dll."
+  },
+  {
+    "id": "doc-011",
+    "category": "doc-web-tooling",
+    "type": "short",
+    "difficulty": "medium",
+    "usage_source": "sitemap.xml mendaftar URL halaman untuk crawler",
+    "prompt": "Selain `robots.txt`, situs besar biasanya menyediakan satu file XML di root yang mendaftar seluruh URL halaman agar crawler tidak perlu menebak. Tulis nama file itu beserta ekstensinya.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": {
+      "value": "sitemap.xml",
+      "accept": [
+        "sitemap"
+      ]
+    },
+    "solution": "`sitemap.xml` (bisa berupa sitemap index yang menunjuk sitemap lain). Biasanya juga didaftarkan lewat baris `Sitemap:` di robots.txt."
+  },
+  {
+    "id": "doc-012",
+    "category": "doc-web-tooling",
+    "type": "short",
+    "difficulty": "hard",
+    "usage_source": "Kode bahasa Tesseract untuk bahasa Indonesia = ind",
+    "prompt": "Atha akan meng-OCR hasil scan dokumen berbahasa Indonesia memakai Tesseract. Agar akurat, ia harus memilih paket bahasa memakai kode ISO 639-2 tiga huruf. Tulis kode bahasa Tesseract untuk bahasa Indonesia.\n\nJawab singkat. Akhiri jawaban dengan baris `#### <jawaban>`.",
+    "answer": {
+      "value": "ind"
+    },
+    "solution": "Tesseract memakai kode ISO 639-2 (3 huruf): bahasa Indonesia = `ind` (dipakai `-l ind`). Kode 2 huruf `id` bukan nama traineddata Tesseract."
+  }
+]

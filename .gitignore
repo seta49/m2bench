@@ -1,6 +1,13 @@
 # Data runs (large, user-specific)
 data/
 
+# Local configs & backups
+config.json
+*.bak-*
+
+# Scratch / temporary notebooks
+colab_m2bench.ipynb
+
 # Python
 __pycache__/
 *.pyc
