@@ -8,10 +8,11 @@
 
 ## Why `m2bench`?
 
-- **4-Criterion Rubrics, Not Regex Guessing:** Every task is scored against 4 explicit criteria (`pass = 1.0`, `partial = 0.5`, `fail = 0.0`, `DNF = 0`) with anti-false-positive traps so models cannot pass by nitpicking valid code.
-- **Hybrid Deterministic + LLM-Judge Grading:** Format, JSON validity, word-count, and exact-substring constraints are verified programmatically (`_eval_check`), while reasoning and fixes are graded by a judge model.
-- **Honesty & Hallucination Resistance:** Dedicated prompts with fake APIs, nonexistent journals/DOIs, impossible hardware specs, and scam listings test whether models admit uncertainty or play along.
-- **Local Web Leaderboard (`leaderboard.html`):** Generates a self-contained dashboard with category breakdowns, Intelligence vs Speed (`t/s`) scatter plot, and per-task drilldown from your own runs.
+- **4-Criterion Rubrics, Not Regex Guessing:** Every task is scored against 4 explicit criteria (`pass = 1.0`, `partial = 0.5`, `fail = 0.0`, `DNF = 0`).
+- **Strict Pass + Avg Score Ranking:** Ranks models primarily by **Strict Pass Rate** (% of tasks achieving `1.00` across all 4 criteria) alongside **Avg Score** so subtle errors aren't hidden by partial credit.
+- **Hybrid Deterministic + Code Execution + LLM-Judge Grading:** Format, JSON validity, word-count, substring rules, and live Python unit tests (`python_tests`) run deterministically in `_eval_check`, while open-ended reasoning and audits are graded by a judge model.
+- **Honesty & Hallucination Resistance:** Dedicated prompts with fake APIs, nonexistent CLI flags, zero-bug traps, and impossible specs test whether models admit uncertainty instead of inventing workarounds.
+- **Local Web Leaderboard (`leaderboard.html`):** Generates a self-contained dashboard with Strict Pass / Avg Score toggle, category breakdowns, Intelligence vs Speed (`t/s`) scatter plot, and per-task drilldown from your own runs.
 
 ---
 
@@ -19,6 +20,7 @@
 
 | Set | Tasks | Focus & Categories | Status |
 |---|---|---|---|
+| **`frontier`** | 16 | `coding-exec` (4, Python unit-tested), `code-audit` (4, zero-hint traps), `long-context` (4), `reasoning-trap` (4) | Active (High-Discrimination) |
 | **`expert`** *(default)* | 50 | `literal-precision` (12), `coding-fix` (13), `honesty` (12), `id-instruction` (13) | Active |
 | **`daily_plus`** | 8 | `long-context` (2), `multi-turn` (2), `coding-fix` (2), `structured-json` (2) | Active |
 | `usage200` | 200 | High-volume stress-test suite (skipped by default `validate`) | Experimental |
@@ -28,16 +30,16 @@
 
 ## Sample Results (`expert` Set)
 
-Snapshot from personal runs on `expert` (50 tasks, `DNF = 0`):
+Snapshot from personal runs on `expert` (50 tasks, ranked by **Strict Pass** — tasks with exact `1.00` score):
 
-| Model | Provider | Score | DNF | Speed | Context / Mode |
-|---|---|---:|---:|---|---|
-| `mimo-v2.6-pro` | `xiaomi` | **97.5%** | 0 | 26.2 t/s | `reasoning=high` |
-| `mimo-v2.6-flash` | `xiaomi` | **94.8%** | 0 | 40.5 t/s | `reasoning=high` |
-| `gemma4:26b` | `ollama` (L4) | **94.2%** | 0 | **85.9 t/s** | 16k ctx, `temp=default` |
-| `mimo-v2.5-pro` | `xiaomi` | **91.5%** | 0 | 67.4 t/s | `reasoning=high` |
-| `mimo-v2.5` | `xiaomi` | **90.2%** | 0 | 29.2 t/s | `reasoning=high` |
-| `qwen3.5-4b-128k` | `ollama` | **67.2%** | 0 | - | 128k ctx, `reasoning=none` |
+| Model | Provider | Strict Pass | Avg Score | DNF | Speed | Context / Mode |
+|---|---|---:|---:|---:|---|---|
+| `mimo-v2.6-pro` | `xiaomi` | **86.0%** (43/50) | 97.5% | 0 | 26.2 t/s | `reasoning=high` |
+| `mimo-v2.6-flash` | `xiaomi` | **82.0%** (41/50) | 94.8% | 0 | 40.5 t/s | `reasoning=high` |
+| `gemma4:26b` | `ollama` (L4) | **76.0%** (38/50) | 94.2% | 0 | **85.9 t/s** | 16k ctx, `temp=default` |
+| `mimo-v2.5` | `xiaomi` | **70.0%** (35/50) | 90.2% | 0 | 29.2 t/s | `reasoning=high` |
+| `mimo-v2.5-pro` | `xiaomi` | **68.0%** (34/50) | 91.5% | 0 | 67.4 t/s | `reasoning=high` |
+| `qwen3.5-4b-128k` | `ollama` | **28.0%** (14/50) | 67.2% | 0 | - | 128k ctx, `reasoning=none` |
 
 ---
 
@@ -117,7 +119,7 @@ Every inference call injects a uniform system guardrail (`--no-guardrail` to dis
 m2bench/
 ├── m2bench.py              # Core benchmark CLI & interactive TUI (stdlib only)
 ├── providers.json          # Provider endpoints & auth env var registry
-├── tasks/                  # Task sets (expert.json, daily_plus.json, legacy sets)
+├── tasks/                  # Task sets (frontier.json, expert.json, daily_plus.json, legacy sets)
 ├── tools/
 │   ├── build_leaderboard.py    # Generates leaderboard.html + leaderboard.json
 │   ├── build_expert_set.py     # Builds expert.json from drafts/

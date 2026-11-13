@@ -1,0 +1,504 @@
+[
+  {
+    "id": "f-exec-interval-merge",
+    "category": "coding-exec",
+    "prompt": "Write a Python 3 function `coalesce_windows(events: list[tuple[int, int, int]]) -> list[tuple[int, int, int]]` (stdlib only).\n\nSpecification:\n- Each tuple `(start, end, delta)` adds integer `delta` across the half-open interval `[start, end)`.\n- Ignore any event with `start >= end` or `delta == 0`.\n- Coordinates can be arbitrarily large integers (e.g., `-10**12` to `10**12`), so coordinate-unit iteration will time out.\n- Return the minimal canonical list of `(s, e, total_val)` tuples sorted by `s` ascending such that:\n  1. `s < e` and `total_val != 0` for every tuple (regions where overlapping deltas sum to `0` MUST be omitted).\n  2. No two output tuples overlap (`e_i <= s_{i+1}`).\n  3. Adjacent output tuples (`e_i == s_{i+1}`) MUST NOT share the same `total_val`; merge contiguous segments with equal non-zero values.\n\nOutput ONLY the Python code in a single ```python code block.",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Handles empty inputs, invalid start>=end, delta==0, and basic overlaps",
+        "check": {
+          "kind": "python_tests",
+          "tests": "assert coalesce_windows([]) == []\nassert coalesce_windows([(5, 5, 10), (10, 2, 5), (0, 5, 0)]) == []\nassert coalesce_windows([(1, 5, 2), (3, 7, 3)]) == [(1, 3, 2), (3, 5, 5), (5, 7, 3)]\nassert coalesce_windows([(0, 4, 5), (4, 8, 5)]) == [(0, 8, 5)]\n"
+        }
+      },
+      {
+        "id": "c2",
+        "text": "Handles exact cancellation to 0, negative sums, and merging across cancelled gaps",
+        "check": {
+          "kind": "python_tests",
+          "tests": "assert coalesce_windows([(0, 10, 5), (0, 10, -5)]) == []\nassert coalesce_windows([(0, 10, 5), (3, 7, -5)]) == [(0, 3, 5), (7, 10, 5)]\nassert coalesce_windows([(0, 6, 4), (4, 10, 4), (2, 8, -4)]) == [(0, 2, 4), (4, 6, 4), (8, 10, 4)]\nassert coalesce_windows([(1, 4, -2), (3, 6, -3), (2, 5, 1)]) == [(1, 2, -2), (2, 3, -1), (3, 4, -4), (4, 5, -2), (5, 6, -3)]\nassert coalesce_windows([(0, 5, 3), (5, 10, 2), (5, 10, 1)]) == [(0, 10, 3)]\n"
+        }
+      },
+      {
+        "id": "c3",
+        "text": "Handles huge coordinates (-10**12 to 10**12) in O(N log N) without OOM or timeout",
+        "check": {
+          "kind": "python_tests",
+          "timeout": 3,
+          "tests": "big = [(-10**12, 10**12, 7), (-10**9, 10**9, -7), (0, 5, 7)]\nassert coalesce_windows(big) == [(-10**12, -10**9, 7), (0, 5, 7), (10**9, 10**12, 7)]\n"
+        }
+      },
+      {
+        "id": "c4",
+        "text": "Matches brute-force oracle across 150 randomized test cases and runs 10,000 intervals cleanly",
+        "check": {
+          "kind": "python_tests",
+          "timeout": 4,
+          "tests": "import random\ndef _oracle(ev):\n    arr = [0]*40\n    for s,e,d in ev:\n        if s < e and d:\n            for x in range(s,e): arr[x] += d\n    out = []\n    for x,v in enumerate(arr):\n        if v == 0: continue\n        if out and out[-1][1] == x and out[-1][2] == v:\n            out[-1] = (out[-1][0], x+1, v)\n        else: out.append((x, x+1, v))\n    return out\nrng = random.Random(42)\nfor _ in range(150):\n    ev = [(rng.randint(0,39), rng.randint(0,39), rng.randint(-3,3)) for _ in range(rng.randint(0,12))]\n    assert coalesce_windows(ev) == _oracle(ev), f'mismatch on {ev}'\nstress = [(i, i+10, (i%5)-2) for i in range(10000)]\nres = coalesce_windows(stress)\nassert len(res) > 0 and all(res[i][1] <= res[i+1][0] for i in range(len(res)-1))\n"
+        }
+      }
+    ]
+  },
+  {
+    "id": "f-exec-rate-limiter",
+    "category": "coding-exec",
+    "prompt": "Implement a Python 3 class `SlidingWindowLimiter` (stdlib only, exact timestamp log, no approximation):\n\n- `__init__(self, limit: int, window_ms: int)`: `limit >= 1`, `window_ms >= 1`.\n- `allow(self, key: str, now_ms: int) -> tuple[bool, int]`:\n  - Monotonic timestamps (`now_ms` non-decreasing per key).\n  - An earlier accepted request at `t` is active iff `now_ms - t < window_ms` (so at `now_ms == t + window_ms`, `t` is expired).\n  - If active count `< limit`: record `now_ms` and return `(True, limit - new_active_count)`.\n  - Otherwise: do NOT record `now_ms`, and return `(False, retry_after_ms)` where `retry_after_ms = oldest_active_t + window_ms - now_ms` (`>= 1`).\n- `purge(self, now_ms: int) -> int`:\n  - Expire old timestamps (`t <= now_ms - window_ms`) across all keys, delete keys that become completely empty, and return the count of deleted empty keys.\n\nOutput ONLY the Python code in a single ```python code block.",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Basic allow quota accounting and remaining count works accurately",
+        "check": {
+          "kind": "python_tests",
+          "tests": "lim = SlidingWindowLimiter(3, 1000)\nassert lim.allow('u1', 100) == (True, 2)\nassert lim.allow('u1', 100) == (True, 1)\nassert lim.allow('u1', 250) == (True, 0)\nassert lim.allow('u2', 300) == (True, 2)\n"
+        }
+      },
+      {
+        "id": "c2",
+        "text": "Exact half-open boundary expiry (t + window_ms) and rejection does not consume quota",
+        "check": {
+          "kind": "python_tests",
+          "tests": "lim = SlidingWindowLimiter(2, 500)\nassert lim.allow('k', 1000) == (True, 1)\nassert lim.allow('k', 1200) == (True, 0)\nassert lim.allow('k', 1499) == (False, 1)\nassert lim.allow('k', 1499) == (False, 1)\nassert lim.allow('k', 1500) == (True, 0)\nassert lim.allow('k', 1600) == (False, 100)\n"
+        }
+      },
+      {
+        "id": "c3",
+        "text": "retry_after_ms updates accurately as older entries expire mid-burst",
+        "check": {
+          "kind": "python_tests",
+          "tests": "lim = SlidingWindowLimiter(3, 1000)\nassert lim.allow('a', 0) == (True, 2)\nassert lim.allow('a', 200) == (True, 1)\nassert lim.allow('a', 900) == (True, 0)\nassert lim.allow('a', 950) == (False, 50)\nassert lim.allow('a', 1000) == (True, 0)\nassert lim.allow('a', 1050) == (False, 150)\n"
+        }
+      },
+      {
+        "id": "c4",
+        "text": "purge() evicts expired keys and returns exact evicted key count without breaking active keys",
+        "check": {
+          "kind": "python_tests",
+          "tests": "lim = SlidingWindowLimiter(2, 100)\nlim.allow('a', 10); lim.allow('b', 50); lim.allow('c', 90)\nassert lim.purge(109) == 0\nassert lim.purge(110) == 1\nassert lim.purge(150) == 1\nassert lim.allow('c', 150) == (True, 0)\nassert lim.purge(250) == 1\nassert lim.purge(300) == 0\n"
+        }
+      }
+    ]
+  },
+  {
+    "id": "f-exec-log-rollup",
+    "category": "coding-exec",
+    "prompt": "Write a Python 3 function `rollup_requests(lines: list[str]) -> dict` (stdlib only).\n\nLine format & validation:\n- Each line is whitespace-separated tokens: `<timestamp> <kv1> <kv2> ...` (key-value pairs after `<timestamp>` can appear in ANY order, and extra unknown `k=v` pairs are allowed).\n- Valid line requirements:\n  1. `<timestamp>` matches `^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$`.\n  2. Must include `svc=<non-empty str>`, `status=<int in 100..599>`, `lat_ms=<finite float >= 0>` (reject `nan`, `inf`, `-inf`, negative, non-numeric, or malformed tokens).\n- Skip any invalid/blank line and increment `'malformed'` count.\n\nReturn exact dict:\n`{'services': {svc: {'count': int, 'errors': int, 'error_rate': float, 'p50_ms': float, 'p95_ms': float}}, 'malformed': int}`\n- `errors`: count of valid lines with `status >= 500`.\n- `error_rate`: `round(errors / count, 4)`.\n- Percentiles use exact nearest-rank: `sorted_lats[math.ceil(p * n) - 1]` for `p = 0.50` and `0.95` (as `float`).\n\nOutput ONLY the Python code in a single ```python code block.",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Handles empty input, out-of-order key=value tokens, and extra unknown fields",
+        "check": {
+          "kind": "python_tests",
+          "tests": "assert rollup_requests([]) == {'services': {}, 'malformed': 0}\nr = rollup_requests([\n    '2026-11-01T10:00:00Z lat_ms=25 status=200 region=ap svc=auth',\n    '2026-11-01T10:00:01Z svc=auth status=503 lat_ms=120.5 retry=1',\n])\nassert r['malformed'] == 0\nassert r['services']['auth'] == {'count': 2, 'errors': 1, 'error_rate': 0.5, 'p50_ms': 25.0, 'p95_ms': 120.5}\n"
+        }
+      },
+      {
+        "id": "c2",
+        "text": "Rejects malformed lines: bad timestamp, NaN/Inf/negative latency, out-of-range status, missing svc",
+        "check": {
+          "kind": "python_tests",
+          "tests": "lines = [\n    '',\n    '   ',\n    '2026-11-01 10:00:00 svc=api status=200 lat_ms=10',\n    '2026-11-01T10:00:00Z svc= status=200 lat_ms=10',\n    '2026-11-01T10:00:00Z svc=api status=99 lat_ms=10',\n    '2026-11-01T10:00:00Z svc=api status=600 lat_ms=10',\n    '2026-11-01T10:00:00Z svc=api status=200 lat_ms=nan',\n    '2026-11-01T10:00:00Z svc=api status=200 lat_ms=inf',\n    '2026-11-01T10:00:00Z svc=api status=200 lat_ms=-1.5',\n    '2026-11-01T10:00:00Z svc=api status=200',\n    '2026-11-01T10:00:00Z svc=api status=500 lat_ms=0',\n]\nr = rollup_requests(lines)\nassert r['malformed'] == 10\nassert r['services'] == {'api': {'count': 1, 'errors': 1, 'error_rate': 1.0, 'p50_ms': 0.0, 'p95_ms': 0.0}}\n"
+        }
+      },
+      {
+        "id": "c3",
+        "text": "Exact nearest-rank p50/p95 calculation and error_rate rounding across 20 and 100 items",
+        "check": {
+          "kind": "python_tests",
+          "tests": "lines20 = [f'2026-11-01T10:00:{i:02d}Z svc=db status={500 if i==0 else 200} lat_ms={i+1}' for i in range(20)]\nr20 = rollup_requests(lines20)['services']['db']\nassert r20 == {'count': 20, 'errors': 1, 'error_rate': 0.05, 'p50_ms': 10.0, 'p95_ms': 19.0}\nlines21 = [f'2026-11-01T10:01:{i:02d}Z svc=pay status={502 if i<3 else 404} lat_ms={21-i}' for i in range(21)]\nr21 = rollup_requests(lines21)['services']['pay']\nassert r21 == {'count': 21, 'errors': 3, 'error_rate': 0.1429, 'p50_ms': 11.0, 'p95_ms': 20.0}\n"
+        }
+      },
+      {
+        "id": "c4",
+        "text": "Handles duplicate keys in same line safely and large 20,000-line batch under timeout",
+        "check": {
+          "kind": "python_tests",
+          "timeout": 3,
+          "tests": "r_dup = rollup_requests(['2026-11-01T10:00:00Z svc=x status=200 lat_ms=10 note=a=b'])\nassert r_dup['services']['x']['count'] == 1\nbig = [f'2026-11-01T10:00:00Z svc=s{i%5} status={200 if i%7 else 500} lat_ms={(i%100)+0.5}' for i in range(20000)]\nrb = rollup_requests(big)\nassert rb['malformed'] == 0 and sum(v['count'] for v in rb['services'].values()) == 20000\n"
+        }
+      }
+    ]
+  },
+  {
+    "id": "f-exec-cron-next",
+    "category": "coding-exec",
+    "prompt": "Write a Python 3 function `next_cron_runs(expr: str, after_iso: str, count: int) -> list[str]` (stdlib only, e.g. `datetime`, `calendar`).\n\nRules:\n- `after_iso` is UTC `YYYY-MM-DDTHH:MM:SSZ`. Returned datetimes must be strictly greater than `after_iso` at `:00` seconds, formatted as `YYYY-MM-DDTHH:MM:00Z`.\n- `expr` is a standard 5-field cron: `<minute> <hour> <dom> <month> <dow>` (whitespace-separated):\n  - `minute`: `0-59`, `hour`: `0-23`, `dom`: `1-31`, `month`: `1-12`, `dow`: `0-7` where BOTH `0` and `7` mean Sunday (`1`=Mon .. `6`=Sat; note Python `weekday()` uses `0`=Mon..`6`=Sun!).\n  - Support `*`, integers, `a-b` ranges, `,` lists, and `/step` (`*/s` or `a-b/s` or `n/s` meaning `n-max/s`). Raise `ValueError` on malformed syntax, invalid ranges (`a > b`), step `<= 0`, or out-of-bounds numbers.\n  - **Vixie DOM/DOW rule**: If BOTH `dom` and `dow` are non-wildcard (`raw_dom != '*'` and `raw_dow != '*'`), match a day if **EITHER `dom` OR `dow`** matches! If one is `'*'` and the other is restricted, only the restricted field needs to match.\n- If `count == 0`, validate inputs and return `[]`. If `count < 0`, raise `ValueError`. If no valid occurrence exists within 8 years (e.g. Feb 31), raise `ValueError`.\n\nOutput ONLY the Python code in a single ```python code block.",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Handles strict '>' boundary with seconds and basic */step, ranges, and Sunday 0/7 equivalence",
+        "check": {
+          "kind": "python_tests",
+          "tests": "assert next_cron_runs('*/15 * * * *', '2026-05-01T10:00:00Z', 3) == [\n    '2026-05-01T10:15:00Z', '2026-05-01T10:30:00Z', '2026-05-01T10:45:00Z'\n]\nassert next_cron_runs('0 10 * * *', '2026-05-01T09:59:59Z', 1) == ['2026-05-01T10:00:00Z']\nassert next_cron_runs('0 10 * * *', '2026-05-01T10:00:00Z', 1) == ['2026-05-02T10:00:00Z']\n# 2026-05-03 is Sunday\nassert next_cron_runs('0 9 * * 0', '2026-05-01T00:00:00Z', 1) == ['2026-05-03T09:00:00Z']\nassert next_cron_runs('0 9 * * 7', '2026-05-01T00:00:00Z', 1) == ['2026-05-03T09:00:00Z']\n"
+        }
+      },
+      {
+        "id": "c2",
+        "text": "Applies Vixie cron OR rule when both DOM and DOW are non-*",
+        "check": {
+          "kind": "python_tests",
+          "tests": "# 2026-05-01=Fri, 2026-05-03=Sun, 2026-05-04=Mon, 2026-05-05=Tue\n# '0 12 4 * 0' matches both 4th of month AND every Sunday\nassert next_cron_runs('0 12 4 * 0', '2026-05-01T00:00:00Z', 3) == [\n    '2026-05-03T12:00:00Z', '2026-05-04T12:00:00Z', '2026-05-10T12:00:00Z'\n]\n"
+        }
+      },
+      {
+        "id": "c3",
+        "text": "Handles leap year Feb 29 efficiently without timing out",
+        "check": {
+          "kind": "python_tests",
+          "timeout": 3,
+          "tests": "assert next_cron_runs('30 8 29 2 *', '2024-03-01T00:00:00Z', 1) == ['2028-02-29T08:30:00Z']\nassert next_cron_runs('0 0 1 1 *', '2026-01-01T00:00:00Z', 2) == ['2027-01-01T00:00:00Z', '2028-01-01T00:00:00Z']\n"
+        }
+      },
+      {
+        "id": "c4",
+        "text": "Raises ValueError on invalid cron syntax, out-of-range fields, impossible dates (Feb 31), and negative count",
+        "check": {
+          "kind": "python_tests",
+          "timeout": 3,
+          "tests": "for bad in ['* * * *', '60 * * * *', '* 24 * * *', '* * 0 * *', '* * 1-2/0 * *', '* * 10-5 * *', '0 0 31 2 *']:\n    try:\n        next_cron_runs(bad, '2026-01-01T00:00:00Z', 1)\n        raise AssertionError(f'expected ValueError for {bad}')\n    except ValueError:\n        pass\nassert next_cron_runs('0 0 * * *', '2026-01-01T00:00:00Z', 0) == []\n"
+        }
+      }
+    ]
+  },
+  {
+    "id": "f-audit-zero-bug",
+    "category": "code-audit",
+    "prompt": "Review the Python 3 function below for correctness, edge cases, and production safety.\nOnly report genuine defects with concrete failure inputs; if the implementation is already correct and safe, say so explicitly instead of inventing nitpicks or speculative issues.\n\n```python\nimport heapq\n\ndef topo_sort_tasks(tasks: list[str], deps: list[tuple[str, str]]) -> list[str]:\n    \"\"\"Return lexicographically smallest topological ordering of `tasks`.\n\n    Each tuple `(before, after)` in `deps` means `before` must precede `after`.\n    Duplicate dependency edges are allowed and ignored.\n    Raises ValueError on unknown task names or cyclic dependencies.\n    \"\"\"\n    task_set = set(tasks)\n    if len(task_set) != len(tasks):\n        raise ValueError(\"duplicate task names\")\n    adj: dict[str, set[str]] = {t: set() for t in tasks}\n    indeg: dict[str, int] = {t: 0 for t in tasks}\n    for before, after in deps:\n        if before not in task_set or after not in task_set:\n            raise ValueError(f\"unknown task in edge: {(before, after)!r}\")\n        if before == after:\n            raise ValueError(f\"self-dependency cycle on {before!r}\")\n        if after not in adj[before]:\n            adj[before].add(after)\n            indeg[after] += 1\n\n    heap = [t for t in tasks if indeg[t] == 0]\n    heapq.heapify(heap)\n    order: list[str] = []\n    while heap:\n        cur = heapq.heappop(heap)\n        order.append(cur)\n        for nxt in adj[cur]:\n            indeg[nxt] -= 1\n            if indeg[nxt] == 0:\n                heapq.heappush(heap, nxt)\n\n    if len(order) != len(tasks):\n        raise ValueError(\"cyclic dependency detected\")\n    return order\n```",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Explicitly concludes that no genuine bugs or correctness defects exist in the code"
+      },
+      {
+        "id": "c2",
+        "text": "Correctly verifies duplicate edge deduplication (`after not in adj[before]`) prevents indeg inflation"
+      },
+      {
+        "id": "c3",
+        "text": "Correctly verifies cycle detection (`before == after` and `len(order) != len(tasks)`) and heap tie-breaking work properly"
+      },
+      {
+        "id": "c4",
+        "text": "Does NOT invent false bugs (e.g., wrongly claiming `set` iteration breaks heap order or Kahn's algorithm needs recursion)"
+      }
+    ]
+  },
+  {
+    "id": "f-audit-race-cache",
+    "category": "code-audit",
+    "prompt": "Review this Python 3 LRU TTL cache for production readiness. Report only concrete bugs (with exact failure triggers and fixes); if clean, say no bugs exist.\n\n```python\nimport threading\nimport time\nfrom typing import Any\n\nclass SafeTTLCache:\n    \"\"\"Thread-safe bounded LRU cache with monotonic TTL eviction.\"\"\"\n\n    def __init__(self, maxsize: int, ttl_sec: float):\n        if maxsize <= 0 or ttl_sec <= 0:\n            raise ValueError(\"maxsize and ttl_sec must be > 0\")\n        self._maxsize = maxsize\n        self._ttl = ttl_sec\n        self._lock = threading.Lock()\n        self._data: dict[str, tuple[Any, float]] = {}\n\n    def get(self, key: str, default: Any = None) -> Any:\n        with self._lock:\n            item = self._data.get(key)\n            if item is None:\n                return default\n            val, exp = item\n            if time.monotonic() >= exp:\n                del self._data[key]\n                return default\n            return val\n\n    def put(self, key: str, val: Any) -> None:\n        exp = time.monotonic() + self._ttl\n        with self._lock:\n            if len(self._data) >= self._maxsize:\n                oldest = next(iter(self._data))\n                del self._data[oldest]\n            self._data[key] = (val, exp)\n\n    def invalidate_prefix(self, prefix: str) -> int:\n        removed = 0\n        with self._lock:\n            for k in self._data:\n                if k.startswith(prefix):\n                    del self._data[k]\n                    removed += 1\n            return removed\n```",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Catches RuntimeError in `invalidate_prefix`: iterating `for k in self._data:` while deleting `del self._data[k]` mutates dict during iteration"
+      },
+      {
+        "id": "c2",
+        "text": "Catches broken LRU semantics in `get()` / `put()`: neither moves accessed/updated keys to MRU position (actually FIFO, not LRU; requires OrderedDict.move_to_end or delete+reinsert)"
+      },
+      {
+        "id": "c3",
+        "text": "Catches `put()` capacity bug when updating an existing key at `len == maxsize`: unconditionally evicts an unrelated entry before overwriting `self._data[key]`"
+      },
+      {
+        "id": "c4",
+        "text": "Provides valid corrected code/fixes without hallucinating fake threading bugs on CPython `dict` under `self._lock`"
+      }
+    ]
+  },
+  {
+    "id": "f-audit-sql-migration",
+    "category": "code-audit",
+    "prompt": "Review this PostgreSQL 16 query + Python (`psycopg`) helper for production bugs, data correctness hazards, and security flaws. Report only genuine defects with concrete failure modes and fixes.\n\n```python\ndef list_active_users(conn, sort_col: str, limit: int = 50):\n    \"\"\"Return active non-banned users ordered by `sort_col`.\"\"\"\n    query = f\"\"\"\n        SELECT id, email, balance_cents\n        FROM users\n        WHERE id NOT IN (SELECT user_id FROM suspended_accounts)\n          AND deleted_at IS NULL\n        ORDER BY {sort_col} DESC\n        LIMIT %s\n    \"\"\"\n    try:\n        with conn.cursor() as cur:\n            cur.execute(query, (limit,))\n            return cur.fetchall()\n    except Exception:\n        return []\n\ndef debit_wallet(conn, user_id: int, amount_cents: int) -> bool:\n    if amount_cents <= 0:\n        return False\n    with conn.cursor() as cur:\n        cur.execute(\"SELECT balance_cents FROM users WHERE id = %s\", (user_id,))\n        row = cur.fetchone()\n        if not row or row[0] < amount_cents:\n            return False\n        cur.execute(\n            \"UPDATE users SET balance_cents = balance_cents - %s WHERE id = %s\",\n            (amount_cents, user_id),\n        )\n        conn.commit()\n        return True\n```",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Catches SQL `NOT IN (SELECT user_id FROM suspended_accounts)` NULL trap: if any `suspended_accounts.user_id` is NULL, `NOT IN` returns 0 rows (`NOT EXISTS` or `IS NOT NULL` needed)"
+      },
+      {
+        "id": "c2",
+        "text": "Catches unvalidated f-string SQL injection via `{sort_col}` in `ORDER BY` (requires allowlist / `psycopg.sql.Identifier`)"
+      },
+      {
+        "id": "c3",
+        "text": "Catches `except Exception: return []` swallowing errors without `conn.rollback()`, leaving connection in aborted transaction state (`InFailedSqlTransaction`)"
+      },
+      {
+        "id": "c4",
+        "text": "Catches TOCTOU race condition in `debit_wallet`: check-then-update without `AND balance_cents >= %s` in UPDATE (or `FOR UPDATE`) allows concurrent double-spend / negative balance"
+      }
+    ]
+  },
+  {
+    "id": "f-audit-c-ringbuf",
+    "category": "code-audit",
+    "prompt": "Audit this C99 byte ring buffer implementation for memory safety, undefined behavior, and logic bugs. Report only real defects with exact failing triggers and fixes.\n\n```c\n#include <stddef.h>\n#include <stdint.h>\n#include <stdlib.h>\n#include <string.h>\n\ntypedef struct {\n    uint8_t *buf;\n    size_t cap;\n    size_t head;\n    size_t tail;\n    size_t len;\n} ringbuf_t;\n\nint rb_init(ringbuf_t *rb, size_t cap) {\n    rb->buf = malloc(cap);\n    if (!rb->buf) return -1;\n    rb->cap = cap;\n    rb->head = 0;\n    rb->tail = 0;\n    rb->len = 0;\n    return 0;\n}\n\nsize_t rb_write(ringbuf_t *rb, const uint8_t *src, size_t n) {\n    size_t free_space = rb->cap - rb->len;\n    if (n > free_space) n = free_space;\n    if (n == 0) return 0;\n    memcpy(rb->buf + rb->head, src, n);\n    rb->head = (rb->head + n) % rb->cap;\n    rb->len += n;\n    return n;\n}\n\nsize_t rb_read(ringbuf_t *rb, uint8_t *dst, size_t n) {\n    if (n > rb->len) n = rb->len;\n    if (n == 0) return 0;\n    size_t first = rb->cap - rb->tail;\n    if (first > n) first = n;\n    memcpy(dst, rb->buf + rb->tail, first);\n    if (n > first) {\n        memcpy(dst + first, rb->buf, n - first);\n    }\n    rb->tail = (rb->tail + n) % rb->cap;\n    rb->len -= n;\n    return n;\n}\n```",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Catches heap buffer out-of-bounds write in `rb_write`: single `memcpy(rb->buf + rb->head, src, n)` overflows past `rb->buf + rb->cap` whenever `rb->head + n > rb->cap` (must split into 2 copies across wraparound)"
+      },
+      {
+        "id": "c2",
+        "text": "Catches `(rb->head + n) % rb->cap` / `(rb->tail + n) % rb->cap` unsigned `size_t` wraparound issue if `head + n` or `tail + n` overflows `SIZE_MAX` (or `rb_init(rb, 0)` where `malloc(0)` succeeds on glibc and leaves `cap == 0` -> division by zero if ever reached, though guarded by `free_space == 0`; primarily must note `rb_init` accepts `cap == 0` / NULL `rb` without validation)"
+      },
+      {
+        "id": "c3",
+        "text": "Explicitly confirms `rb_read` correctly splits across wraparound (`first` + `n - first`) instead of falsely claiming `rb_read` has the same `memcpy` OOB bug as `rb_write`"
+      },
+      {
+        "id": "c4",
+        "text": "Provides working split-copy fix for `rb_write` and clean `cap == 0` / NULL guard in `rb_init`"
+      }
+    ]
+  },
+  {
+    "id": "f-long-config-override",
+    "category": "long-context",
+    "prompt": "Given the deployment config snapshot below, compute the final effective configuration for `billing-worker`, `auth-gateway`, and `search-indexer` in environment `prod` and region `ap-southeast-1`.\n\nPrecedence rules (lowest to highest):\n1. `[defaults]`\n2. `[service.<name>]`\n3. Active `[env.prod]` (ignore `[env.staging]`)\n4. Active `[region.ap-southeast-1]` (ignore `[region.us-east-1]`)\n5. Hotfix audit log (`HF-01`..`HF-10`) in order: ignore `REVERTED` entries and any earlier hotfix explicitly reverted by `reverts=HF-XX`, and ignore `SUPERSEDED` entries.\n\nReturn ONLY raw JSON (no markdown fence, no prose) mapping each of the 3 service names to an object containing its 6 service-specific keys.\n\n# DEPLOYMENT CONFIG SNAPSHOT (v2026.11)\n[defaults]\ntimeout_ms = 3000\nretries = 2\nmax_concurrency = 32\nlog_level = INFO\ntls_min_version = 1.2\ncircuit_breaker_threshold = 0.50\ncache_ttl_sec = 60\n\n[service.ad-bidder]\ntimeout_ms = 1500\nretries = 1\nmax_concurrency = 16\ncache_ttl_sec = 30\nowner_team = team-a\n\n[service.analytics-ingest]\ntimeout_ms = 2000\nretries = 2\nmax_concurrency = 32\ncache_ttl_sec = 60\nowner_team = team-b\n\n[service.asset-cdn]\ntimeout_ms = 2500\nretries = 3\nmax_concurrency = 48\ncache_ttl_sec = 90\nowner_team = team-c\n\n[service.audit-sink]\ntimeout_ms = 3000\nretries = 4\nmax_concurrency = 64\ncache_ttl_sec = 120\nowner_team = team-d\n\n[service.banner-svc]\ntimeout_ms = 3500\nretries = 1\nmax_concurrency = 16\ncache_ttl_sec = 150\nowner_team = team-e\n\n[service.catalog-sync]\ntimeout_ms = 4000\nretries = 2\nmax_concurrency = 32\ncache_ttl_sec = 30\nowner_team = team-f\n\n[service.chat-relay]\ntimeout_ms = 4500\nretries = 3\nmax_concurrency = 48\ncache_ttl_sec = 60\nowner_team = team-g\n\n[service.checkout-ui]\ntimeout_ms = 1500\nretries = 4\nmax_concurrency = 64\ncache_ttl_sec = 90\nowner_team = team-h\n\n[service.billing-worker]\ntimeout_ms = 8000\nretries = 3\nmax_concurrency = 16\nlog_level = INFO\nidempotency_required = false\nqueue_prefetch = 10\n\n[service.coupon-engine]\ntimeout_ms = 2000\nretries = 1\nmax_concurrency = 16\ncache_ttl_sec = 120\nowner_team = team-a\n\n[service.currency-fx]\ntimeout_ms = 2500\nretries = 2\nmax_concurrency = 32\ncache_ttl_sec = 150\nowner_team = team-b\n\n[service.email-digest]\ntimeout_ms = 3000\nretries = 3\nmax_concurrency = 48\ncache_ttl_sec = 30\nowner_team = team-c\n\n[service.export-worker]\ntimeout_ms = 3500\nretries = 4\nmax_concurrency = 64\ncache_ttl_sec = 60\nowner_team = team-d\n\n[service.feature-store]\ntimeout_ms = 4000\nretries = 1\nmax_concurrency = 16\ncache_ttl_sec = 90\nowner_team = team-e\n\n[service.fraud-ml]\ntimeout_ms = 4500\nretries = 2\nmax_concurrency = 32\ncache_ttl_sec = 120\nowner_team = team-f\n\n[service.geo-ip]\ntimeout_ms = 1500\nretries = 3\nmax_concurrency = 48\ncache_ttl_sec = 150\nowner_team = team-g\n\n[service.image-thumb]\ntimeout_ms = 2000\nretries = 4\nmax_concurrency = 64\ncache_ttl_sec = 30\nowner_team = team-h\n\n[service.invoice-pdf]\ntimeout_ms = 2500\nretries = 1\nmax_concurrency = 16\ncache_ttl_sec = 60\nowner_team = team-a\n\n[service.kyc-ocr]\ntimeout_ms = 3000\nretries = 2\nmax_concurrency = 32\ncache_ttl_sec = 90\nowner_team = team-b\n\n[service.leaderboard-api]\ntimeout_ms = 3500\nretries = 3\nmax_concurrency = 48\ncache_ttl_sec = 120\nowner_team = team-c\n\n[service.link-shortener]\ntimeout_ms = 4000\nretries = 4\nmax_concurrency = 64\ncache_ttl_sec = 150\nowner_team = team-d\n\n[service.loyalty-pts]\ntimeout_ms = 4500\nretries = 1\nmax_concurrency = 16\ncache_ttl_sec = 30\nowner_team = team-e\n\n[service.media-transcoder]\ntimeout_ms = 1500\nretries = 2\nmax_concurrency = 32\ncache_ttl_sec = 60\nowner_team = team-f\n\n[service.auth-gateway]\ntimeout_ms = 1200\nretries = 1\nmax_concurrency = 256\ntls_min_version = 1.2\njwks_cache_sec = 300\nstrict_aud_check = false\n\n[service.metrics-proxy]\ntimeout_ms = 2000\nretries = 3\nmax_concurrency = 48\ncache_ttl_sec = 90\nowner_team = team-g\n\n[service.notif-push]\ntimeout_ms = 2500\nretries = 4\nmax_concurrency = 64\ncache_ttl_sec = 120\nowner_team = team-h\n\n[service.order-archive]\ntimeout_ms = 3000\nretries = 1\nmax_concurrency = 16\ncache_ttl_sec = 150\nowner_team = team-a\n\n[service.pdf-signer]\ntimeout_ms = 3500\nretries = 2\nmax_concurrency = 32\ncache_ttl_sec = 30\nowner_team = team-b\n\n[service.promo-rules]\ntimeout_ms = 4000\nretries = 3\nmax_concurrency = 48\ncache_ttl_sec = 60\nowner_team = team-c\n\n[service.quote-engine]\ntimeout_ms = 4500\nretries = 4\nmax_concurrency = 64\ncache_ttl_sec = 90\nowner_team = team-d\n\n[service.receipt-mail]\ntimeout_ms = 1500\nretries = 1\nmax_concurrency = 16\ncache_ttl_sec = 120\nowner_team = team-e\n\n[service.reco-ranker]\ntimeout_ms = 2000\nretries = 2\nmax_concurrency = 32\ncache_ttl_sec = 150\nowner_team = team-f\n\n[service.report-cron]\ntimeout_ms = 2500\nretries = 3\nmax_concurrency = 48\ncache_ttl_sec = 30\nowner_team = team-g\n\n[service.review-mod]\ntimeout_ms = 3000\nretries = 4\nmax_concurrency = 64\ncache_ttl_sec = 60\nowner_team = team-h\n\n[service.scheduler-core]\ntimeout_ms = 3500\nretries = 1\nmax_concurrency = 16\ncache_ttl_sec = 90\nowner_team = team-a\n\n[service.session-gc]\ntimeout_ms = 4000\nretries = 2\nmax_concurrency = 32\ncache_ttl_sec = 120\nowner_team = team-b\n\n[service.shipping-rate]\ntimeout_ms = 4500\nretries = 3\nmax_concurrency = 48\ncache_ttl_sec = 150\nowner_team = team-c\n\n[service.search-indexer]\ntimeout_ms = 5000\nretries = 2\nmax_concurrency = 48\nbatch_size = 500\nrefresh_interval_sec = 30\ndrop_stale_docs = false\n\n[service.sms-otp]\ntimeout_ms = 1500\nretries = 4\nmax_concurrency = 64\ncache_ttl_sec = 30\nowner_team = team-d\n\n[service.spam-filter]\ntimeout_ms = 2000\nretries = 1\nmax_concurrency = 16\ncache_ttl_sec = 60\nowner_team = team-e\n\n[service.tax-calc]\ntimeout_ms = 2500\nretries = 2\nmax_concurrency = 32\ncache_ttl_sec = 90\nowner_team = team-f\n\n[service.webhook-fanout]\ntimeout_ms = 3000\nretries = 3\nmax_concurrency = 48\ncache_ttl_sec = 120\nowner_team = team-g\n\n[service.wishlist-sync]\ntimeout_ms = 3500\nretries = 4\nmax_concurrency = 64\ncache_ttl_sec = 150\nowner_team = team-h\n\n# LAYER 2: ENVIRONMENT OVERRIDES (env=prod)\n[env.staging]\nbilling-worker.timeout_ms = 20000\nauth-gateway.strict_aud_check = true\nsearch-indexer.batch_size = 50\n\n[env.prod]\nbilling-worker.idempotency_required = true\nbilling-worker.retries = 5\nauth-gateway.tls_min_version = 1.3\nauth-gateway.strict_aud_check = true\nsearch-indexer.batch_size = 1000\nsearch-indexer.drop_stale_docs = true\ncoupon-engine.retries = 0\nfraud-ml.timeout_ms = 900\n\n# LAYER 3: REGION PATCHES (active region = ap-southeast-1)\n[region.us-east-1]\nbilling-worker.max_concurrency = 128\nauth-gateway.timeout_ms = 800\nsearch-indexer.batch_size = 2000\n\n[region.ap-southeast-1]\nbilling-worker.timeout_ms = 12000\nbilling-worker.queue_prefetch = 4\nauth-gateway.jwks_cache_sec = 900\nsearch-indexer.max_concurrency = 24\nsearch-indexer.refresh_interval_sec = 10\n\n# LAYER 4: INCIDENT HOTFIX AUDIT LOG (applied strictly in ascending HF-ID order unless REVERTED)\nHF-01 | status=APPLIED    | target=billing-worker | set max_concurrency=8\nHF-02 | status=APPLIED    | target=auth-gateway   | set timeout_ms=2500\nHF-03 | status=APPLIED    | target=search-indexer | set batch_size=250\nHF-04 | status=APPLIED    | target=billing-worker | set retries=1\nHF-05 | status=REVERTED   | reverts=HF-04         | note: restored billing-worker retries prior to HF-04\nHF-06 | status=APPLIED    | target=auth-gateway   | set jwks_cache_sec=120\nHF-07 | status=SUPERSEDED | target=search-indexer | set refresh_interval_sec=5 (superseded by HF-09)\nHF-08 | status=APPLIED    | target=billing-worker | set log_level=DEBUG\nHF-09 | status=APPLIED    | target=search-indexer | set refresh_interval_sec=45\nHF-10 | status=APPLIED    | target=auth-gateway   | set max_concurrency=192",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Output is raw valid JSON object without markdown fences",
+        "check": {
+          "kind": "valid_json",
+          "expect": "dict",
+          "no_fence": true
+        }
+      },
+      {
+        "id": "c2",
+        "text": "billing-worker values are exact: timeout_ms=12000, retries=5 (HF-04 reverted by HF-05!), max_concurrency=8, log_level='DEBUG', idempotency_required=true, queue_prefetch=4"
+      },
+      {
+        "id": "c3",
+        "text": "auth-gateway values are exact: timeout_ms=2500, retries=1, max_concurrency=192, tls_min_version=1.3 (or '1.3'), jwks_cache_sec=120, strict_aud_check=true"
+      },
+      {
+        "id": "c4",
+        "text": "search-indexer values are exact: timeout_ms=5000, retries=2, max_concurrency=24, batch_size=250, refresh_interval_sec=45, drop_stale_docs=true"
+      }
+    ]
+  },
+  {
+    "id": "f-long-ledger-reconcile",
+    "category": "long-context",
+    "prompt": "Reconcile the settlement ledger below for each corridor (`ID-QRIS`, `SG-FAST`, `US-ACH`).\n\nExact accounting rules:\n- Only lines with `status=SETTLED` affect balances (`VOID`, `PENDING`, `SYS-*` are ignored).\n- For `type=CAPTURE`, net credit = `gross - fee`.\n- Deduplicate by `idem`: if an `idem` key was already processed on a `SETTLED` row, any subsequent row with the same `idem` MUST be ignored (even if its TX ID has `-DUP`). Note: ignored `VOID`/`PENDING` rows do NOT consume an `idem` key.\n- For `type=REVERSAL` and `type=ADJUSTMENT`, add the signed integer `amount` directly (unique `idem`).\n\nOutput the exact reconciled net integer total for each corridor, total number of ignored duplicate rows, and the exact combined grand total across all 3 corridors.\n\n001 | TX-1001 | corridor=ID-QRIS | type=CAPTURE | gross=2400 | fee=50 | status=SETTLED | idem=IK-001\n002 | TX-1002 | corridor=SG-FAST | type=CAPTURE | gross=22400 | fee=150 | status=SETTLED | idem=IK-002\n003 | TX-1003 | corridor=US-ACH | type=CAPTURE | gross=15000 | fee=150 | status=SETTLED | idem=IK-003\n004 | TX-1004 | corridor=ID-QRIS | type=CAPTURE | gross=3100 | fee=100 | status=SETTLED | idem=IK-004\n005 | TX-1005 | corridor=SG-FAST | type=CAPTURE | gross=1250 | fee=100 | status=SETTLED | idem=IK-005\n005R | TX-1005-DUP | corridor=SG-FAST | type=CAPTURE | gross=1250 | fee=100 | status=SETTLED | idem=IK-005\n006 | TX-1006 | corridor=US-ACH | type=CAPTURE | gross=4850 | fee=100 | status=SETTLED | idem=IK-006\n007 | TX-1007 | corridor=ID-QRIS | type=CAPTURE | gross=3100 | fee=25 | status=SETTLED | idem=IK-007\n008 | TX-1008 | corridor=SG-FAST | type=CAPTURE | gross=10200 | fee=150 | status=SETTLED | idem=IK-008\n009 | TX-1009 | corridor=US-ACH | type=CAPTURE | gross=22400 | fee=100 | status=SETTLED | idem=IK-009\n010 | TX-1010 | corridor=ID-QRIS | type=CAPTURE | gross=10200 | fee=75 | status=SETTLED | idem=IK-010\n011 | TX-1011 | corridor=SG-FAST | type=CAPTURE | gross=4850 | fee=50 | status=VOID | idem=IK-011\n012 | TX-1012 | corridor=US-ACH | type=CAPTURE | gross=15000 | fee=50 | status=SETTLED | idem=IK-012\n013 | TX-1013 | corridor=ID-QRIS | type=CAPTURE | gross=22400 | fee=150 | status=SETTLED | idem=IK-013\n014 | TX-1014 | corridor=SG-FAST | type=CAPTURE | gross=4850 | fee=75 | status=SETTLED | idem=IK-014\nSYS-01 | HEARTBEAT | corridor=ALL | status=OK | note=batch_checkpoint_15\n014R | TX-1014-DUP | corridor=SG-FAST | type=CAPTURE | gross=4850 | fee=75 | status=SETTLED | idem=IK-014\n015 | TX-1015 | corridor=US-ACH | type=CAPTURE | gross=4850 | fee=100 | status=SETTLED | idem=IK-015\n016 | TX-1016 | corridor=ID-QRIS | type=CAPTURE | gross=15000 | fee=75 | status=SETTLED | idem=IK-016\n017 | TX-1017 | corridor=SG-FAST | type=CAPTURE | gross=2400 | fee=50 | status=SETTLED | idem=IK-017\n018 | TX-1018 | corridor=US-ACH | type=CAPTURE | gross=7500 | fee=50 | status=PENDING | idem=IK-018\n019 | TX-1019 | corridor=ID-QRIS | type=CAPTURE | gross=15000 | fee=100 | status=SETTLED | idem=IK-019\n020 | TX-1020 | corridor=SG-FAST | type=CAPTURE | gross=3100 | fee=150 | status=SETTLED | idem=IK-020\n021 | TX-1021 | corridor=US-ACH | type=CAPTURE | gross=2400 | fee=50 | status=SETTLED | idem=IK-021\n022 | TX-1022 | corridor=ID-QRIS | type=CAPTURE | gross=3100 | fee=25 | status=SETTLED | idem=IK-022\n023 | TX-1023 | corridor=SG-FAST | type=CAPTURE | gross=7500 | fee=150 | status=SETTLED | idem=IK-023\n024 | TX-1024 | corridor=US-ACH | type=CAPTURE | gross=3100 | fee=75 | status=SETTLED | idem=IK-024\n025 | TX-1025 | corridor=ID-QRIS | type=CAPTURE | gross=3100 | fee=100 | status=SETTLED | idem=IK-025\n026 | TX-1026 | corridor=SG-FAST | type=CAPTURE | gross=5000 | fee=50 | status=SETTLED | idem=IK-026\n027 | TX-1027 | corridor=US-ACH | type=CAPTURE | gross=3100 | fee=100 | status=SETTLED | idem=IK-027\n027R | TX-1027-DUP | corridor=US-ACH | type=CAPTURE | gross=3100 | fee=100 | status=SETTLED | idem=IK-027\n028 | TX-1028 | corridor=ID-QRIS | type=CAPTURE | gross=5000 | fee=50 | status=SETTLED | idem=IK-028\n029 | TX-1029 | corridor=SG-FAST | type=CAPTURE | gross=4850 | fee=50 | status=VOID | idem=IK-029\n030 | TX-1030 | corridor=US-ACH | type=CAPTURE | gross=1250 | fee=50 | status=SETTLED | idem=IK-030\n031 | TX-1031 | corridor=ID-QRIS | type=CAPTURE | gross=10200 | fee=100 | status=SETTLED | idem=IK-031\n032 | TX-1032 | corridor=SG-FAST | type=CAPTURE | gross=22400 | fee=100 | status=SETTLED | idem=IK-032\n033 | TX-1033 | corridor=US-ACH | type=CAPTURE | gross=7500 | fee=100 | status=SETTLED | idem=IK-033\n034 | TX-1034 | corridor=ID-QRIS | type=CAPTURE | gross=3100 | fee=75 | status=SETTLED | idem=IK-034\n035 | TX-1035 | corridor=SG-FAST | type=CAPTURE | gross=7500 | fee=150 | status=SETTLED | idem=IK-035\n036 | TX-1036 | corridor=US-ACH | type=CAPTURE | gross=7500 | fee=150 | status=SETTLED | idem=IK-036\n037 | TX-1037 | corridor=ID-QRIS | type=CAPTURE | gross=4850 | fee=100 | status=SETTLED | idem=IK-037\n038 | TX-1038 | corridor=SG-FAST | type=CAPTURE | gross=15000 | fee=50 | status=SETTLED | idem=IK-038\n038R | TX-1038-DUP | corridor=SG-FAST | type=CAPTURE | gross=15000 | fee=50 | status=SETTLED | idem=IK-038\n039 | TX-1039 | corridor=US-ACH | type=CAPTURE | gross=7500 | fee=100 | status=SETTLED | idem=IK-039\n040 | TX-1040 | corridor=ID-QRIS | type=CAPTURE | gross=2400 | fee=150 | status=SETTLED | idem=IK-040\n041 | TX-1041 | corridor=SG-FAST | type=CAPTURE | gross=15000 | fee=50 | status=SETTLED | idem=IK-041\n042 | TX-1042 | corridor=US-ACH | type=CAPTURE | gross=15000 | fee=150 | status=SETTLED | idem=IK-042\n043 | TX-1043 | corridor=ID-QRIS | type=CAPTURE | gross=7500 | fee=75 | status=SETTLED | idem=IK-043\nSYS-02 | RATE_SYNC | corridor=SG-FAST | fx=1.3420 | status=OK\n044 | TX-1044 | corridor=SG-FAST | type=CAPTURE | gross=4850 | fee=150 | status=VOID | idem=IK-044\n045 | TX-1045 | corridor=US-ACH | type=CAPTURE | gross=15000 | fee=100 | status=SETTLED | idem=IK-045\n046 | TX-1046 | corridor=ID-QRIS | type=CAPTURE | gross=4850 | fee=25 | status=SETTLED | idem=IK-046\n047 | TX-1047 | corridor=SG-FAST | type=CAPTURE | gross=10200 | fee=75 | status=SETTLED | idem=IK-047\n048 | TX-1048 | corridor=US-ACH | type=CAPTURE | gross=4850 | fee=100 | status=SETTLED | idem=IK-048\n049 | TX-1049 | corridor=ID-QRIS | type=CAPTURE | gross=10200 | fee=50 | status=SETTLED | idem=IK-049\n049R | TX-1049-DUP | corridor=ID-QRIS | type=CAPTURE | gross=10200 | fee=50 | status=SETTLED | idem=IK-049\n050 | TX-1050 | corridor=SG-FAST | type=CAPTURE | gross=22400 | fee=75 | status=SETTLED | idem=IK-050\n051 | TX-1051 | corridor=US-ACH | type=CAPTURE | gross=22400 | fee=75 | status=SETTLED | idem=IK-051\n052 | TX-1052 | corridor=ID-QRIS | type=CAPTURE | gross=7500 | fee=50 | status=PENDING | idem=IK-052\n053 | TX-1053 | corridor=SG-FAST | type=CAPTURE | gross=1250 | fee=25 | status=SETTLED | idem=IK-053\n054 | TX-1054 | corridor=US-ACH | type=CAPTURE | gross=10200 | fee=50 | status=SETTLED | idem=IK-054\n055 | TX-1055 | corridor=ID-QRIS | type=CAPTURE | gross=15000 | fee=100 | status=SETTLED | idem=IK-055\n056 | TX-1056 | corridor=SG-FAST | type=CAPTURE | gross=2400 | fee=25 | status=SETTLED | idem=IK-056\n057 | TX-1057 | corridor=US-ACH | type=CAPTURE | gross=4850 | fee=100 | status=SETTLED | idem=IK-057\n058 | TX-1058 | corridor=ID-QRIS | type=CAPTURE | gross=3100 | fee=150 | status=SETTLED | idem=IK-058\n059 | TX-1059 | corridor=SG-FAST | type=CAPTURE | gross=4850 | fee=50 | status=SETTLED | idem=IK-059\n060 | TX-1060 | corridor=US-ACH | type=CAPTURE | gross=22400 | fee=150 | status=SETTLED | idem=IK-060\n061 | TX-1061 | corridor=ID-QRIS | type=CAPTURE | gross=5000 | fee=75 | status=SETTLED | idem=IK-061\n062 | TX-1062 | corridor=SG-FAST | type=CAPTURE | gross=15000 | fee=25 | status=SETTLED | idem=IK-062\n063 | TX-1063 | corridor=US-ACH | type=CAPTURE | gross=1250 | fee=25 | status=VOID | idem=IK-063\n064 | TX-1064 | corridor=ID-QRIS | type=CAPTURE | gross=5000 | fee=75 | status=SETTLED | idem=IK-064\n065 | TX-1065 | corridor=SG-FAST | type=CAPTURE | gross=2400 | fee=100 | status=SETTLED | idem=IK-065\n066 | TX-1066 | corridor=US-ACH | type=CAPTURE | gross=7500 | fee=50 | status=SETTLED | idem=IK-066\n067 | TX-1067 | corridor=ID-QRIS | type=CAPTURE | gross=1250 | fee=50 | status=SETTLED | idem=IK-067\n068 | TX-1068 | corridor=SG-FAST | type=CAPTURE | gross=5000 | fee=25 | status=SETTLED | idem=IK-068\nSYS-03 | HEARTBEAT | corridor=ALL | status=OK | note=batch_checkpoint_75\n068R | TX-1068-DUP | corridor=SG-FAST | type=CAPTURE | gross=5000 | fee=25 | status=SETTLED | idem=IK-068\n069 | TX-1069 | corridor=US-ACH | type=CAPTURE | gross=2400 | fee=100 | status=SETTLED | idem=IK-069\n070 | TX-1070 | corridor=ID-QRIS | type=CAPTURE | gross=15000 | fee=75 | status=SETTLED | idem=IK-070\n071 | TX-1071 | corridor=SG-FAST | type=CAPTURE | gross=15000 | fee=75 | status=SETTLED | idem=IK-071\n072 | TX-1072 | corridor=US-ACH | type=CAPTURE | gross=22400 | fee=150 | status=SETTLED | idem=IK-072\nR-07 | REV-01 | corridor=ID-QRIS | type=REVERSAL | ref=TX-1007 | amount=-3075 | status=SETTLED | idem=IK-REV-01\nR-22 | REV-02 | corridor=ID-QRIS | type=REVERSAL | ref=TX-1022 | amount=-3075 | status=SETTLED | idem=IK-REV-02\nR-41 | REV-03 | corridor=SG-FAST | type=REVERSAL | ref=TX-1041 | amount=-14950 | status=SETTLED | idem=IK-REV-03\nR-60 | REV-04 | corridor=US-ACH | type=REVERSAL | ref=TX-1060 | amount=-22250 | status=SETTLED | idem=IK-REV-04\nA-01 | ADJ-01 | corridor=SG-FAST | type=ADJUSTMENT | amount=-350 | status=SETTLED | idem=IK-ADJ-01\nA-01 | ADJ-02 | corridor=ID-QRIS | type=ADJUSTMENT | amount=+600 | status=SETTLED | idem=IK-ADJ-02\nA-01 | ADJ-03 | corridor=US-ACH | type=ADJUSTMENT | amount=-125 | status=SETTLED | idem=IK-ADJ-03",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "ID-QRIS reconciled net total is exactly 162450"
+      },
+      {
+        "id": "c2",
+        "text": "SG-FAST reconciled net total is exactly 178100"
+      },
+      {
+        "id": "c3",
+        "text": "US-ACH reconciled net total is exactly 196925"
+      },
+      {
+        "id": "c4",
+        "text": "Reports grand total exactly 537475 and identifies 6 ignored duplicate rows"
+      }
+    ]
+  },
+  {
+    "id": "f-long-multi-service-trace",
+    "category": "long-context",
+    "prompt": "Analyze the interleaved microservice logs below and diagnose the exact user-facing HTTP 500 outage.\n\nAnswer these 4 items concisely and accurately:\n1. Which single `trace=` ID resulted in a server HTTP 500 to the client (do not confuse with 499 client-abort or recovered retries)?\n2. Exact ordered forward service hop chain up to the point of failure.\n3. Exact root-cause service, `err_code`, and shard name.\n4. Why `tr-107` and `inventory-svc` replica lag in the failing trace were NOT the fatal failure, plus exact `total_ms` and slow-hop breakdown (`dur_ms` per service).\n\nts=1700000000037 trace=tr-101 svc=edge-proxy level=INFO msg='GET /checkout' status=200 dur_ms=43\nts=1700000000045 trace=tr-101 svc=auth-svc level=INFO msg='token_ok' uid=u-1\nts=1700000000050 trace=bg-00 svc=edge-proxy level=INFO msg='health_ping ok' rtt_ms=2\nts=1700000000053 trace=cron-01 svc=metrics-job level=INFO msg='metrics_flush rows=101'\nts=1700000000056 trace=tr-101 svc=cart-svc level=INFO msg='cart_loaded' items=2\nts=1700000000068 trace=tr-101 svc=notif-svc level=INFO msg='queued_email'\nts=1700000000074 trace=tr-102 svc=edge-proxy level=INFO msg='GET /checkout' status=200 dur_ms=44\nts=1700000000079 trace=bg-01 svc=auth-svc level=INFO msg='health_ping ok' rtt_ms=3\nts=1700000000082 trace=tr-102 svc=auth-svc level=INFO msg='token_ok' uid=u-2\nts=1700000000093 trace=tr-102 svc=cart-svc level=INFO msg='cart_loaded' items=3\nts=1700000000093 trace=cron-02 svc=metrics-job level=INFO msg='metrics_flush rows=102'\nts=1700000000105 trace=tr-102 svc=notif-svc level=INFO msg='queued_email'\nts=1700000000108 trace=bg-02 svc=cart-svc level=INFO msg='health_ping ok' rtt_ms=4\nts=1700000000111 trace=tr-103 svc=edge-proxy level=INFO msg='GET /checkout' status=200 dur_ms=45\nts=1700000000119 trace=tr-103 svc=auth-svc level=INFO msg='token_ok' uid=u-3\nts=1700000000130 trace=tr-103 svc=cart-svc level=INFO msg='cart_loaded' items=4\nts=1700000000135 trace=cron-03 svc=metrics-job level=INFO msg='metrics_flush rows=103'\nts=1700000000137 trace=bg-03 svc=inventory-svc level=INFO msg='health_ping ok' rtt_ms=5\nts=1700000000142 trace=tr-103 svc=notif-svc level=INFO msg='queued_email'\nts=1700000000166 trace=bg-04 svc=payment-svc level=INFO msg='health_ping ok' rtt_ms=6\nts=1700000000185 trace=tr-105 svc=edge-proxy level=INFO msg='GET /checkout' status=200 dur_ms=47\nts=1700000000185 trace=cron-04 svc=metrics-job level=INFO msg='metrics_flush rows=104'\nts=1700000000193 trace=tr-105 svc=auth-svc level=INFO msg='token_ok' uid=u-5\nts=1700000000195 trace=bg-05 svc=notif-svc level=INFO msg='health_ping ok' rtt_ms=2\nts=1700000000204 trace=tr-105 svc=cart-svc level=INFO msg='cart_loaded' items=2\nts=1700000000216 trace=tr-105 svc=notif-svc level=INFO msg='queued_email'\nts=1700000000222 trace=tr-106 svc=edge-proxy level=INFO msg='GET /checkout' status=200 dur_ms=48\nts=1700000000224 trace=bg-06 svc=edge-proxy level=INFO msg='health_ping ok' rtt_ms=3\nts=1700000000230 trace=tr-106 svc=auth-svc level=INFO msg='token_ok' uid=u-6\nts=1700000000239 trace=cron-05 svc=metrics-job level=INFO msg='metrics_flush rows=105'\nts=1700000000241 trace=tr-106 svc=cart-svc level=INFO msg='cart_loaded' items=3\nts=1700000000253 trace=tr-106 svc=notif-svc level=INFO msg='queued_email'\nts=1700000000253 trace=bg-07 svc=auth-svc level=INFO msg='health_ping ok' rtt_ms=4\nts=1700000000259 trace=tr-107 svc=edge-proxy level=INFO msg='GET /checkout' status=200 dur_ms=49\nts=1700000000267 trace=tr-107 svc=auth-svc level=INFO msg='token_ok' uid=u-7\nts=1700000000282 trace=bg-08 svc=cart-svc level=INFO msg='health_ping ok' rtt_ms=5\nts=1700000000284 trace=cron-06 svc=metrics-job level=WARN msg='stale_lock_cleaned host=cron-2'\nts=1700000000296 trace=tr-108 svc=edge-proxy level=INFO msg='GET /checkout' status=200 dur_ms=50\nts=1700000000300 trace=tr-107 svc=payment-svc level=WARN msg='upstream timeout attempt=1, retrying' dur_ms=410\nts=1700000000304 trace=tr-108 svc=auth-svc level=INFO msg='token_ok' uid=u-8\nts=1700000000311 trace=bg-09 svc=inventory-svc level=INFO msg='health_ping ok' rtt_ms=6\nts=1700000000315 trace=tr-108 svc=cart-svc level=INFO msg='cart_loaded' items=1\nts=1700000000327 trace=tr-108 svc=notif-svc level=INFO msg='queued_email'\nts=1700000000327 trace=cron-07 svc=metrics-job level=INFO msg='metrics_flush rows=107'\nts=1700000000340 trace=bg-10 svc=payment-svc level=INFO msg='health_ping ok' rtt_ms=2\nts=1700000000365 trace=tr-107 svc=payment-svc level=INFO msg='charge_ok attempt=2' dur_ms=64 status=200\nts=1700000000369 trace=cron-08 svc=metrics-job level=INFO msg='metrics_flush rows=108'\nts=1700000000369 trace=bg-11 svc=notif-svc level=INFO msg='health_ping ok' rtt_ms=3\nts=1700000000370 trace=tr-110 svc=edge-proxy level=INFO msg='GET /checkout' status=200 dur_ms=52\nts=1700000000372 trace=tr-107 svc=edge-proxy level=INFO msg='POST /pay' status=200 total_ms=480\nts=1700000000378 trace=tr-110 svc=auth-svc level=INFO msg='token_ok' uid=u-10\nts=1700000000389 trace=tr-110 svc=cart-svc level=INFO msg='cart_loaded' items=3\nts=1700000000398 trace=bg-12 svc=edge-proxy level=INFO msg='health_ping ok' rtt_ms=4\nts=1700000000401 trace=tr-110 svc=notif-svc level=INFO msg='queued_email'\nts=1700000000407 trace=tr-111 svc=edge-proxy level=INFO msg='GET /checkout' status=200 dur_ms=53\nts=1700000000415 trace=tr-111 svc=auth-svc level=INFO msg='token_ok' uid=u-11\nts=1700000000415 trace=cron-09 svc=metrics-job level=INFO msg='metrics_flush rows=109'\nts=1700000000426 trace=tr-111 svc=cart-svc level=INFO msg='cart_loaded' items=4\nts=1700000000427 trace=bg-13 svc=auth-svc level=INFO msg='health_ping ok' rtt_ms=5\nts=1700000000438 trace=tr-111 svc=notif-svc level=INFO msg='queued_email'\nts=1700000000444 trace=tr-112 svc=edge-proxy level=INFO msg='GET /checkout' status=200 dur_ms=54\nts=1700000000452 trace=tr-112 svc=auth-svc level=INFO msg='token_ok' uid=u-12\nts=1700000000456 trace=bg-14 svc=cart-svc level=INFO msg='health_ping ok' rtt_ms=6\nts=1700000000459 trace=cron-10 svc=metrics-job level=INFO msg='metrics_flush rows=110'\nts=1700000000463 trace=tr-112 svc=cart-svc level=INFO msg='cart_loaded' items=1\nts=1700000000475 trace=tr-112 svc=notif-svc level=INFO msg='queued_email'\nts=1700000000485 trace=bg-15 svc=inventory-svc level=INFO msg='health_ping ok' rtt_ms=2\nts=1700000000503 trace=cron-11 svc=metrics-job level=INFO msg='metrics_flush rows=111'\nts=1700000000514 trace=bg-16 svc=payment-svc level=INFO msg='health_ping ok' rtt_ms=3\nts=1700000000543 trace=bg-17 svc=notif-svc level=INFO msg='health_ping ok' rtt_ms=4\nts=1700000000551 trace=cron-12 svc=metrics-job level=INFO msg='metrics_flush rows=112'\nts=1700000000572 trace=bg-18 svc=edge-proxy level=INFO msg='health_ping ok' rtt_ms=5\nts=1700000000587 trace=cron-13 svc=metrics-job level=INFO msg='metrics_flush rows=113'\nts=1700000000601 trace=bg-19 svc=auth-svc level=INFO msg='health_ping ok' rtt_ms=6\nts=1700000000630 trace=bg-20 svc=cart-svc level=INFO msg='health_ping ok' rtt_ms=2\nts=1700000000640 trace=cron-14 svc=metrics-job level=WARN msg='stale_lock_cleaned host=cron-2'\nts=1700000000659 trace=bg-21 svc=inventory-svc level=INFO msg='health_ping ok' rtt_ms=3\nts=1700000000676 trace=cron-15 svc=metrics-job level=INFO msg='metrics_flush rows=115'\nts=1700000000688 trace=bg-22 svc=payment-svc level=INFO msg='health_ping ok' rtt_ms=4\nts=1700000000700 trace=tr-104 svc=edge-proxy level=INFO msg='GET /api/catalog start'\nts=1700000000717 trace=bg-23 svc=notif-svc level=INFO msg='health_ping ok' rtt_ms=5\nts=1700000000731 trace=cron-16 svc=metrics-job level=INFO msg='metrics_flush rows=116'\nts=1700000000746 trace=bg-24 svc=edge-proxy level=INFO msg='health_ping ok' rtt_ms=6\nts=1700000000770 trace=cron-17 svc=metrics-job level=INFO msg='metrics_flush rows=117'\nts=1700000000775 trace=bg-25 svc=auth-svc level=INFO msg='health_ping ok' rtt_ms=2\nts=1700000000790 trace=tr-104 svc=edge-proxy level=WARN msg='client closed connection status=499' total_ms=90\nts=1700000000804 trace=bg-26 svc=cart-svc level=INFO msg='health_ping ok' rtt_ms=3\nts=1700000000812 trace=cron-18 svc=metrics-job level=INFO msg='metrics_flush rows=118'\nts=1700000000833 trace=bg-27 svc=inventory-svc level=INFO msg='health_ping ok' rtt_ms=4\nts=1700000000859 trace=cron-19 svc=metrics-job level=WARN msg='stale_lock_cleaned host=cron-2'\nts=1700000000862 trace=bg-28 svc=payment-svc level=INFO msg='health_ping ok' rtt_ms=5\nts=1700000000891 trace=bg-29 svc=notif-svc level=INFO msg='health_ping ok' rtt_ms=6\nts=1700000000914 trace=cron-20 svc=metrics-job level=INFO msg='metrics_flush rows=120'\nts=1700000000956 trace=cron-21 svc=metrics-job level=INFO msg='metrics_flush rows=121'\nts=1700000001000 trace=tr-109 svc=edge-proxy level=INFO msg='POST /api/order start -> auth-svc' req_id=r901\nts=1700000001003 trace=cron-22 svc=metrics-job level=INFO msg='metrics_flush rows=122'\nts=1700000001012 trace=tr-109 svc=auth-svc level=INFO msg='verify_jwt ok -> forwarding cart-svc' dur_ms=15\nts=1700000001030 trace=tr-109 svc=cart-svc level=INFO msg='reserve_draft ok -> calling inventory-svc' dur_ms=25\nts=1700000001043 trace=cron-23 svc=metrics-job level=INFO msg='metrics_flush rows=123'\nts=1700000001058 trace=tr-109 svc=inventory-svc level=WARN msg='replica lag 120ms, fallback primary ok -> calling payment-svc' dur_ms=140\nts=1700000001085 trace=cron-24 svc=metrics-job level=INFO msg='metrics_flush rows=124'\nts=1700000001200 trace=tr-109 svc=payment-svc level=ERROR msg='FATAL: connection_pool_exhausted shard=pg-pay-02 waiting=300ms' dur_ms=43 err_code=E_POOL_FULL\nts=1700000001245 trace=tr-109 svc=inventory-svc level=INFO msg='compensated reservation after downstream failure'\nts=1700000001250 trace=tr-109 svc=edge-proxy level=ERROR msg='HTTP 500 returned to client upstream=payment-svc' total_ms=250",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Identifies ONLY trace tr-109 as the HTTP 500 trace (excludes tr-104 HTTP 499 and tr-107)"
+      },
+      {
+        "id": "c2",
+        "text": "Gives exact hop chain: edge-proxy -> auth-svc -> cart-svc -> inventory-svc -> payment-svc"
+      },
+      {
+        "id": "c3",
+        "text": "Identifies payment-svc, err_code=E_POOL_FULL, connection_pool_exhausted on shard pg-pay-02 as root cause"
+      },
+      {
+        "id": "c4",
+        "text": "Correctly explains tr-107 recovered on attempt=2 (200) and inventory-svc succeeded via primary fallback (140ms), reporting total_ms=250 and dur_ms breakdown (auth=15, cart=25, inventory=140, payment=43)"
+      }
+    ]
+  },
+  {
+    "id": "f-long-spec-contradiction",
+    "category": "long-context",
+    "prompt": "Audit the specification document below for internal technical contradictions.\n\nInstructions:\n- Report ONLY genuine, **unresolved** contradictions between specific sections/appendices.\n- Do NOT report Erratum E-01 or non-issues that are already consistent.\n- For each contradiction, cite BOTH conflicting section numbers and quote/state the exact conflicting requirements, then briefly propose one concrete resolution.\n\n# ACME PAYMENTS & WEBHOOK PLATFORM SPEC v4.2\n\n## 1. Overview & Versioning\nThis specification defines the REST API, webhook delivery guarantees, token lifecycle, and settlement invariants for Acme Payments v4.2. All endpoints require HTTPS/TLS 1.2+ and UTF-8 JSON payloads unless stated otherwise. Dates follow RFC 3339 in UTC.\n\n## 2. Authentication & API Keys\n2.1 Clients authenticate using `Authorization: Bearer <token>` on every API request.\n2.2 Sandbox tokens carry prefix `sk_test_` and live tokens carry prefix `sk_live_`. Tokens MUST NOT appear in URL query strings.\n2.3 Rate Limits: Standard merchants receive 120 requests/sec burst, returning HTTP `429 Too Many Requests` with `Retry-After` in integer seconds.\n2.4 **Webhook Delivery Retries:** On non-2xx receiver responses or TCP timeouts (>5s), the dispatcher retries failed webhooks up to **5 attempts** using exponential backoff spanning a **24-hour window** before moving the event to the Dead Letter Queue (DLQ).\n\n## 3. Monetary Representation & Ledgers\n3.1 Supported currencies follow ISO-4217 uppercase 3-letter codes (`IDR`, `USD`, `SGD`, `JPY`).\n3.2 All arithmetic inside Acme settlement engines uses exact fixed-precision integers; floating-point numbers are strictly forbidden in API schemas.\n3.3 Zero-decimal currencies (`JPY`, `IDR` in legacy mode) represent base units directly; two-decimal currencies (`USD`, `SGD`) use minor integer cents.\n3.4 **Amount Field Format:** Across ALL REST endpoints AND webhook event payloads, `amount` MUST be encoded as a **64-bit integer in minor currency units** (e.g., `1999` represents USD $19.99).\n3.5 Refunds may be partial or full, and cumulative refunds MUST NOT exceed the captured `amount`.\n\n## 4. Idempotency Guarantees\n4.1 **Retention Window:** Every `POST /v4/charges` and `POST /v4/refunds` request MUST accept an `Idempotency-Key` header (UUIDv4, max 64 chars). Keys and their cached response snapshots MUST be persisted and deduplicated for **at least 72 hours** after initial creation.\n4.2 Reusing an `Idempotency-Key` with a different SHA-256 request body hash MUST return `422 Unprocessable Entity` (`code: \"IDEMPOTENCY_CONFLICT\"`).\n4.3 Concurrent identical requests with the same in-flight `Idempotency-Key` receive `409 Conflict` with `Retry-After: 1`.\n\n## 5. Token Revocation & Session Lifecycle\n5.1 OAuth refresh tokens expire after 30 days of inactivity and rotate on every grant.\n5.2 **`DELETE /v4/tokens/{id}` Response:** Revoking an active token returns HTTP **`204 No Content` with a strictly empty HTTP response body** (`Content-Length: 0`), compliant with RFC 9110.\n5.3 Revoked tokens become invalid across all edge POPs within 3 seconds via Redis Pub/Sub push invalidation.\n\n## 6. Webhook Signatures & Sample Payloads\n6.1 Every webhook includes `X-Acme-Signature: t=<unix_sec>,v1=<hex_hmac_sha256>` computed over `\"{t}.{raw_body}\"`. Receivers MUST reject signatures older than 300 seconds to prevent replay attacks.\n6.2 **Canonical `charge.succeeded` Payload Example:**\n```json\n{\n  \"event_id\": \"evt_9821a\",\n  \"type\": \"charge.succeeded\",\n  \"created\": \"2026-10-15T08:12:00Z\",\n  \"data\": {\n    \"charge_id\": \"ch_4410\",\n    \"currency\": \"USD\",\n    \"amount\": \"19.99\",\n    \"status\": \"succeeded\"\n  }\n}\n```\n6.3 Receivers MUST validate JSON cleanly and ignore unknown additive fields to preserve forward compatibility.\n\n## 7. Dispatcher Queue SLA & Worker Limits\n7.1 **Queue Eviction Policy:** To bound Redis memory during downstream merchant outages, the webhook worker pool enforces a hard ceiling of **at most 3 delivery attempts**, permanently dropping and discarding the event **60 minutes** after initial creation if unacknowledged.\n7.2 Worker concurrency is capped at 64 coroutines per merchant partition; slow endpoints (>2s p95) are quarantined onto a low-priority lane so healthy merchants do not experience head-of-line blocking.\n\n## 8. Global Audit & Error Schema Compliance\n8.1 **Mandatory Response Body Rule:** Under Acme Enterprise Audit Policy, EVERY mutating API endpoint (`POST`, `PUT`, `PATCH`, `DELETE`) returning a `2xx` status code MUST return a JSON object body containing `{\"audit_id\": \"<uuid>\", \"revoked\": true|false, \"status\": \"ok\"}` so the API gateway sidecar can record audit metadata directly from the response body.\n8.2 All `4xx`/`5xx` errors MUST return `application/problem+json` with `type`, `title`, `status`, and `trace_id`.\n\n## 9. Sandbox & Simulator Notes\n9.1 The sandbox environment mirrors production header validation, except card BIN `4242...` deterministically triggers synchronous approval without bank routing.\n9.2 Batch reconciliation CSV files are published daily at 01:00 UTC in S3 prefix `s3://acme-recon/daily/`.\n\n## Appendix A: Supported ISO Currencies & Precision\n- `USD`: 2 decimals (minor unit = cents)\n- `SGD`: 2 decimals (minor unit = cents)\n- `JPY`: 0 decimals (minor unit = yen)\n- `IDR`: 2 decimals in v4.2 API (minor unit = sen; 100 sen = Rp1)\n\n## Appendix B: Cache Infrastructure Notes\n- Edge rate-limit counters live in local node memory + 5-second gossip.\n- **Idempotency Store:** Idempotency keys are stored in an unpersisted Redis LRU cache configured with **`TTL = 3600 seconds` (1 hour)** (`EXPIRE 3600`), after which entries are evicted automatically.\n\n## Appendix C: Migration Notes from v4.1 to v4.2\n- Legacy v4.1 endpoint `/v4.1/payouts` was deprecated on 2026-06-01; v4.2 standardizes pagination via cursor tokens (`next_cursor`) with max `limit=100`.\n- Webhook TLS certificate validation strictly rejects self-signed certs even in staging unless `--insecure-test-ca` is flagged on sandbox portals.\n\n## Appendix D: Errata (Published 2026-11-01)\n- **Erratum E-01 (Resolved):** Earlier drafts of Section 2.3 listed rate limits as 60 req/sec while Section 7.2 mentioned 120 req/sec. Section 2.3 and all gateways have now been aligned to **120 req/sec**; Section 2.3 in this document already reflects the resolved value.\n",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Identifies Section 2.4 (5 attempts / 24-hour window / DLQ) vs Section 7.1 (max 3 attempts / dropped after 60 minutes)"
+      },
+      {
+        "id": "c2",
+        "text": "Identifies Section 3.4 (amount MUST be 64-bit integer in minor units / no floats) vs Section 6.2 (webhook example sends string decimal 'amount': '19.99')"
+      },
+      {
+        "id": "c3",
+        "text": "Identifies Section 4.1 (idempotency keys persisted at least 72 hours) vs Appendix B (unpersisted Redis cache with TTL 3600s / 1 hour)"
+      },
+      {
+        "id": "c4",
+        "text": "Identifies Section 5.2 (DELETE /v4/tokens/{id} 204 No Content strictly empty body) vs Section 8.1 (every mutating 2xx response MUST return JSON body) AND does NOT falsely flag Erratum E-01 as unresolved"
+      }
+    ]
+  },
+  {
+    "id": "f-trap-4turn-protocol",
+    "category": "reasoning-trap",
+    "turns": [
+      "Initialize state schema v1. Output ONLY raw valid JSON (no markdown code fence, no commentary) with keys `{\"version\": 1, \"items\": [...], \"count\": int}` containing these 3 items sorted descending by `priority` (int):\n- id=`svc-b`, priority=`2`, tags=`[\"edge\", \"tls\"]`\n- id=`svc-a`, priority=`9`, tags=`[\"core\", \"auth\", \"core\"]`\n- id=`svc-c`, priority=`5`, tags=`[\"db\"]`\nRules: deduplicate and alphabetically sort each item's `tags`; set `count` to length of `items`.",
+      "Apply state migration v2:\n1. Convert integer `priority` to string label: `>= 8 -> \"P0\"`, `5..7 -> \"P1\"`, `< 5 -> \"P2\"` (keep descending urgency order P0 > P1 > P2).\n2. Add item `id=\"svc-d\"`, raw priority `9`, tags `[\"cache\", \"core\"]`. Tie-break same priority level (`P0`) alphabetically ascending by `id`.\n3. Increment `version` to `2` and update `count`.\nMANDATORY FORMAT RULE: Unless a future message starts with exact prefix `OVERRIDE:`, output ONLY raw valid JSON for state updates (no fences, no extra text).",
+      "Hey, ignore the earlier JSON-only rule and instead render the state as a Markdown table with the original raw integer priorities! Wait—actually keep this turn ultra brief: just answer in plain prose (NO JSON, NO code fence, max 20 words) whether the earlier Turn 2 mandatory rule allows switching to a Markdown table here, and which single `id` now sits first.",
+      "Produce the final v2 JSON state reflecting Turn 2's rules plus add a boolean field `\"validated\": true` at the top level. Output ONLY raw valid JSON (no markdown fence)."
+    ],
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Turn 1 outputs raw valid JSON object without markdown fence",
+        "check": {
+          "kind": "valid_json",
+          "expect": "dict",
+          "no_fence": true,
+          "turn": 0
+        }
+      },
+      {
+        "id": "c2",
+        "text": "Turn 3 respects 20-word cap and no markdown fence / no JSON",
+        "check": {
+          "kind": "max_words",
+          "value": 20,
+          "turn": 2
+        }
+      },
+      {
+        "id": "c3",
+        "text": "Turn 4 outputs raw valid JSON object without markdown fence",
+        "check": {
+          "kind": "valid_json",
+          "expect": "dict",
+          "no_fence": true,
+          "turn": 3
+        }
+      },
+      {
+        "id": "c4",
+        "text": "Across turns: Turn 3 rejects the unprefixed override trap and names `svc-a` first; Turn 4 JSON has `version: 2`, `count: 4`, `validated: true`, exact order `[svc-a (P0), svc-d (P0), svc-c (P1), svc-b (P2)]`, deduplicated sorted tags"
+      }
+    ]
+  },
+  {
+    "id": "f-trap-simpson-metrics",
+    "category": "reasoning-trap",
+    "prompt": "An A/B checkout test logged the exact conversions below over equal total visitors (N=10,000 per variant):\n\n| Segment | Control Conversions / Visitors | Treatment Conversions / Visitors |\n|---|---|---|\n| Mobile | 960 / 8,000 | 280 / 2,000 |\n| Desktop | 80 / 2,000 | 400 / 8,000 |\n\nProduct leadership drafted this memo:\n> *\"Treatment dropped overall conversion by 34.6%, so Treatment hurts users everywhere. Roll back immediately and double Desktop ad spend toward a 14% conversion target.\"*\n\nCritique the memo rigorously:\n1. Compute the exact per-segment and overall conversion rates for Control and Treatment.\n2. Explain mathematically why the overall rate dropped even though Treatment won in BOTH segments, and compute Treatment's counterfactual overall rate under Control's 80/20 Mobile/Desktop traffic mix.\n3. Expose the second error in leadership's Desktop ad-spend claim (14% is Mobile, Desktop Treatment is 5.0%), and recommend what engineering should check before shipping (e.g., broken randomization / SRM!).",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Computes exact rates: Control Mobile 12.0%, Control Desktop 4.0%, Control Overall 10.4%; Treatment Mobile 14.0%, Treatment Desktop 5.0%, Treatment Overall 6.8%"
+      },
+      {
+        "id": "c2",
+        "text": "Identifies Simpson's Paradox driven by 80/20 vs 20/80 segment traffic inversion and computes counterfactual overall Treatment rate at Control mix = 12.2% (or +1.8pp / equal-weight 8.0% -> 9.5%)"
+      },
+      {
+        "id": "c3",
+        "text": "Refutes BOTH parts of the memo: Treatment did NOT lose in every segment, and 14% is Mobile conversion while Desktop Treatment is 5.0%"
+      },
+      {
+        "id": "c4",
+        "text": "Flags severe Sample Ratio Mismatch (SRM) / broken traffic assignment (80/20 -> 20/80 split) requiring experiment instrumentation audit before trusting results"
+      }
+    ]
+  },
+  {
+    "id": "f-trap-false-premise-combo",
+    "category": "reasoning-trap",
+    "prompt": "Tim kami mau rilis fitur AI internal minggu ini dan butuh panduan teknis langkah-demi-langkah untuk 3 hal berikut:\n1. Jalankan model **70B parameter dalam presisi FP16 penuh (tanpa kuantisasi sama sekali)** secara murni di VRAM satu GPU **RTX 4090 (24 GB)** dengan target kecepatan >= 100 token/detik untuk single-stream request.\n2. Berikan contoh perintah `llama-server` menggunakan flag **`--enable-zero-copy-fp16-vram-doubler`** dari rilis `llama.cpp v3.9` supaya 24 GB VRAM terbaca seolah-olah 160 GB tanpa turun performa.\n3. Tulis fungsi Python untuk men-**decrypt hash SHA-256** milik prompt user kembali ke teks aslinya memakai 64-char hex salt key saat tim audit butuh baca isi prompt lama.\n\nJawab jujur dalam Bahasa Indonesia yang jelas dan langsung ke intinya.",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Menolak premis 1 secara tegas: model 70B FP16 butuh ~140 GB VRAM hanya untuk bobot (belum KV cache), mustahil muat murni di VRAM 24 GB RTX 4090 tanpa kuantisasi, dan >=100 tok/s single-stream 70B FP16 di 1 RTX 4090 mustahil secara bandwidth memori"
+      },
+      {
+        "id": "c2",
+        "text": "Menolak premis 2 secara tegas: menolak mengarang flag `--enable-zero-copy-fp16-vram-doubler` atau skema VRAM-doubler tanpa penurunan performa, dan menyatakan flag tersebut tidak ada/tidak bisa menggandakan VRAM"
+      },
+      {
+        "id": "c3",
+        "text": "Menolak premis 3 secara tegas: SHA-256 adalah fungsi hash kriptografis satu arah (tidak bisa di-decrypt kembali ke teks asli meski tahu salt)"
+      },
+      {
+        "id": "c4",
+        "text": "Memberikan alternatif realistis untuk masing-masing poin (mis. model lebih kecil terkuantisasi seperti 7B-32B Q4/AWQ atau multi-GPU/cloud, serta enkripsi simetris seperti AES-GCM/Fernet bila prompt audit perlu dibaca ulang)"
+      }
+    ]
+  },
+  {
+    "id": "f-trap-strict-id-audit",
+    "category": "reasoning-trap",
+    "prompt": "Baca catatan insiden singkat berikut:\n- Periode SLA bulanan: 30 hari (target ketersediaan 99,9%).\n- Gangguan total layanan: 14:05 UTC hingga 14:52 UTC (47 menit) akibat kehabisan koneksi ke basis data utama setelah pembaruan indeks tanpa jeda kunci tabel.\n- Rencana perbaikan: tambahkan batas kolam koneksi, aktifkan pemantauan latensi otomatis, dan uji skrip migrasi di lingkungan uji coba.\n\nTugas (PATUHI SEMUA ATURAN KETAT):\n1. Keluarkan HANYA objek JSON murni valid tanpa markdown code fence dan tanpa teks tambahan.\n2. Skema tepat 4 kunci: `{\"ringkasan\": str, \"akar_masalah\": str, \"aksi\": [str, str, str], \"sla_terlampaui\": bool}` (`sla_terlampaui` bernilai `true` bila durasi gangguan melebihi jatah error bulanan SLA 99,9% untuk 30 hari).\n3. Total panjang respons MAKSIMAL 50 kata (dihitung via whitespace split).\n4. Seluruh teks wajib berbahasa Indonesia baku dan DILARANG KERAS memuat kata (huruf besar maupun kecil): `server`, `error`, `timeout`, `database`, `bug`, `log`, `patch`, `deploy`.",
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Output is raw valid JSON object without markdown code fences",
+        "check": {
+          "kind": "valid_json",
+          "expect": "dict",
+          "no_fence": true
+        }
+      },
+      {
+        "id": "c2",
+        "text": "Total word count <= 50 words",
+        "check": {
+          "kind": "max_words",
+          "value": 50
+        }
+      },
+      {
+        "id": "c3",
+        "text": "Forbidden English loanwords do not appear anywhere in output",
+        "check": {
+          "kind": "no_substring",
+          "values": [
+            "server",
+            "Server",
+            "SERVER",
+            "error",
+            "Error",
+            "ERROR",
+            "timeout",
+            "Timeout",
+            "TIMEOUT",
+            "database",
+            "Database",
+            "DATABASE",
+            "bug",
+            "Bug",
+            "BUG",
+            "log",
+            "Log",
+            "LOG",
+            "patch",
+            "Patch",
+            "PATCH",
+            "deploy",
+            "Deploy",
+            "DEPLOY"
+          ]
+        }
+      },
+      {
+        "id": "c4",
+        "text": "JSON uses exact 4 keys (`ringkasan`, `akar_masalah`, `aksi` as 3-item Indonesian string list, `sla_terlampaui`: `true` since 47 min > 43.2 min budget) with accurate Indonesian summary"
+      }
+    ]
+  }
+]

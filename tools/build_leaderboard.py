@@ -18,7 +18,7 @@ import m2bench  # noqa: E402
 
 OUT_JSON = os.path.join(m2bench.DATA_DIR, "leaderboard.json")
 OUT_HTML = os.path.join(m2bench.DATA_DIR, "leaderboard.html")
-SET_ORDER = ["expert", "daily_plus", "hard", "medium", "easy"]
+SET_ORDER = ["frontier", "expert", "daily_plus", "hard", "medium", "easy"]
 
 
 def collect_entries():
@@ -67,6 +67,8 @@ def collect_entries():
             n_tasks = len(tids) or 1
             completed_scores = [grades[(model, t)]["task_score"] for t in tids if (model, t) in grades]
             non_dnf_avg = round(sum(completed_scores) / len(completed_scores) * 100, 1) if completed_scores else 0.0
+            strict_count = sum(1 for s in completed_scores if s == 1.0)
+            strict_pct = round(st.get("strict", strict_count / n_tasks * 100), 1)
 
             per_task = []
             for t in tids:
@@ -95,6 +97,8 @@ def collect_entries():
                 "temp": "default" if meta.get("temperature") is None else meta.get("temperature"),
                 "judges": judges,
                 "score": round(st["score"], 1),
+                "strict": strict_pct,
+                "strict_count": strict_count,
                 "non_dnf_avg": non_dnf_avg,
                 "dnf": st["dnf"],
                 "completed": len(completed_scores),
@@ -265,6 +269,10 @@ HTML_TEMPLATE = """<!doctype html>
 
   <div class="controls">
     <input type="search" id="searchBox" placeholder="Cari model atau nama run..." />
+    <select id="metricMode">
+      <option value="strict">Ranking: Strict Pass (100%)</option>
+      <option value="score">Ranking: Avg Score</option>
+    </select>
     <select id="providerFilter"><option value="">Semua provider</option></select>
     <select id="judgeFilter"><option value="">Semua judge</option></select>
     <label class="toggle">
@@ -275,11 +283,11 @@ HTML_TEMPLATE = """<!doctype html>
 
   <div class="grid-charts">
     <div class="card">
-      <h2>Top Skor (Overall %)</h2>
+      <h2 id="barTitle">Top Strict Pass (100% Task Score)</h2>
       <div id="barChart"></div>
     </div>
     <div class="card">
-      <h2>Intelligence vs Speed (t/s)</h2>
+      <h2 id="scatterTitle">Strict Pass vs Speed (t/s)</h2>
       <svg class="scatter" id="scatterSvg" viewBox="0 0 460 220"></svg>
     </div>
   </div>
@@ -313,7 +321,8 @@ const DATA = __LEADERBOARD_JSON__;
 const SET_ORDER = __SET_ORDER__;
 
 let activeSet = SET_ORDER.find(s => DATA.entries.some(e => e.set === s)) || DATA.sets[0] || "";
-let sortKey = "score";
+let metricMode = "strict";
+let sortKey = "strict";
 let sortDesc = true;
 
 function esc(s) {
@@ -392,15 +401,29 @@ function renderTabs() {
   });
 }
 
+function activeVal(r) {
+  return metricMode === "strict" ? r.strict : r.score;
+}
+
 function renderCharts(rows) {
-  const top = [...rows].sort((a, b) => b.score - a.score).slice(0, 8);
-  document.getElementById("barChart").innerHTML = top.length ? top.map(r => `
+  const isStrict = metricMode === "strict";
+  document.getElementById("barTitle").textContent = isStrict
+    ? "Top Strict Pass (100% Task Score)"
+    : "Top Avg Score (Overall %)";
+  document.getElementById("scatterTitle").textContent = isStrict
+    ? "Strict Pass vs Speed (t/s)"
+    : "Avg Score vs Speed (t/s)";
+
+  const top = [...rows].sort((a, b) => activeVal(b) - activeVal(a) || b.score - a.score).slice(0, 8);
+  document.getElementById("barChart").innerHTML = top.length ? top.map(r => {
+    const val = activeVal(r);
+    return `
     <div class="bar-row">
       <div class="bar-name" title="${esc(r.model)} (${esc(r.run)})">${esc(r.model)}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(2, r.score)}%"></div></div>
-      <div class="bar-val">${r.score.toFixed(1)}%</div>
-    </div>
-  `).join("") : '<div class="sub">Tidak ada data cocok dengan filter.</div>';
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(2, val)}%"></div></div>
+      <div class="bar-val">${val.toFixed(1)}%</div>
+    </div>`;
+  }).join("") : '<div class="sub">Tidak ada data cocok dengan filter.</div>';
 
   const svg = document.getElementById("scatterSvg");
   const pts = rows.filter(r => r.tps !== null && r.tps > 0);
@@ -424,11 +447,12 @@ function renderCharts(rows) {
     out += `<text x="${x}" y="${padT+H+16}" text-anchor="middle" fill="#8b9bb4" font-size="10">${xv} t/s</text>`;
   }
   for (const p of pts) {
+    const yVal = activeVal(p);
     const x = padL + (p.tps / maxTps) * W;
-    const y = padT + H - (p.score / 100) * H;
-    const col = p.score >= 85 ? "#22c55e" : (p.score >= 60 ? "#f59e0b" : "#4f8cff");
+    const y = padT + H - (yVal / 100) * H;
+    const col = yVal >= 85 ? "#22c55e" : (yVal >= 60 ? "#f59e0b" : "#4f8cff");
     out += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="${col}" fill-opacity="0.88" stroke="#0b0f17" stroke-width="1.5">` +
-           `<title>${esc(p.model)} (${esc(p.run)}): ${p.score}% @ ${p.tps} t/s</title></circle>` +
+           `<title>${esc(p.model)} (${esc(p.run)}): Strict ${p.strict}% · Avg ${p.score}% @ ${p.tps} t/s</title></circle>` +
            `<text x="${Math.min(padL+W-4, x+7).toFixed(1)}" y="${(y+3).toFixed(1)}" fill="#e6edf7" font-size="9.5">${esc(p.model)}</text>`;
   }
   svg.innerHTML = out;
@@ -438,7 +462,8 @@ function renderTable(rows) {
   const cats = [...new Set(rows.flatMap(r => Object.keys(r.categories)))].sort();
   const cols = [
     { key: "model", label: "Model & Run", num: false },
-    { key: "score", label: "Score", num: true },
+    { key: "strict", label: "Strict Pass", num: true },
+    { key: "score", label: "Avg Score", num: true },
     { key: "non_dnf_avg", label: "Non-DNF", num: true },
     { key: "dnf", label: "DNF", num: true },
     { key: "tps", label: "Speed (t/s)", num: true },
@@ -479,6 +504,7 @@ function renderTable(rows) {
         <div class="model-title">${esc(r.model)}</div>
         <div class="run-meta">${esc(r.run)} · ${pills}</div>
       </td>
+      <td class="num ${scoreClass(r.strict)}">${r.strict.toFixed(1)}% <span class="sub">(${r.strict_count}/${r.total_tasks})</span></td>
       <td class="num ${scoreClass(r.score)}">${r.score.toFixed(1)}%</td>
       <td class="num">${r.non_dnf_avg.toFixed(1)}%</td>
       <td class="num">${r.dnf}</td>
@@ -497,7 +523,7 @@ function renderTable(rows) {
 function openModal(r) {
   document.getElementById("dlgTitle").textContent = `${r.model} — ${r.run}`;
   document.getElementById("dlgMeta").textContent =
-    `Set: ${r.set} | Score: ${r.score}% | Non-DNF: ${r.non_dnf_avg}% | DNF: ${r.dnf}/${r.total_tasks} | Speed: ${r.tps ?? "-"} t/s`;
+    `Set: ${r.set} | Strict Pass: ${r.strict}% (${r.strict_count}/${r.total_tasks}) | Avg: ${r.score}% | Non-DNF: ${r.non_dnf_avg}% | DNF: ${r.dnf}/${r.total_tasks} | Speed: ${r.tps ?? "-"} t/s`;
   document.getElementById("dlgBody").innerHTML = r.tasks.map(t => {
     const sc = t.status === "DNF" ? '<span class="score-bad">DNF</span>' :
                t.score !== null ? `<span class="${scoreClass(t.score * 100)}">${t.score.toFixed(2)}</span>` : "-";
@@ -509,18 +535,27 @@ function openModal(r) {
 function renderAll() {
   const rows = getFiltered();
   const uniqueModels = new Set(DATA.entries.map(e => e.model)).size;
-  const topScore = rows.length ? Math.max(...rows.map(r => r.score)).toFixed(1) + "%" : "-";
+  const isStrict = metricMode === "strict";
+  const topVal = rows.length ? Math.max(...rows.map(activeVal)).toFixed(1) + "%" : "-";
   document.getElementById("subtitle").textContent =
     `Generated: ${DATA.generated_at} · ${DATA.entries.length} hasil run ter-grade dari ${uniqueModels} model`;
   document.getElementById("summaryCards").innerHTML = `
     <div class="stat-card"><div class="k">Model di tab ini</div><div class="v">${rows.length}</div></div>
-    <div class="stat-card"><div class="k">Skor tertinggi</div><div class="v">${topScore}</div></div>
+    <div class="stat-card"><div class="k">${isStrict ? "Strict Pass tertinggi" : "Avg Score tertinggi"}</div><div class="v">${topVal}</div></div>
     <div class="stat-card"><div class="k">Total model tersimpan</div><div class="v">${uniqueModels}</div></div>
   `;
   renderCharts(rows);
   renderTable(rows);
 }
 
+document.getElementById("metricMode").addEventListener("change", e => {
+  metricMode = e.target.value;
+  if (sortKey === "strict" || sortKey === "score") {
+    sortKey = metricMode;
+    sortDesc = true;
+  }
+  renderAll();
+});
 ["searchBox", "providerFilter", "judgeFilter", "latestOnly"].forEach(id => {
   document.getElementById(id).addEventListener("input", renderAll);
   document.getElementById(id).addEventListener("change", renderAll);

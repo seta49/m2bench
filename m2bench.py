@@ -464,8 +464,9 @@ def aggregate_run(rdir, tmap):
                     costs.append(c)
         n = len(tids)
         sc = sum(scores) / n * 100 if n else 0
+        strict = sum(1 for x in scores if x == 1.0) / n * 100 if n else 0
         agg[m] = {
-            "scores": scores, "dnf": dnf, "score": sc,
+            "scores": scores, "dnf": dnf, "score": sc, "strict": strict,
             "times": times, "ptok": ptok, "ctok": ctok, "costs": costs,
             "cat": {},
         }
@@ -735,6 +736,33 @@ def _eval_check(chk, text):
         m = re.search(chk["pattern"], t, re.S)
         return {"verdict": "pass" if m else "fail",
                 "reason": "pattern matched" if m else "pattern not matched"}
+    if kind == "python_tests":
+        blocks = re.findall(r"```(?:python|py)?\s*\n(.*?)```", t, re.S | re.I)
+        code = max(blocks, key=len) if blocks else t
+        script = f"{code}\n\n{chk['tests']}\n"
+        fd, tmp = tempfile.mkstemp(suffix=".py", dir=tempfile.gettempdir())
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(script)
+            proc = subprocess.run(
+                [sys.executable, tmp],
+                capture_output=True, encoding="utf-8", errors="replace",
+                timeout=chk.get("timeout", 5),
+            )
+            if proc.returncode == 0:
+                return {"verdict": "pass", "reason": "all assertions passed"}
+            err = (proc.stderr or proc.stdout or "").strip().splitlines()
+            msg = err[-1][:120] if err else f"exit {proc.returncode}"
+            return {"verdict": "fail", "reason": f"test failed: {msg}"}
+        except subprocess.TimeoutExpired:
+            return {"verdict": "fail", "reason": "test timed out"}
+        except Exception as e:
+            return {"verdict": "fail", "reason": f"exec error: {str(e)[:80]}"}
+        finally:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
     return None
 
 
